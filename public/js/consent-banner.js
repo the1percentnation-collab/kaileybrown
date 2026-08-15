@@ -36,9 +36,9 @@
     bar.setAttribute('aria-label', 'Cookie consent');
     bar.style.cssText = [
       'position:fixed', 'left:16px', 'right:16px', 'bottom:16px', 'z-index:99999',
-      'max-width:720px', 'margin:0 auto', 'background:#FFFFFF', 'color:#3C3C3C',
-      'border:1px solid rgba(0,0,0,.12)', 'border-radius:14px',
-      'box-shadow:0 14px 36px rgba(0,0,0,.14)', 'padding:16px 18px',
+      'max-width:720px', 'margin:0 auto', 'background:#141416', 'color:#C9C9C9',
+      'border:1px solid rgba(255,255,255,.14)', 'border-radius:14px',
+      'box-shadow:0 14px 36px rgba(0,0,0,.6)', 'padding:16px 18px',
       'font-family:Jost,system-ui,sans-serif', 'font-size:.95rem',
       'display:flex', 'flex-wrap:wrap', 'gap:12px', 'align-items:center',
       'justify-content:space-between'
@@ -56,12 +56,12 @@
     var decline = document.createElement('button');
     decline.type = 'button';
     decline.textContent = 'Decline';
-    decline.style.cssText = 'padding:9px 16px;border-radius:9px;border:1px solid rgba(0,0,0,.18);background:transparent;color:#1A1A1A;cursor:pointer;font-weight:600;';
+    decline.style.cssText = 'padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#F7F7F7;cursor:pointer;font-weight:600;';
 
     var accept = document.createElement('button');
     accept.type = 'button';
     accept.textContent = 'Accept';
-    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#C8102E;color:#fff;cursor:pointer;font-weight:700;';
+    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#E31837;color:#fff;cursor:pointer;font-weight:700;';
 
     function close(choice) {
       save(choice);

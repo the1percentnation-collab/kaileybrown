@@ -6,10 +6,12 @@
    drifted apart. They are consolidated here so the theme is changed in exactly
    one place. Load this BEFORE any other stylesheet.
 
-   Palette intent: white paper, charcoal ink, red as punctuation.
-   Red carries meaning, never decoration. Reserve it for the single primary
-   action on a screen, the active nav state, the logo mark, and genuine
-   destructive or error states. Everything else is ink on paper.
+   Palette intent: black city, white light, red as the pulse.
+   A monochrome night-city aesthetic — near-black surfaces, white/grey type,
+   and one vivid red artery running through it. Red carries meaning, never
+   decoration. Reserve it for the single primary action on a screen, the
+   active nav state, the logo mark, and genuine destructive or error states.
+   Everything else is light on black.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Audrey is not a Google Font, so it cannot come through the Google Fonts
@@ -26,20 +28,23 @@
 }
 
 :root {
-  /* ── Paper and ink ─────────────────────────────────────────────────────── */
-  --paper:        #FFFFFF;
-  --surface:      #FAFAFA;   /* cards, raised panels */
-  --surface-2:    #F2F1EF;   /* warm off-white, matches the wordmark lockup */
-  --ink:          #3C3C3C;   /* body text */
-  --ink-strong:   #1A1A1A;   /* headings */
-  --ink-muted:    #8A8A8A;   /* captions, meta, placeholders */
-  --border:       rgba(0, 0, 0, 0.10);
+  /* Native form controls, scrollbars and UA defaults render dark to match. */
+  color-scheme: dark;
+
+  /* ── Paper and ink (roles, not literals: "paper" is the page ground) ──── */
+  --paper:        #0B0B0C;   /* near-black page ground */
+  --surface:      #141416;   /* cards, raised panels */
+  --surface-2:    #1B1B1E;   /* deeper lift: hero grounds, wells */
+  --ink:          #C9C9C9;   /* body text */
+  --ink-strong:   #F7F7F7;   /* headings */
+  --ink-muted:    #8F8F8F;   /* captions, meta, placeholders */
+  --border:       rgba(255, 255, 255, 0.12);
 
   /* ── The pop ───────────────────────────────────────────────────────────── */
-  --red:          #C8102E;
-  --red-dark:     #9E0C24;
-  --red-tint:     rgba(200, 16, 46, 0.08);   /* hover washes, selected rows */
-  --border-red:   rgba(200, 16, 46, 0.28);
+  --red:          #E31837;   /* brightened a step so it burns against black */
+  --red-dark:     #C8102E;   /* pressed / hover state of filled-red controls */
+  --red-tint:     rgba(227, 24, 55, 0.12);   /* hover washes, selected rows */
+  --border-red:   rgba(227, 24, 55, 0.38);
 
   /* ── Type ──────────────────────────────────────────────────────────────── */
   --font-display: 'Audrey', 'Jost', Georgia, serif;
@@ -58,25 +63,25 @@
      Rather than rewrite every call site, each old name is re-pointed at its
      new role, which inverts the whole theme in one move.
 
-     Note --white and --black now resolve to their OPPOSITES: on a light
-     theme, "white text" means dark ink and a "black background" means paper.
-     That is why the names above are role-based. Do NOT "fix" --black back to
-     black; use --ink-strong / --paper in new code and let these fade out.
+     On the current dark theme the literal names happen to line up again
+     (--black IS near-black, --white IS near-white), but keep treating them
+     as roles: use --ink-strong / --paper in new code and let these fade out,
+     so the theme can be re-skinned in this one file forever.
      ═════════════════════════════════════════════════════════════════════════ */
   --black:      var(--paper);
   --black-2:    var(--surface);
   --charcoal:   var(--surface-2);
-  --gray-dark:  #E4E2DF;             /* was a lift off black, now a step off paper */
+  --gray-dark:  #232326;             /* a lift off black once more */
   --gray-mid:   var(--ink-muted);
   --gray-light: var(--ink-muted);
   --gray-400:   var(--ink-muted);
-  --gray-600:   #6B6B6B;             /* darker than --ink-muted: body-size text needs AA */
-  --surface2:   #EAE8E5;
+  --gray-600:   #ABABAB;             /* lighter than --ink-muted: body-size text needs AA on black */
+  --surface2:   #1F1F23;
   --white:      var(--ink-strong);
-  --white-dim:  rgba(60, 60, 60, 0.75);
+  --white-dim:  rgba(247, 247, 247, 0.72);
   --white-soft: var(--ink);
   --off-white:  var(--ink);
   --accent:     var(--ink-strong);
   --red-light:  var(--red-tint);
-  --red-glow:   rgba(200, 16, 46, 0.15);
+  --red-glow:   rgba(227, 24, 55, 0.22);
 }
