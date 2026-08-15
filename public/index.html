@@ -313,32 +313,60 @@
     .section-head.is-centered { justify-items: center; text-align: center; }
     .section-head .rule { width: 44px; height: 1px; background: var(--red); }
 
-    /* ── Books: alternating image / text rows ────────────────────────────── */
-    .book {
+    /* ── Books: a shelf of covers, three up, info beneath each ──────────
+       Each cover is a standing book: a spine down the left edge, a page
+       block on the right, and a shadow it casts on the shelf. Hovering
+       eases it open a few degrees — the same 3D language as the buttons. */
+    .books-grid {
       display: grid;
-      grid-template-columns: minmax(220px, 340px) 1fr;
-      gap: clamp(36px, 6vw, 80px);
-      align-items: center;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(28px, 4vw, 56px);
+      align-items: start;
+      /* Narrower than the page: three covers at full width read as posters,
+         not books on a shelf. */
+      max-width: 920px;
+      margin-inline: auto;
     }
-    .book + .book { margin-top: clamp(64px, 9vw, 110px); }
-    /* Alternate: even rows put the cover on the right for visual rhythm. */
-    .book:nth-of-type(even) { grid-template-columns: 1fr minmax(220px, 340px); }
-    .book:nth-of-type(even) .book-cover { order: 2; }
-
+    .book { display: grid; gap: 22px; justify-items: start; }
     .book-cover {
-      aspect-ratio: 2 / 3;
+      display: grid; place-items: center;   /* centres the missing-cover note */
+      position: relative;
+      width: 100%; aspect-ratio: 2 / 3;
       background: linear-gradient(150deg, var(--surface-2), var(--surface));
       border: 1px solid var(--border);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
-      display: grid; place-items: center;
-      overflow: hidden; position: relative;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
+      overflow: hidden;
+      transform-origin: left center;
+      transition: transform .45s var(--ease-out), box-shadow .45s var(--ease-out);
     }
     .book-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-    .book-body { display: grid; gap: 18px; justify-items: start; }
-    .book-meta { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
-    .book-blurb { max-width: 58ch; }
-    .book-blurb p + p { margin-top: 14px; }
+    /* The spine: a dark gutter with a highlight where the cover folds. */
+    .book-cover::before {
+      content: '';
+      position: absolute; top: 0; bottom: 0; left: 0; width: 11px; z-index: 2;
+      background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.16) 46%,
+        rgba(255, 255, 255, 0.22) 62%, rgba(0, 0, 0, 0.10) 100%);
+    }
+    /* The page block: the stacked leaves showing along the fore edge. */
+    .book-cover::after {
+      content: '';
+      position: absolute; top: 3px; bottom: 3px; right: 0; width: 5px; z-index: 2;
+      background: repeating-linear-gradient(90deg,
+        rgba(0, 0, 0, 0.16) 0 1px, rgba(255, 255, 255, 0.5) 1px 2px);
+    }
+    .book:hover .book-cover {
+      transform: perspective(1100px) rotateY(-7deg) translateY(-5px);
+      box-shadow: 0 26px 48px rgba(0, 0, 0, 0.22);
+    }
+    .book-body { display: grid; gap: 12px; justify-items: start; }
+    .book-meta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .book-body h3 { font-size: clamp(1.35rem, 1.6vw, 1.7rem); }
+    .book-blurb { font-size: 0.98rem; }
+    .book-blurb p + p { margin-top: 12px; }
+    .book .btn { margin-top: 4px; padding: 12px 26px; }
+    /* A title with no cover yet still holds its place on the shelf. */
+    .book.is-upcoming .book-cover { background: var(--surface); }
 
     .placeholder {
       font-family: var(--sans-label); font-size: 10px;
@@ -460,9 +488,8 @@
     }
 
     @media (max-width: 820px) {
-      .book, .book:nth-of-type(even) { grid-template-columns: 1fr; }
-      .book:nth-of-type(even) .book-cover { order: 0; }
-      .book-cover { max-width: 260px; }
+      .books-grid { grid-template-columns: 1fr; max-width: 340px; margin-inline: auto; }
+      .book { justify-items: stretch; }
       .about-grid { grid-template-columns: 1fr; }
       .about-photo { max-width: 340px; }
       .nav-links { display: none; }
@@ -545,8 +572,8 @@
   </section>
 
   <!-- ════════ BOOKS ════════
-       One .book row per title, covers alternating sides automatically via
-       nth-of-type. Add a new title by copying an <article> block. -->
+       A shelf of titles, three across: cover on top, info beneath. Add a
+       title by copying an <article> block; the grid reflows on its own. -->
   <section class="section" id="books">
     <div class="wrap">
       <div class="section-head is-centered fade-up">
@@ -554,36 +581,65 @@
         <div class="rule" aria-hidden="true"></div>
       </div>
 
-      <article class="book fade-up">
-        <div class="book-cover">
-          <!-- TODO(assets): the cover at /assets/book-cover.jpg (2:3). -->
-          <img src="/assets/book-cover.jpg"
-               alt="Cover of Somewhere Between Dreaming &amp; You"
-               loading="lazy" onerror="this.remove()">
-          <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
-        </div>
-        <div class="book-body">
-          <div class="book-meta">
-            <span class="label is-red">Out now</span>
-            <span class="label muted">Contemporary romance</span>
+      <div class="books-grid">
+        <article class="book fade-up">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
+            <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
           </div>
-          <h3>Somewhere Between Dreaming &amp; You</h3>
-          <div class="book-blurb">
-            <!-- TODO(brand): the real back-cover blurb. -->
-            <p>
-              The back-cover blurb goes here. Set up the situation, introduce
-              the person it happens to, and end on the question the reader
-              needs answered.
-            </p>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label is-red">Out now</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Somewhere Between Dreaming &amp; You</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>The back-cover blurb goes here. Set up the situation, introduce the person it happens to, and end on the question the reader needs answered.</p>
+            </div>
+            <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
-          <!-- TODO(brand): the real Amazon URL. -->
-          <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
-        </div>
-      </article>
-
-      <!-- Next book: copy the article above; the cover will sit on the right
-           automatically. -->
-
+        </article>
+        <article class="book fade-up is-upcoming">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
+            <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-2.jpg</p>
+          </div>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label is-red">Coming soon</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Second Title</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>A line or two about the next book — enough to make a reader want the release date in their calendar.</p>
+            </div>
+            <a class="btn" href="#newsletter">Get the date<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          </div>
+        </article>
+        <article class="book fade-up is-upcoming">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
+            <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-3.jpg</p>
+          </div>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label muted">In progress</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Third Title</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>The one being written now. Tease the premise and let the Inner Circle hear about it first.</p>
+            </div>
+            <a class="btn" href="#newsletter">Follow along<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
