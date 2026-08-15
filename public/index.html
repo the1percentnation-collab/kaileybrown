@@ -104,15 +104,16 @@
       border: 1px solid rgba(0, 0, 0, 0.35);
       border-radius: 0;
       /* Stage for the page turn below. isolation keeps the negative-z
-         pseudo layers inside the button, so the label paints over them
-         without wrapping every button's text in a span. overflow clips
-         the leaf once it folds past the spine. */
+         leaf layers inside the button so the label paints over them. */
       position: relative;
-      /* No overflow:hidden — the lifting page must be free to loom past the
-         button's box, or the 3D edge gets clipped flat and the turn reads
-         as a wipe again. Nothing else needs the clip: the red underlay is
-         inset:0 and the leaf is invisible past 90deg (backface hidden). */
       isolation: isolate;
+      /* Not overflow:hidden — that clips the lifting page flat at the box
+         and the turn reads as a wipe. Negative insets extend the clip
+         outward on top/right/bottom so the leaf can loom out of the button,
+         while 0 on the left cuts everything behind the spine — the same way
+         a book's earlier pages hide a fully-turned leaf. Without this the
+         curl segment ends its roll as a mirrored sliver left of the button. */
+      clip-path: inset(-60px -60px 0 0);
       /* Near enough for the leaf to loom, far enough that a toward-the-
          viewer rotation doesn't project wider than the button (which would
          hide the red until ~55deg and collapse the reveal into a late wipe). */
@@ -127,32 +128,62 @@
       position: absolute; inset: 0; z-index: -2;
       background: linear-gradient(90deg, #8E2733 0%, var(--red-muted) 22%);
     }
-    /* The white page itself. It rests flat (var(--paper), so it is white on
-       the page and near-black on the on-black band automatically), hinges
-       at the left edge — the spine — and its free right edge lifts toward
-       the viewer, looming larger as it comes: the trapezoid that reads as
-       paper in motion. Only -102deg: past ~90 the leaf is edge-on and
-       clipped, so a full -180 would spend half the transition invisible. */
-    .btn::before {
-      content: '';
+    /* The white page itself — real elements, because the flipbook roll needs
+       nested 3D transforms and pseudo-elements cannot nest. .page is the
+       spine half of the leaf: it rests flat (var(--paper), so white on the
+       page and near-black on the on-black band automatically), hinges at
+       the left edge and lifts toward the viewer. Its background only paints
+       the LEFT half — the right half belongs to the curl child, so the red
+       shows through the moment the curl lifts away. */
+    .btn .page {
       position: absolute; inset: 0; z-index: -1;
-      background: var(--paper);
+      background: linear-gradient(90deg, var(--paper) 0%, var(--paper) 50%, transparent 50%);
       transform-origin: left center;
       /* rotate3d with a touch of X in the axis: the page comes up and over
          slightly diagonally, the way a hand turns it from the corner. */
       transform: rotate3d(0.12, 1, 0, 0deg);
+      /* The child must rotate in this element's plane, not flat on screen. */
+      transform-style: preserve-3d;
       backface-visibility: hidden;
-      /* Shadow only exists in flight — at rest it would halo the button now
-         that overflow is visible. */
+      /* Shadow only exists in flight — at rest it would halo the button. */
       box-shadow: 0 0 0 rgba(0, 0, 0, 0);
       transition: transform .55s cubic-bezier(0.4, 0.1, 0.22, 1),
                   box-shadow .55s cubic-bezier(0.4, 0.1, 0.22, 1);
     }
-    .btn:hover::before,
-    .btn:focus-visible::before {
+    /* The curling half: the outer 50% of the page, hinged at the page's
+       midline. It folds AHEAD of the page body (shorter, sharper timing),
+       so mid-flight the edge is rolled back over the leaf with its shaded
+       underside showing — the flipbook curl. backface stays VISIBLE: the
+       visible roll IS this segment's backface once it folds past 90deg.
+       Width 50.5% so no hairline seam shows at the midline. */
+    .btn .page > span {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 50.5%;
+      /* Opaque paper: translucent shading here would let the red underlay
+         bleed through the resting button as a stripe at the midline. */
+      background: var(--paper);
+      transform-origin: left center;
+      transform: rotateY(0deg);
+      transition: transform .38s cubic-bezier(0.5, 0.05, 0.3, 1);
+    }
+    /* Fold-line shading lives on an overlay that only exists in flight, so
+       the resting page stays perfectly flat and unshaded. Mirrored on the
+       segment's backface it reads as the shadow inside the curl. */
+    .btn .page > span::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.14), transparent 42%);
+      opacity: 0;
+      transition: opacity .38s cubic-bezier(0.5, 0.05, 0.3, 1);
+    }
+    .btn:hover .page > span::before,
+    .btn:focus-visible .page > span::before { opacity: 1; }
+    .btn:hover .page,
+    .btn:focus-visible .page {
       transform: rotate3d(0.12, 1, 0, -104deg);
       box-shadow: 12px 6px 26px rgba(0, 0, 0, 0.35);
     }
+    .btn:hover .page > span,
+    .btn:focus-visible .page > span { transform: rotateY(-56deg); }
     /* The delay matters: without it the label goes white before the page has
        covered it, leaving white-on-white for a beat. No delay on the way out. */
     .btn:hover, .btn:focus-visible {
@@ -163,7 +194,8 @@
     .btn-red { background: transparent; border-color: var(--red); color: #fff; }
     /* The filled button's vivid red face IS its top page; the muted red
        waits underneath, same as the white buttons. */
-    .btn-red::before { background: var(--red); }
+    .btn-red .page { background: linear-gradient(90deg, var(--red) 0%, var(--red) 50%, transparent 50%); }
+    .btn-red .page > span { background: var(--red); }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
     /* ── Nav: slim light-grey band, Audrey wordmark top-left ─────────────
@@ -485,8 +517,8 @@
           stories can hold extraordinary truth.
         </p>
         <div class="hero-actions">
-          <a class="btn" href="#books">The book</a>
-          <a class="btn" href="#newsletter">Join the Inner Circle</a>
+          <a class="btn" href="#books">The book<span class="page" aria-hidden="true"><span></span></span></a>
+          <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span></span></span></a>
         </div>
       </div>
 
@@ -534,7 +566,7 @@
             </p>
           </div>
           <!-- TODO(brand): the real Amazon URL. -->
-          <a class="btn" href="#" target="_blank" rel="noopener">Buy now</a>
+          <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span></span></span></a>
         </div>
       </article>
 
@@ -562,7 +594,7 @@
           pages, get lost for a while, and come back to your own life feeling
           a little less alone.
         </p>
-        <a class="btn" href="#newsletter">Join the Inner Circle</a>
+        <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span></span></span></a>
       </div>
     </div>
   </section>
@@ -585,7 +617,7 @@
       <form class="newsletter" id="newsletter-form" novalidate>
         <label for="newsletter-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Email address</label>
         <input id="newsletter-email" type="email" placeholder="Your email address" required autocomplete="email">
-        <button class="btn btn-red" type="submit">Join</button>
+        <button class="btn btn-red" type="submit">Join<span class="page" aria-hidden="true"><span></span></span></button>
       </form>
 
       <p class="consent muted" id="newsletter-consent">
