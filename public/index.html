@@ -362,7 +362,12 @@
        mid-swing and the open reads as a wipe. */
     .book-cover {
       position: relative;
-      width: 100%; aspect-ratio: 2 / 3;
+      /* 5:8, the KDP/ebook cover standard the real covers are drawn to —
+         not 2:3, which was a guess made before any art existed. The img is
+         object-fit:cover, so a container that disagrees with the source
+         centre-crops it: at 2:3 these covers lost ~6% off the top and
+         bottom, which is exactly where the tagline and the author name sit. */
+      width: 100%; aspect-ratio: 5 / 8;
       /* Deep. A nearer viewpoint magnifies the swung cover enough that it
          overhangs the card and lands on the neighbouring title's labels. */
       perspective: 2400px;
@@ -713,7 +718,7 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
+                  <!-- TODO(assets): cover art at /assets/book-cover.jpg (5:8 portrait — the ebook standard, e.g. 1600x2560). -->
                   <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
                   <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-cover.jpg</p>
                 </div>
@@ -741,7 +746,7 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
+                  <!-- TODO(assets): cover art at /assets/book-2.jpg (5:8 portrait — the ebook standard, e.g. 1600x2560). -->
                   <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
                   <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-2.jpg</p>
                 </div>
@@ -769,7 +774,7 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
+                  <!-- TODO(assets): cover art at /assets/book-3.jpg (5:8 portrait — the ebook standard, e.g. 1600x2560). -->
                   <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
                   <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-3.jpg</p>
                 </div>
