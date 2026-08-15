@@ -10,6 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Without this the deploy action fails with a bare
+      # "Input required and not supplied: firebaseServiceAccount" stack trace,
+      # which does not say WHICH secret is missing or where to set it.
+      - name: Check the deploy credential is present
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KAILEY_BROWN }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::error::Repository secret FIREBASE_SERVICE_ACCOUNT_KAILEY_BROWN is missing or empty."
+            echo "::error::Set it at Settings > Secrets and variables > Actions > New repository secret."
+            echo "::error::The name must match exactly, and it must be a REPOSITORY secret (an environment secret is not visible here)."
+            echo "::error::The value is the whole service-account JSON from Firebase console > Project settings > Service accounts."
+            exit 1
+          fi
+          # Prove it parses without ever printing the key itself.
+          echo "$SA_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print('secret present, client_email:', d['client_email'])"
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
