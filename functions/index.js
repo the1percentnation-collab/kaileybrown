@@ -3961,8 +3961,9 @@ function buildCourseKnowledge(courses) {
   }).join('\n');
 }
 
-function buildSystemPrompt(userContext, knowledgeEntries, communityContext, courses) {
+function buildSystemPrompt(userContext, knowledgeEntries, communityContext, courses, books) {
   const courseList = buildCourseKnowledge(courses);
+  const bookSection = buildBookKnowledge(books);
 
   // Inject owner-supplied knowledge base entries
   let kbSection = '';
@@ -3984,6 +3985,8 @@ BOOK-RELATED HELP — what readers most often need:
 - BOOK CLUBS: offer discussion questions, themes, and pacing suggestions. You may generate thoughtful questions yourself when no official guide exists — say when they are yours rather than an official guide.
 - RESOURCES: reading guides, bonus scenes, playlists, newsletter (the Inner Circle), events and signings. If you are not certain something exists, say so plainly and point them to the Inner Circle newsletter or the contact address rather than inventing a resource, a link, a price, or a release date.
 - NEXT BOOK: share only what the knowledge base states. Never guess at a release date.
+
+${bookSection}
 
 AVAILABLE COURSES (secondary — for portal members):
 ${courseList}${kbSection}
@@ -4224,6 +4227,309 @@ exports.listKnowledgeEntries = onCall(async (request) => {
   };
 });
 
+// ════════════════════════════════════════════════════════════════
+// THE BOOK SHELF
+//
+// Where readers can buy the books is the single most common question the
+// Reading Room gets, and it is exactly the kind of fact a language model
+// will cheerfully invent if you leave it to guess. So the buy links live
+// here as owner-entered data, and the assistant is handed them verbatim
+// with instructions never to produce a link that is not on this list.
+//
+// This is deliberately its own collection rather than more free-text
+// chatbotKnowledge entries: the fields are known in advance (ISBN, format,
+// retailer, price, release date), so storing them as structure means the
+// prompt builder can present them consistently, and a future storefront
+// page can read the same documents.
+// ════════════════════════════════════════════════════════════════
+
+const BOOK_STATUSES = ['out_now', 'preorder', 'coming_soon'];
+const BOOK_TEXT_FIELDS = {
+  title: 200, subtitle: 200, series: 120, blurb: 4000, genre: 160,
+  tropes: 500, contentNotes: 1000, readingOrderNote: 400,
+  isbn13: 20, isbn10: 20, asin: 20, publisher: 160, language: 60,
+  coverUrl: 600
+};
+
+// Only http(s) survives. A javascript: or data: URL stored here would be
+// handed to readers as a "buy link" and rendered by whatever consumes it.
+function safeUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  let parsed;
+  try { parsed = new URL(raw); } catch (e) { return ''; }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+  return parsed.toString().slice(0, 600);
+}
+
+function sanitizeLinkRows(rows, fields, max = 20) {
+  if (!Array.isArray(rows)) return [];
+  return rows.slice(0, max).map((row) => {
+    const out = {};
+    for (const [key, limit] of Object.entries(fields)) {
+      out[key] = String((row && row[key]) || '').trim().slice(0, limit);
+    }
+    out.url = safeUrl(row && row.url);
+    return out;
+  }).filter((row) => row.url || row.label || row.retailer);
+}
+
+function sanitizeBookPayload(data) {
+  const book = {};
+  for (const [field, limit] of Object.entries(BOOK_TEXT_FIELDS)) {
+    book[field] = String((data && data[field]) || '').trim().slice(0, limit);
+  }
+  book.coverUrl = safeUrl(data && data.coverUrl);
+  book.status = BOOK_STATUSES.includes(data && data.status) ? data.status : 'out_now';
+  // Kept as a plain YYYY-MM-DD string, not a Timestamp: it goes straight into
+  // a prompt, and a Timestamp would arrive there as a timezone-shifted
+  // datetime that reads as the wrong day to readers in half the world.
+  const rawDate = String((data && data.releaseDate) || '').trim();
+  book.releaseDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : '';
+  book.seriesNumber = Number.isFinite(Number(data && data.seriesNumber)) && data.seriesNumber !== ''
+    ? Math.max(0, Math.min(99, Math.round(Number(data.seriesNumber))))
+    : null;
+  book.pageCount = Number.isFinite(Number(data && data.pageCount)) && data.pageCount !== ''
+    ? Math.max(0, Math.min(20000, Math.round(Number(data.pageCount))))
+    : null;
+  book.order = Number.isFinite(Number(data && data.order)) ? Math.round(Number(data.order)) : 0;
+  book.active = (data && data.active) !== false;
+  book.buyLinks = sanitizeLinkRows(data && data.buyLinks,
+    { retailer: 120, format: 60, price: 40, currency: 10, note: 200 });
+  book.resources = sanitizeLinkRows(data && data.resources, { label: 160, note: 300 });
+  return book;
+}
+
+// saveBook — create or update a book. Owner/admin only.
+exports.saveBook = onCall(async (request) => {
+  const db = admin.firestore();
+  if (!(await isAdminCaller(db, request))) {
+    throw new HttpsError('permission-denied', 'Admin or owner role required.');
+  }
+  const data = request.data || {};
+  if (!data.title || !String(data.title).trim()) {
+    throw new HttpsError('invalid-argument', 'title is required.');
+  }
+
+  const payload = sanitizeBookPayload(data);
+  payload.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+  payload.updatedBy = request.auth.uid;
+
+  if (data.id) {
+    const ref = db.collection('books').doc(String(data.id));
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Book not found.');
+    await ref.set(payload, { merge: true });
+    return { ok: true, id: ref.id };
+  }
+  payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+  payload.createdBy = request.auth.uid;
+  const ref = await db.collection('books').add(payload);
+  return { ok: true, id: ref.id };
+});
+
+// deleteBook — hard-delete. Owner/admin only.
+exports.deleteBook = onCall(async (request) => {
+  const db = admin.firestore();
+  if (!(await isAdminCaller(db, request))) {
+    throw new HttpsError('permission-denied', 'Admin or owner role required.');
+  }
+  const id = String((request.data && request.data.id) || '').trim();
+  if (!id) throw new HttpsError('invalid-argument', 'id is required.');
+  await db.collection('books').doc(id).delete();
+  return { ok: true };
+});
+
+// listBooks — every book, including inactive ones. Owner/admin only.
+exports.listBooks = onCall(async (request) => {
+  const db = admin.firestore();
+  if (!(await isAdminCaller(db, request))) {
+    throw new HttpsError('permission-denied', 'Admin or owner role required.');
+  }
+  const snap = await db.collection('books').orderBy('order', 'asc').limit(200).get();
+  return {
+    books: snap.docs.map((d) => {
+      const b = d.data() || {};
+      return { id: d.id, ...b,
+        createdAt: b.createdAt ? b.createdAt.toMillis() : null,
+        updatedAt: b.updatedAt ? b.updatedAt.toMillis() : null };
+    })
+  };
+});
+
+// ── Metadata lookup ──────────────────────────────────────────────────────
+//
+// "Sync my Amazon and publishing info" in the form it can actually take
+// today. Google Books and Open Library are queried by ISBN (or title) and
+// need no credentials, so this works the moment it deploys; between them
+// they cover publisher, page count, categories, cover art and the matching
+// ISBN-10/13 pair.
+//
+// Amazon's own catalog is NOT one of these. Its Product Advertising API
+// requires an approved Associates account and signed requests, and scraping
+// the storefront violates its terms — so Amazon arrives here as a product
+// URL built from the ISBN-10 (which IS the ASIN for most print books), and
+// the other retailers as search URLs. They are proposals: the owner sees
+// every one in the form and saves it only after checking it resolves.
+//
+// Requires the Blaze plan — outbound network calls are blocked on Spark.
+async function fetchJson(url, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.warn('[lookupBookMetadata] fetch failed:', url, e && e.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function isbn13to10(isbn13) {
+  const digits = String(isbn13 || '').replace(/[^0-9X]/gi, '');
+  if (digits.length !== 13 || !digits.startsWith('978')) return '';
+  const core = digits.slice(3, 12);
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += (10 - i) * Number(core[i]);
+  const check = (11 - (sum % 11)) % 11;
+  return core + (check === 10 ? 'X' : String(check));
+}
+
+function buildRetailerSuggestions({ isbn13, isbn10, asin, title }) {
+  const links = [];
+  const amazonId = String(asin || isbn10 || '').trim();
+  const term = encodeURIComponent(isbn13 || title || '');
+  if (amazonId) {
+    links.push({ retailer: 'Amazon', format: '', price: '', currency: '',
+      note: 'Auto-built from the ASIN/ISBN-10 — open it once to confirm.',
+      url: `https://www.amazon.com/dp/${encodeURIComponent(amazonId)}` });
+  }
+  if (isbn13 || title) {
+    links.push({ retailer: 'Bookshop.org', format: '', price: '', currency: '',
+      note: 'Search link — replace with the direct product URL when you have it.',
+      url: `https://bookshop.org/search?keywords=${term}` });
+    links.push({ retailer: 'Barnes & Noble', format: '', price: '', currency: '',
+      note: 'Search link — replace with the direct product URL when you have it.',
+      url: `https://www.barnesandnoble.com/s/${term}` });
+    links.push({ retailer: 'Kobo', format: 'Ebook', price: '', currency: '',
+      note: 'Search link — replace with the direct product URL when you have it.',
+      url: `https://www.kobo.com/us/en/search?query=${term}` });
+  }
+  return links;
+}
+
+exports.lookupBookMetadata = onCall(async (request) => {
+  const db = admin.firestore();
+  if (!(await isAdminCaller(db, request))) {
+    throw new HttpsError('permission-denied', 'Admin or owner role required.');
+  }
+  const rawIsbn = String((request.data && request.data.isbn) || '').replace(/[^0-9Xx]/g, '');
+  const query   = String((request.data && request.data.query) || '').trim().slice(0, 200);
+  if (!rawIsbn && !query) {
+    throw new HttpsError('invalid-argument', 'Provide an ISBN or a title to search for.');
+  }
+
+  const googleUrl = rawIsbn
+    ? `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(rawIsbn)}`
+    : `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`;
+  const openLibUrl = rawIsbn
+    ? `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(rawIsbn)}&format=json&jscmd=data`
+    : null;
+
+  const [google, openLib] = await Promise.all([
+    fetchJson(googleUrl),
+    openLibUrl ? fetchJson(openLibUrl) : Promise.resolve(null)
+  ]);
+
+  const vol = google && google.items && google.items[0] && google.items[0].volumeInfo;
+  const ol  = openLib && openLib[`ISBN:${rawIsbn}`];
+  if (!vol && !ol) {
+    return { found: false, message: 'No match found. Fill the form in by hand — nothing has been changed.' };
+  }
+
+  const ids = (vol && vol.industryIdentifiers) || [];
+  const pick = (type) => {
+    const hit = ids.find((i) => i.type === type);
+    return hit ? hit.identifier : '';
+  };
+  const isbn13 = pick('ISBN_13') || (rawIsbn.length === 13 ? rawIsbn : '');
+  const isbn10 = pick('ISBN_10') || (rawIsbn.length === 10 ? rawIsbn : '') || isbn13to10(isbn13);
+
+  const book = {
+    title:     (vol && vol.title) || (ol && ol.title) || '',
+    subtitle:  (vol && vol.subtitle) || '',
+    blurb:     (vol && vol.description) || '',
+    publisher: (vol && vol.publisher) || (ol && ol.publishers && ol.publishers[0] && ol.publishers[0].name) || '',
+    pageCount: (vol && vol.pageCount) || (ol && ol.number_of_pages) || null,
+    language:  (vol && vol.language) || '',
+    genre:     (vol && vol.categories && vol.categories.join(', ')) || '',
+    // Google's date is sometimes just a year or year-month; only a full date
+    // is useful to a reader asking when a book comes out.
+    releaseDate: /^\d{4}-\d{2}-\d{2}$/.test((vol && vol.publishedDate) || '') ? vol.publishedDate : '',
+    coverUrl: (vol && vol.imageLinks && (vol.imageLinks.thumbnail || vol.imageLinks.smallThumbnail) || '')
+      .replace(/^http:/, 'https:'),
+    isbn13, isbn10, asin: isbn10
+  };
+
+  return {
+    found: true,
+    book,
+    suggestedBuyLinks: buildRetailerSuggestions({ isbn13, isbn10, asin: isbn10, title: book.title }),
+    sources: [vol ? 'Google Books' : null, ol ? 'Open Library' : null].filter(Boolean)
+  };
+});
+
+// The chatbot's view of the shelf. Only active books, ordered as the owner
+// ordered them. Fails soft: on a read error the assistant simply has no
+// shelf, rather than the whole conversation erroring out.
+async function loadBookCatalog(db) {
+  try {
+    const snap = await db.collection('books').where('active', '==', true)
+      .orderBy('order', 'asc').limit(60).get();
+    return snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
+  } catch (e) {
+    console.warn('[courseAdvisorChat] loadBookCatalog failed:', e && e.message);
+    return [];
+  }
+}
+
+function buildBookKnowledge(books) {
+  if (!books || !books.length) return '';
+  const statusLabel = { out_now: 'Out now', preorder: 'Available to pre-order', coming_soon: 'Coming soon' };
+  const blocks = books.map((b) => {
+    const lines = [];
+    const seriesBit = b.series
+      ? ` (${b.series}${b.seriesNumber != null ? `, book ${b.seriesNumber}` : ''})`
+      : '';
+    lines.push(`### ${b.title}${b.subtitle ? `: ${b.subtitle}` : ''}${seriesBit}`);
+    lines.push(`Status: ${statusLabel[b.status] || 'Out now'}${b.releaseDate ? ` — ${b.releaseDate}` : ''}`);
+    if (b.genre)     lines.push(`Genre: ${b.genre}`);
+    if (b.tropes)    lines.push(`Themes and tropes: ${b.tropes}`);
+    if (b.pageCount) lines.push(`Length: ${b.pageCount} pages`);
+    if (b.publisher) lines.push(`Publisher: ${b.publisher}`);
+    if (b.isbn13)    lines.push(`ISBN-13: ${b.isbn13}`);
+    if (b.blurb)     lines.push(`Blurb: ${b.blurb}`);
+    if (b.contentNotes)      lines.push(`Content notes: ${b.contentNotes}`);
+    if (b.readingOrderNote)  lines.push(`Reading order: ${b.readingOrderNote}`);
+    if (b.buyLinks && b.buyLinks.length) {
+      lines.push('Where to buy:');
+      b.buyLinks.forEach((l) => {
+        const bits = [l.format, l.price ? `${l.currency || '$'}${l.price}` : null].filter(Boolean).join(', ');
+        lines.push(`- ${l.retailer || 'Retailer'}${bits ? ` (${bits})` : ''}: ${l.url}`);
+      });
+    }
+    if (b.resources && b.resources.length) {
+      lines.push('Resources for readers:');
+      b.resources.forEach((r) => lines.push(`- ${r.label || 'Resource'}: ${r.url}${r.note ? ` — ${r.note}` : ''}`));
+    }
+    return lines.join('\n');
+  });
+  return `\n\nTHE BOOKS (this is the complete, authoritative shelf):\n${blocks.join('\n\n')}\n\nLINK RULE: the URLs above are the ONLY links you may give a reader. Never construct, guess at, or recall from memory a retailer URL, price, or release date for these books. If a reader asks for a format or a retailer that is not listed, say it is not listed and point them to the Inner Circle newsletter or kailey@kaileybrown.com.`;
+}
+
 exports.courseAdvisorChat = onCall(async (request) => {
   const db = admin.firestore();
   const { message, history } = request.data || {};
@@ -4245,11 +4551,12 @@ exports.courseAdvisorChat = onCall(async (request) => {
   // Fetch member context first so we have companyId for community scoping.
   const courseCatalog = await loadCourseCatalog(db);
   const memberContext = uid ? await fetchMemberContext(db, uid, courseCatalog) : null;
-  const [knowledgeEntries, communityContext] = await Promise.all([
+  const [knowledgeEntries, communityContext, bookCatalog] = await Promise.all([
     fetchKnowledgeEntries(db),
-    uid ? fetchCommunityContext(db, memberContext && memberContext.companyId) : Promise.resolve(null)
+    uid ? fetchCommunityContext(db, memberContext && memberContext.companyId) : Promise.resolve(null),
+    loadBookCatalog(db)
   ]);
-  const systemPrompt = buildSystemPrompt(memberContext, knowledgeEntries, communityContext, courseCatalog);
+  const systemPrompt = buildSystemPrompt(memberContext, knowledgeEntries, communityContext, courseCatalog, bookCatalog);
 
   // Build conversation history (max 20 turns to stay within context limits).
   const safeHistory = Array.isArray(history) ? history.slice(-20) : [];
