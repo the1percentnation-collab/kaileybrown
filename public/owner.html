@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Z4PKNDLHG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-1Z4PKNDLHG");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Console | Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.svg" alt="" class="console-brand-mark">
+
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">&larr; Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+        <div class="card">
+          <h2>Manage your store</h2>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:14px;">
+            Edit courses, set prices and discounts, control what's live, and run your affiliate program.
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn btn-primary" href="/manage-courses.html">Manage Courses &amp; Pricing →</a>
+            <a class="btn btn-ghost" href="/manage-affiliates.html">Affiliate Program →</a>
+            <a class="btn btn-ghost" href="/chatbot-kb.html">Chatbot Knowledge Base →</a>
+            <a class="btn btn-ghost" href="/bug-reports.html">Bug Reports →</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Bootstrap owner claim</h2>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:12px;">
+            One-time: run this if your account doesn't yet have the <code>role=owner</code> custom claim.
+            Your email must be the owner bootstrap email for this to succeed.
+          </p>
+          <button class="btn btn-primary" id="btn-bootstrap">Run bootstrapOwner</button>
+          <div id="bootstrap-result" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Backfill channel defaults</h2>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:12px;">
+            One-time, safe to re-run. Stamps <code>visibility</code> and <code>listed</code> onto
+            every channel that predates private channels. Until this runs, members who aren't
+            owner/admin won't see custom channels in the community sidebar &mdash; the sidebar query
+            matches <code>listed == true</code>, and Firestore skips documents where the field is
+            missing.
+          </p>
+          <button class="btn btn-primary" id="btn-backfill-channels">Run channel backfill</button>
+          <div id="backfill-result" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Create a company</h2>
+          <form class="inline-form" id="create-form">
+            <div class="field">
+              <label for="c-name">Company name</label>
+              <input id="c-name" type="text" required />
+            </div>
+            <div class="field">
+              <label for="c-admin-email">Admin email</label>
+              <input id="c-admin-email" type="email" required />
+            </div>
+            <div class="field" style="max-width:140px;">
+              <label for="c-seats">Seats</label>
+              <input id="c-seats" type="number" min="1" value="10" required />
+            </div>
+            <div class="field" style="max-width:160px;">
+              <label for="c-tier">Tier</label>
+              <input id="c-tier" type="text" value="team" />
+            </div>
+            <button class="btn btn-primary" type="submit">Create</button>
+          </form>
+          <div id="create-result" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>All companies</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Seats</th>
+                <th>Admins</th>
+                <th>Tier</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="companies-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/owner.js"></script>
+</body>
+</html>

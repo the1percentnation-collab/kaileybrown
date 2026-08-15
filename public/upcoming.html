@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Z4PKNDLHG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-1Z4PKNDLHG");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon | Kailey Brown Academy</title>
+  <meta name="description" content="See what's coming next and be the first to know. Join the interest list for upcoming products.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <main class="pre-shell">
+    <header class="pre-hero">
+      <a href="https://kaileybrown.com" class="pre-brand"><img src="/assets/academy-logo.svg" alt="" class="pre-logo"></a>
+      <div class="brand-badge">Coming Soon</div>
+      <h1>WHAT'S <span>NEXT</span></h1>
+      <p class="pre-sub">Get a first look at what we're building — and be the first to know when it drops.</p>
+    </header>
+
+    <section id="pre-grid" class="pre-grid"></section>
+
+    <section class="pre-early card">
+      <h2>Want early access to everything?</h2>
+      <p class="pre-early-sub">Join the early-access list and we'll tell you the moment new products launch.</p>
+      <form id="early-form" class="pre-inline-form">
+        <input class="c-input" id="ea-name" placeholder="Your name" />
+        <input class="c-input" id="ea-email" type="email" placeholder="you@email.com" required />
+        <label class="pre-consent"><input type="checkbox" id="ea-consent" /> Email/SMS me about new releases</label>
+        <button class="btn btn-primary" type="submit">Notify me</button>
+      </form>
+      <div id="ea-msg" class="pre-msg"></div>
+    </section>
+
+    <footer class="pre-foot"><a class="back-to-main" href="https://kaileybrown.com">← Back to Main Site</a></footer>
+  </main>
+
+  <div id="modal-root"></div>
+  <script type="module" src="js/upcoming.js"></script>
+</body>
+</html>

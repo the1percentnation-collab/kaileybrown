@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kailey Brown">
+  <!-- Square monogram. Every slot that renders this sizes by height with
+       width:auto, so a compact mark fits the topbar, the CRM sidebar and the
+       112px auth lockup alike; the brand wordmark sits beside it as real text.
+
+       A text mark in SVG stays crisp at any size and needs no @2x raster.
+       Audrey is the display face, with Jost as the fallback when the licensed
+       webfont is not installed (see /assets/tokens.css). -->
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="none" stroke="#C8102E" stroke-width="2"/>
+  <text x="32" y="42"
+        text-anchor="middle"
+        font-family="Audrey, Jost, Georgia, serif"
+        font-size="30"
+        letter-spacing="1.5"
+        fill="#C8102E">KB</text>
+</svg>

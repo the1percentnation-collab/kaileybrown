@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Z4PKNDLHG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-1Z4PKNDLHG");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Affiliates | Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.svg" alt="" class="console-brand-mark">
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">&larr; Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+
+        <div class="card">
+          <h2>Add an affiliate</h2>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:12px;">
+            Give each salesperson a referral code. Their link is
+            <code>/courses.html?ref=CODE</code> — any paid checkout that starts from it
+            earns them their commission %. Send them to <code>/affiliate.html</code>
+            (signed in with the email below) to see their own stats and earnings.
+          </p>
+          <form class="inline-form" id="aff-form" style="flex-wrap:wrap;">
+            <div class="field"><label for="a-name">Name</label><input id="a-name" type="text" required></div>
+            <div class="field"><label for="a-email">Email (their account login)</label><input id="a-email" type="email" required></div>
+            <div class="field" style="max-width:160px;"><label for="a-code">Code (optional)</label><input id="a-code" type="text" placeholder="auto"></div>
+            <div class="field" style="max-width:140px;"><label for="a-percent">Commission %</label><input id="a-percent" type="number" min="1" max="90" value="20" required></div>
+            <button class="btn btn-primary" type="submit">Create affiliate</button>
+          </form>
+          <div id="aff-result" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Affiliates</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Affiliate</th>
+                <th>Code / Link</th>
+                <th>%</th>
+                <th>Clicks</th>
+                <th>Sales</th>
+                <th>Earned</th>
+                <th>Unpaid</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="affiliates-body"></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="referrals-card" style="display:none;">
+          <h2 id="referrals-title">Sales</h2>
+          <table class="data-table">
+            <thead>
+              <tr><th>Date</th><th>Course</th><th>Sale</th><th>%</th><th>Commission</th><th>Status</th></tr>
+            </thead>
+            <tbody id="referrals-body"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/manage-affiliates.js"></script>
+</body>
+</html>

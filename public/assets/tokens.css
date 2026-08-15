@@ -1,0 +1,82 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   KAILEY BROWN — DESIGN TOKENS
+   The single source of truth for color and type across every page.
+
+   The source platform defined its palette in four separate :root blocks that
+   drifted apart. They are consolidated here so the theme is changed in exactly
+   one place. Load this BEFORE any other stylesheet.
+
+   Palette intent: white paper, charcoal ink, red as punctuation.
+   Red carries meaning, never decoration. Reserve it for the single primary
+   action on a screen, the active nav state, the logo mark, and genuine
+   destructive or error states. Everything else is ink on paper.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Audrey is not a Google Font, so it cannot come through the Google Fonts
+   <link> the way the body face does. Drop a licensed audrey.woff2 into
+   /assets/fonts/ and this picks it up automatically. Until then every
+   --font-display usage falls through to Jost, which is a near match, rather
+   than to Georgia. font-display: swap keeps text visible while it loads. */
+@font-face {
+  font-family: 'Audrey';
+  src: url('/assets/fonts/audrey.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── Paper and ink ─────────────────────────────────────────────────────── */
+  --paper:        #FFFFFF;
+  --surface:      #FAFAFA;   /* cards, raised panels */
+  --surface-2:    #F2F1EF;   /* warm off-white, matches the wordmark lockup */
+  --ink:          #3C3C3C;   /* body text */
+  --ink-strong:   #1A1A1A;   /* headings */
+  --ink-muted:    #8A8A8A;   /* captions, meta, placeholders */
+  --border:       rgba(0, 0, 0, 0.10);
+
+  /* ── The pop ───────────────────────────────────────────────────────────── */
+  --red:          #C8102E;
+  --red-dark:     #9E0C24;
+  --red-tint:     rgba(200, 16, 46, 0.08);   /* hover washes, selected rows */
+  --border-red:   rgba(200, 16, 46, 0.28);
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-display: 'Audrey', 'Jost', Georgia, serif;
+  --font-body:    'Jost', system-ui, -apple-system, sans-serif;
+  --font-mono:    'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* ── Structural (carried over unchanged) ───────────────────────────────── */
+  --nav-h:    64px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:  cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     LEGACY ALIASES
+
+     The ported stylesheet references these names in thousands of places.
+     Rather than rewrite every call site, each old name is re-pointed at its
+     new role, which inverts the whole theme in one move.
+
+     Note --white and --black now resolve to their OPPOSITES: on a light
+     theme, "white text" means dark ink and a "black background" means paper.
+     That is why the names above are role-based. Do NOT "fix" --black back to
+     black; use --ink-strong / --paper in new code and let these fade out.
+     ═════════════════════════════════════════════════════════════════════════ */
+  --black:      var(--paper);
+  --black-2:    var(--surface);
+  --charcoal:   var(--surface-2);
+  --gray-dark:  #E4E2DF;             /* was a lift off black, now a step off paper */
+  --gray-mid:   var(--ink-muted);
+  --gray-light: var(--ink-muted);
+  --gray-400:   var(--ink-muted);
+  --gray-600:   #6B6B6B;             /* darker than --ink-muted: body-size text needs AA */
+  --surface2:   #EAE8E5;
+  --white:      var(--ink-strong);
+  --white-dim:  rgba(60, 60, 60, 0.75);
+  --white-soft: var(--ink);
+  --off-white:  var(--ink);
+  --accent:     var(--ink-strong);
+  --red-light:  var(--red-tint);
+  --red-glow:   rgba(200, 16, 46, 0.15);
+}

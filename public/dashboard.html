@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Z4PKNDLHG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-1Z4PKNDLHG");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="academy-hub">
+
+<div class="academy-shell">
+
+  <header class="academy-header">
+    <div class="academy-header-inner">
+      <a class="academy-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+        <img src="/assets/academy-logo.svg" alt="" class="academy-brand-mark">
+
+      </a>
+
+      <a class="back-to-main" href="https://kaileybrown.com">← Main Site</a>
+
+      <nav class="academy-tabs" id="academy-tabs">
+        <a class="academy-tab active" href="/dashboard.html" data-tab="dashboard">Dashboard</a>
+        <a class="academy-tab" href="/courses.html" data-tab="courses">Courses</a>
+        <a class="academy-tab" href="/community.html" data-tab="community">Community</a>
+        <a class="academy-tab" href="/resources.html" data-tab="resources">Resources</a>
+        <a class="academy-tab" href="/profile.html" data-tab="profile">Profile</a>
+      </nav>
+
+      <div class="academy-header-right">
+        <div class="user-chip" id="user-chip"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="academy-container">
+
+    <section class="academy-hero">
+      <div class="academy-eyebrow">Academy Dashboard</div>
+      <h1 id="hub-greeting">Welcome back.</h1>
+      <div class="hub-quote-label"><span class="hub-quote-dot"></span>Quote of the day</div>
+      <p id="hub-subtitle">Continue your work. Small steps, taken consistently.</p>
+      <div class="academy-tagline">
+        <strong>Clarity.</strong> Intention. Growth.
+      </div>
+    </section>
+
+    <section id="hub-continue-slot"></section>
+
+    <section id="hub-progress" class="hub-progress" hidden>
+      <div class="academy-section-head">
+        <h2>Your course arc</h2>
+        <!-- href is set by renderModuleMap() in js/hub.js to whichever course
+             the map is showing; /courses.html is the safe default. -->
+        <a class="academy-section-meta" id="hub-progress-link" href="/courses.html" style="text-decoration:none;">Open course →</a>
+      </div>
+      <div id="hub-module-map" class="hub-module-map"></div>
+    </section>
+
+    <section>
+      <div class="academy-section-head">
+        <h2>Quick access</h2>
+        <span class="academy-section-meta">Explore the Academy</span>
+      </div>
+      <div class="academy-grid">
+        <a class="academy-tile" href="/courses.html">
+          <span class="academy-tile-label">01 · Courses</span>
+          <span class="academy-tile-title">Your Courses</span>
+          <span class="academy-tile-desc">Pick up where you left off, or browse the Academy library and sign up for what's next.</span>
+          <span class="academy-tile-cta">Open courses</span>
+        </a>
+        <a class="academy-tile" href="/community.html">
+          <span class="academy-tile-label">02 · Community</span>
+          <span class="academy-tile-title">Members Community</span>
+          <span class="academy-tile-desc">Share wins, ask questions, and stay accountable alongside other members.</span>
+          <span class="academy-tile-cta">Enter community</span>
+          <span class="academy-tile-badge" id="hub-community-badge" style="display:none;">New</span>
+        </a>
+        <a class="academy-tile" href="/resources.html">
+          <span class="academy-tile-label">03 · Resources</span>
+          <span class="academy-tile-title">Resource Library</span>
+          <span class="academy-tile-desc">Frameworks, worksheets, and reference material to put the work into practice.</span>
+          <span class="academy-tile-cta">Browse resources</span>
+        </a>
+        <a class="academy-tile" href="/profile.html">
+          <span class="academy-tile-label">04 · Profile</span>
+          <span class="academy-tile-title">Your Profile</span>
+          <span class="academy-tile-desc">Update your display name, bio, and avatar. Manage how you show up in the community.</span>
+          <span class="academy-tile-cta">Edit profile</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="hub-referral" class="hub-referral" hidden>
+      <div class="academy-section-head">
+        <h2>Invite &amp; Earn</h2>
+        <span class="academy-section-meta">Your referral link</span>
+      </div>
+      <div class="referral-card">
+        <p class="referral-lede">
+          Share this link with people you know. When someone joins through it and
+          completes their profile, you earn <b id="ref-per">—</b> points toward your
+          next level.
+        </p>
+        <div class="referral-link-row">
+          <input id="ref-url" class="referral-url" type="text" readonly aria-label="Your referral link" value="Loading…">
+          <button class="btn btn-primary" id="ref-copy" type="button">Copy</button>
+          <button class="btn btn-ghost" id="ref-share" type="button" hidden>Share</button>
+        </div>
+        <div class="referral-stats">
+          <div class="referral-stat">
+            <div class="referral-stat-value" id="ref-joined">—</div>
+            <div class="referral-stat-label">Signed up</div>
+          </div>
+          <div class="referral-stat">
+            <div class="referral-stat-value" id="ref-activated">—</div>
+            <div class="referral-stat-label">Completed profile</div>
+          </div>
+          <div class="referral-stat">
+            <div class="referral-stat-value" id="ref-points">—</div>
+            <div class="referral-stat-label">Points earned</div>
+          </div>
+        </div>
+        <div class="referral-note" id="ref-note"></div>
+      </div>
+    </section>
+
+    <section class="academy-split">
+      <div>
+        <div class="academy-section-head">
+          <h2>Latest in Community</h2>
+          <a class="academy-section-meta" href="/community.html" style="text-decoration:none;">View all →</a>
+        </div>
+        <div id="hub-community-list" class="academy-list">
+          <div class="academy-empty">Loading community activity…</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="academy-section-head">
+          <h2>Your courses</h2>
+          <a class="academy-section-meta" href="/courses.html" style="text-decoration:none;">All courses →</a>
+        </div>
+        <div id="hub-courses-list" class="academy-list">
+          <div class="academy-empty">Loading your courses…</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="js/hub.js"></script>
+<script type="module">
+  import { init as initChatbot } from './js/chatbot.js';
+  initChatbot();
+</script>
+</body>
+</html>
