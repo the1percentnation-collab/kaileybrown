@@ -17,234 +17,276 @@
   <meta property="og:description" content="Contemporary romance for anyone who has ever wanted to feel seen.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kaileybrown.com">
-  <!-- TODO(assets): a 1200x630 share image at /assets/og-image.jpg. Without it,
-       links to this site unfurl as a bare URL on social and in messages. -->
+  <!-- TODO(assets): a 1200x630 share image at /assets/og-image.jpg. -->
   <meta property="og:image" content="https://kaileybrown.com/assets/og-image.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Tokens first: this page carries its own layout CSS but shares the one
-       palette and type scale with the member portal. -->
+  <!-- Marketing-page type, per the design brief: delicate high-contrast serif
+       display, readable serif body, tracked uppercase sans for labels and
+       buttons, and a script face for the wordmark. The member portal keeps its
+       own faces from tokens.css; these load for this page only. -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/tokens.css">
   <style>
-    /* ── Author site layout. Colour and type come from tokens.css. ───────── */
+    /* ═══════════════════════════════════════════════════════════════════════
+       KAILEY BROWN — AUTHOR SITE
+       Brief: the structure and cozy editorial feel of the original
+       kaileybrown.com, re-expressed monochrome — white paper, black ink,
+       red as punctuation. Serif display over photography, script wordmark,
+       quiet outline CTAs, alternating book blocks, centred signup.
+       ═══════════════════════════════════════════════════════════════════════ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     [hidden] { display: none !important; }
+
+    :root {
+      /* Page-scoped type. tokens.css still owns colour. */
+      --serif-display: 'Cormorant Garamond', Georgia, serif;
+      --serif-body: 'Lora', Georgia, serif;
+      --sans-label: 'Jost', system-ui, sans-serif;
+      --script: 'Great Vibes', cursive;
+    }
 
     body {
       background: var(--paper);
       color: var(--ink);
-      font-family: var(--font-body);
+      font-family: var(--serif-body);
+      font-size: 1.02rem;
       -webkit-font-smoothing: antialiased;
-      line-height: 1.6;
+      line-height: 1.75;
     }
 
     img { max-width: 100%; display: block; }
     a { color: inherit; }
 
     .wrap { width: min(1140px, 100% - 48px); margin-inline: auto; }
-    .wrap-narrow { width: min(760px, 100% - 48px); margin-inline: auto; }
+    .wrap-narrow { width: min(680px, 100% - 48px); margin-inline: auto; }
 
-    .eyebrow {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    /* ── Type roles ──────────────────────────────────────────────────────── */
+    h1, h2, h3 {
+      font-family: var(--serif-display);
+      font-weight: 500;
+      color: var(--ink-strong);
+      line-height: 1.05;
+      text-wrap: balance;
     }
-    .eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--red); }
-    .eyebrow.is-centered { justify-content: center; }
+    h1 { font-size: clamp(3.2rem, 9vw, 6.4rem); letter-spacing: 0.005em; }
+    h2 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+    h3 { font-size: clamp(1.7rem, 3vw, 2.3rem); }
 
-    h1, h2, h3 { font-family: var(--font-display); font-weight: 400; color: var(--ink-strong); line-height: 1.08; text-wrap: balance; }
-    h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); letter-spacing: 0.01em; }
-    h2 { font-size: clamp(1.9rem, 4vw, 2.9rem); }
-    h3 { font-size: 1.3rem; }
-    .accent { color: var(--red); }
+    .label {
+      font-family: var(--sans-label);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+    .label.is-red { color: var(--red); }
 
-    .lede { font-size: 1.09rem; color: var(--ink); max-width: 58ch; }
+    .lede { font-size: 1.12rem; max-width: 58ch; }
     .muted { color: var(--ink-muted); }
 
-    /* ── Buttons. One red button per view; everything else is outlined ink. ── */
+    /* ── CTAs: quiet outlined rectangles, tracked uppercase ─────────────────
+       Red is punctuation: buttons rest in ink and answer in red on hover.
+       The single filled-red button on the page is the newsletter Subscribe. */
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 14px 28px; border-radius: 999px;
-      font-size: 0.95rem; font-weight: 600; font-family: var(--font-body);
-      text-decoration: none; cursor: pointer; border: 1px solid transparent;
-      transition: background .18s, color .18s, border-color .18s, transform .12s;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 15px 34px;
+      font-family: var(--sans-label);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.24em; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      background: transparent;
+      color: var(--ink-strong);
+      border: 1px solid rgba(0, 0, 0, 0.35);
+      border-radius: 0;
+      transition: color .18s, border-color .18s, background .18s;
     }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--red); color: #fff; border-color: var(--red); }
-    .btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
-    .btn-primary:disabled { opacity: .6; cursor: default; }
-    .btn-ghost { background: transparent; color: var(--ink-strong); border-color: var(--border); }
-    .btn-ghost:hover { border-color: var(--ink-strong); }
+    .btn:hover { color: var(--red); border-color: var(--red); }
+    .btn-red { background: var(--red); border-color: var(--red); color: #fff; }
+    .btn-red:hover { background: var(--red-dark); border-color: var(--red-dark); color: #fff; }
+    .btn-red:disabled { opacity: .6; cursor: default; }
 
-    /* ── Nav ─────────────────────────────────────────────────────────────── */
+    /* ── Nav: slim, white, script wordmark top-left ─────────────────────── */
     .nav {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(255, 255, 255, 0.86);
-      backdrop-filter: saturate(150%) blur(12px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: saturate(140%) blur(10px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: var(--nav-h); gap: 24px; }
-    .wordmark {
-      font-family: var(--font-display); font-size: 1.3rem;
-      letter-spacing: 0.16em; text-transform: uppercase;
-      text-decoration: none; color: var(--ink-strong); white-space: nowrap;
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 24px; }
+    .wordmark { text-decoration: none; display: flex; flex-direction: column; line-height: 1; }
+    .wordmark .from { font-family: var(--sans-label); font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 2px; }
+    .wordmark .name { font-family: var(--script); font-size: 1.9rem; color: var(--ink-strong); }
+    .wordmark .name .dot { color: var(--red); }
+
+    .nav-links { display: flex; gap: 34px; list-style: none; }
+    .nav-links a {
+      font-family: var(--sans-label);
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      text-decoration: none; color: var(--ink);
+      padding-block: 4px; position: relative;
     }
-    .nav-links { display: flex; gap: 30px; list-style: none; }
-    .nav-links a { text-decoration: none; font-size: 0.88rem; color: var(--ink); position: relative; padding-block: 4px; }
     .nav-links a::after {
       content: ''; position: absolute; left: 0; bottom: 0;
-      width: 0; height: 1.5px; background: var(--red);
+      width: 0; height: 1px; background: var(--red);
       transition: width .22s var(--ease-out);
     }
+    .nav-links a:hover { color: var(--ink-strong); }
     .nav-links a:hover::after { width: 100%; }
-    .nav-cta { display: flex; align-items: center; gap: 12px; }
-    .nav-cta .btn { padding: 9px 20px; font-size: 0.82rem; }
 
     .hamburger { display: none; background: none; border: 0; cursor: pointer; padding: 8px; }
-    .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink-strong); margin: 4px 0; }
+    .hamburger span { display: block; width: 22px; height: 1.5px; background: var(--ink-strong); margin: 5px 0; }
 
-    /* ── Hero: the book is the thesis ────────────────────────────────────── */
-    .hero { padding: clamp(64px, 10vw, 112px) 0 clamp(56px, 8vw, 96px); }
-    .hero-grid { display: grid; grid-template-columns: 1fr 0.8fr; gap: 72px; align-items: center; }
-    .hero h1 { margin: 20px 0 22px; }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 32px; }
-
-    /* The cover gets a real book shape and a shadow that reads as a physical
-       object on paper, rather than a flat rectangle. */
-    .cover {
-      aspect-ratio: 2 / 3;
-      border-radius: 3px 8px 8px 3px;
-      background: linear-gradient(150deg, var(--surface-2), var(--surface));
-      border: 1px solid var(--border);
-      box-shadow: 0 18px 44px rgba(0,0,0,0.16), -1px 0 0 rgba(0,0,0,0.06) inset;
-      display: grid; place-items: center; overflow: hidden; position: relative;
-      max-width: 340px; margin-inline: auto;
-    }
-    .cover img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* A photograph, not a book: square-ish corners, no spine shadow, and the
-       image sits on top of the placeholder rather than beside it. */
-    .hero-photo {
+    /* ── Hero: full-bleed photograph, oversized serif set over it ────────── */
+    .hero {
       position: relative;
-      aspect-ratio: 2 / 3;
-      max-width: 380px;
-      margin-inline: auto;
-      border-radius: 14px;
+      min-height: clamp(540px, 82vh, 800px);
+      display: flex; align-items: center;
       overflow: hidden;
-      background: linear-gradient(150deg, var(--surface-2), var(--surface));
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.14);
-      display: grid;
-      place-items: center;
+      background: var(--surface-2);
     }
-    .hero-photo img {
+    .hero-bg {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
-      object-position: center 20%;
+      object-position: 62% 18%; /* keeps her face in frame */
     }
+    .hero-scrim {
+      position: absolute; inset: 0;
+      background: linear-gradient(100deg,
+        rgba(255, 255, 255, 0.97) 0%,
+        rgba(255, 255, 255, 0.90) 32%,
+        rgba(255, 255, 255, 0.38) 60%,
+        rgba(255, 255, 255, 0) 80%);
+    }
+    /* No width here: this element also carries .wrap, whose width must win. */
+    .hero-inner { position: relative; padding-block: clamp(48px, 8vw, 96px); }
+    .hero-copy { max-width: 620px; display: grid; gap: 22px; justify-items: start; }
+    .hero-copy .rule { width: 44px; height: 1px; background: var(--red); }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
 
-    .placeholder {
-      font-family: var(--font-mono); font-size: 10px;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--ink-muted); text-align: center; padding: 20px; line-height: 1.8;
+    /* Missing photo: same markup renders as a plain paper hero. */
+    .hero:not(.has-photo) { min-height: 0; }
+    .hero:not(.has-photo) .hero-scrim { display: none; }
+    .hero:not(.has-photo) .hero-inner { padding-block: clamp(56px, 9vw, 110px); }
+
+    @media (max-width: 720px) {
+      .hero { align-items: flex-end; min-height: clamp(560px, 92vh, 820px); }
+      .hero-bg { object-position: 58% 10%; }
+      .hero-scrim {
+        background: linear-gradient(180deg,
+          rgba(255, 255, 255, 0.24) 0%,
+          rgba(255, 255, 255, 0.86) 48%,
+          rgba(255, 255, 255, 0.97) 74%);
+      }
     }
 
     /* ── Sections ────────────────────────────────────────────────────────── */
-    .section { padding: clamp(64px, 9vw, 108px) 0; }
-    .section-alt { background: var(--surface); border-block: 1px solid var(--border); }
-    .section-head { max-width: 62ch; margin-bottom: 48px; }
-    .section-head h2 { margin: 16px 0 14px; }
-    .section-head.is-centered { margin-inline: auto; text-align: center; }
+    .section { padding: clamp(72px, 10vw, 128px) 0; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-head { display: grid; gap: 16px; margin-bottom: clamp(44px, 6vw, 72px); }
+    .section-head.is-centered { justify-items: center; text-align: center; }
+    .section-head .rule { width: 44px; height: 1px; background: var(--red); }
 
-    /* ── Books ───────────────────────────────────────────────────────────── */
-    .books { display: grid; gap: 56px; }
+    /* ── Books: alternating image / text rows ────────────────────────────── */
     .book {
-      display: grid; grid-template-columns: 260px 1fr; gap: 44px; align-items: start;
+      display: grid;
+      grid-template-columns: minmax(220px, 340px) 1fr;
+      gap: clamp(36px, 6vw, 80px);
+      align-items: center;
     }
-    .book-meta {
-      font-family: var(--font-mono); font-size: 10px;
-      letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-muted);
-      display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
-    }
-    .book-status {
-      color: var(--red); border: 1px solid var(--border-red);
-      padding: 2px 9px; border-radius: 999px;
-    }
-    .book h3 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 12px; }
-    .book-blurb { color: var(--ink); max-width: 60ch; }
-    .book-blurb p + p { margin-top: 14px; }
-    .buy-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
-    .buy-row .btn { padding: 11px 22px; font-size: 0.88rem; }
+    .book + .book { margin-top: clamp(64px, 9vw, 110px); }
+    /* Alternate: even rows put the cover on the right for visual rhythm. */
+    .book:nth-of-type(even) { grid-template-columns: 1fr minmax(220px, 340px); }
+    .book:nth-of-type(even) .book-cover { order: 2; }
 
-    /* ── Praise ──────────────────────────────────────────────────────────── */
-    .praise { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
-    .quote {
-      border-left: 2px solid var(--red);
-      padding: 6px 0 6px 24px;
-    }
-    .quote blockquote { font-family: var(--font-display); font-size: 1.2rem; line-height: 1.4; color: var(--ink-strong); }
-    .quote cite {
-      display: block; margin-top: 14px; font-style: normal;
-      font-family: var(--font-mono); font-size: 10px;
-      letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted);
-    }
-
-    /* ── About ───────────────────────────────────────────────────────────── */
-    .about-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 64px; align-items: center; }
-    .portrait {
-      aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden;
-      border: 1px solid var(--border); background: var(--surface-2);
+    .book-cover {
+      aspect-ratio: 2 / 3;
+      background: linear-gradient(150deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
       display: grid; place-items: center;
+      overflow: hidden; position: relative;
     }
-    .portrait img { width: 100%; height: 100%; object-fit: cover; }
-    .about-body p + p { margin-top: 16px; }
+    .book-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-    /* ── Newsletter: the primary call to action ──────────────────────────── */
-    .signup { text-align: center; }
-    .signup .lede { margin-inline: auto; }
+    .book-body { display: grid; gap: 18px; justify-items: start; }
+    .book-meta { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+    .book-blurb { max-width: 58ch; }
+    .book-blurb p + p { margin-top: 14px; }
+
+    .placeholder {
+      font-family: var(--sans-label); font-size: 10px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-muted); text-align: center; padding: 20px; line-height: 1.9;
+    }
+
+    /* ── About: candid photo beside text ─────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 420px) 1fr;
+      gap: clamp(40px, 7vw, 88px);
+      align-items: center;
+    }
+    .about-photo {
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      position: relative;
+    }
+    .about-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .about-body { display: grid; gap: 18px; justify-items: start; }
+    .about-body .signoff { font-family: var(--script); font-size: 2.4rem; color: var(--ink-strong); margin-top: 8px; }
+    .about-body .signoff .dot { color: var(--red); }
+
+    /* ── The Inner Circle: centred signup ────────────────────────────────── */
+    .signup { text-align: center; display: grid; justify-items: center; gap: 18px; }
     .newsletter {
-      display: flex; gap: 12px; flex-wrap: wrap;
-      margin: 30px auto 0; max-width: 520px; justify-content: center;
+      display: flex; gap: 0; flex-wrap: wrap; justify-content: center;
+      margin-top: 14px; width: min(560px, 100%);
     }
     .newsletter input {
-      flex: 1 1 260px; padding: 15px 20px; border-radius: 999px;
-      border: 1px solid var(--border); background: var(--paper);
-      font-family: var(--font-body); font-size: 0.95rem; color: var(--ink-strong);
+      flex: 1 1 280px;
+      padding: 15px 20px;
+      border: 1px solid rgba(0, 0, 0, 0.35);
+      border-right: 0;
+      background: var(--paper);
+      font-family: var(--serif-body); font-size: 1rem;
+      color: var(--ink-strong);
     }
-    .newsletter input::placeholder { color: var(--ink-muted); }
+    .newsletter input::placeholder { color: var(--ink-muted); font-style: italic; }
     .newsletter input:focus { outline: 2px solid var(--red); outline-offset: 2px; }
-    .consent { font-size: 0.82rem; margin-top: 16px; max-width: 52ch; margin-inline: auto; }
-    .form-note { font-size: 0.9rem; margin-top: 14px; min-height: 1.4em; }
-    .form-note[data-state="ok"] { color: var(--red); font-weight: 600; }
+    .consent { font-size: 0.82rem; max-width: 52ch; font-family: var(--sans-label); letter-spacing: 0.02em; }
+    .form-note { font-size: 0.95rem; min-height: 1.5em; font-family: var(--serif-body); }
+    .form-note[data-state="ok"] { color: var(--red); }
     .form-note[data-state="error"] { color: #B3261E; }
 
-    /* ── Footer ──────────────────────────────────────────────────────────── */
-    footer { border-top: 1px solid var(--border); padding: 60px 0 40px; }
-    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 44px; }
-    .footer-grid h4 {
-      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--ink-muted); margin-bottom: 16px; font-weight: 400;
-    }
-    .footer-grid ul { list-style: none; display: grid; gap: 10px; }
-    .footer-grid a { text-decoration: none; font-size: 0.92rem; color: var(--ink); }
-    .footer-grid a:hover { color: var(--red); }
-    .footer-bottom {
-      margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--border);
-      display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-      font-size: 0.84rem; color: var(--ink-muted);
+    @media (max-width: 560px) {
+      .newsletter input { border-right: 1px solid rgba(0, 0, 0, 0.35); }
+      .newsletter .btn { width: 100%; margin-top: 10px; }
     }
 
-    /* ── Entrance animation ──────────────────────────────────────────────── */
-    .fade-up { opacity: 0; transform: translateY(18px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+    /* ── Footer: minimal, centred ────────────────────────────────────────── */
+    footer { border-top: 1px solid var(--border); padding: 72px 0 48px; text-align: center; }
+    .footer-mark { display: grid; justify-items: center; gap: 4px; }
+    .footer-mark .from { font-family: var(--sans-label); font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-muted); }
+    .footer-mark .name { font-family: var(--script); font-size: 2.6rem; color: var(--ink-strong); }
+    .footer-mark .name .dot { color: var(--red); }
+    .footer-links { display: flex; justify-content: center; gap: 30px; margin-top: 28px; list-style: none; flex-wrap: wrap; }
+    .footer-links a {
+      font-family: var(--sans-label); font-size: 10px;
+      letter-spacing: 0.24em; text-transform: uppercase;
+      text-decoration: none; color: var(--ink);
+    }
+    .footer-links a:hover { color: var(--red); }
+    .footer-bottom { margin-top: 40px; font-family: var(--sans-label); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-muted); }
+
+    /* ── Entrance ────────────────────────────────────────────────────────── */
+    .fade-up { opacity: 0; transform: translateY(16px); transition: opacity .7s var(--ease-out), transform .7s var(--ease-out); }
     .fade-up.is-in { opacity: 1; transform: none; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -252,21 +294,20 @@
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
 
-    @media (max-width: 900px) {
-      .hero-grid, .about-grid { grid-template-columns: 1fr; gap: 44px; }
-      .hero-grid > div:first-child { order: 2; }
-      .book { grid-template-columns: 1fr; gap: 26px; }
-      .book .cover { max-width: 220px; margin-inline: 0; }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 820px) {
+      .book, .book:nth-of-type(even) { grid-template-columns: 1fr; }
+      .book:nth-of-type(even) .book-cover { order: 0; }
+      .book-cover { max-width: 260px; }
+      .about-grid { grid-template-columns: 1fr; }
+      .about-photo { max-width: 340px; }
       .nav-links { display: none; }
       .hamburger { display: block; }
       .nav-links.open {
-        display: grid; position: absolute; top: var(--nav-h); left: 0; right: 0;
+        display: grid; position: absolute; top: 76px; left: 0; right: 0;
         background: var(--paper); border-bottom: 1px solid var(--border);
-        padding: 20px 24px; gap: 18px;
+        padding: 22px 24px; gap: 18px;
       }
     }
-    @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -274,154 +315,118 @@
 <!-- ════════ NAV ════════ -->
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="wordmark" href="/">Kailey Brown</a>
+    <a class="wordmark" href="/" aria-label="Kailey Brown, home">
+      <span class="from">From the desk of</span>
+      <span class="name">Kailey Brown<span class="dot">.</span></span>
+    </a>
 
     <nav>
       <ul class="nav-links" id="nav-links">
         <li><a href="#books">Books</a></li>
         <li><a href="#about">About</a></li>
-        <li><a href="#newsletter">Newsletter</a></li>
+        <li><a href="#newsletter">Inner Circle</a></li>
+        <li><a href="mailto:kailey@kaileybrown.com">Contact</a></li>
+        <li><a href="/login.html">Sign in</a></li>
       </ul>
     </nav>
 
-    <div class="nav-cta">
-      <a class="btn btn-ghost" href="/login.html">Sign in</a>
-      <a class="btn btn-primary" href="#newsletter">Get updates</a>
-      <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </header>
 
 <main>
 
   <!-- ════════ HERO ════════
-       An author site opens on the book, not on the author. Replace the copy
-       below with the real title, hook and cover. -->
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <p class="eyebrow">Contemporary romance</p>
+       The header is the photograph: Kailey in the bookstore with the book,
+       full bleed, oversized serif set over a white scrim. If /assets/hero.jpg
+       is missing, onerror strips the image and the has-photo class and the
+       same markup renders as a plain paper hero. -->
+  <section class="hero has-photo" id="hero">
+    <img class="hero-bg" src="/assets/hero.jpg"
+         alt="Kailey Brown in a bookstore, reading her novel Somewhere Between Dreaming &amp; You"
+         fetchpriority="high"
+         onerror="this.closest('.hero').classList.remove('has-photo'); this.remove()">
+    <div class="hero-scrim" aria-hidden="true"></div>
 
-        <h1>Somewhere Between <span class="accent">Dreaming &amp; You.</span></h1>
-
-        <!-- TODO(brand): this is adapted from Kailey's own about copy so the
-             hero is in her voice rather than invented, but it describes the
-             writing, not the book. Replace it with the actual hook for
-             Somewhere Between Dreaming & You: what happens, to whom, and the
-             question that keeps a reader turning pages. -->
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="label is-red">Contemporary romance · Out now</p>
+        <h1>Somewhere Between Dreaming &amp; You</h1>
+        <div class="rule" aria-hidden="true"></div>
+        <!-- TODO(brand): replace with the book's real hook: what happens, to
+             whom, and the question that keeps a reader turning pages. -->
         <p class="lede">
           A story for anyone who has ever wanted to feel seen. Step into the
           pages, get lost for a while, and come back to your own life feeling
           a little less alone.
         </p>
-
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#newsletter">Get the next release</a>
-          <a class="btn btn-ghost" href="#books">Read more</a>
+          <a class="btn" href="#books">The book</a>
+          <a class="btn" href="#newsletter">Join the Inner Circle</a>
         </div>
       </div>
-
-      <!-- The hero image is Kailey with the book, not the cover on its own:
-           it shows the author and the book in one frame, which is what an
-           author site's hero is for. The cover alone still appears in the
-           books section below.
-
-           If /assets/hero.jpg is missing the <img> removes itself and the
-           placeholder underneath shows through, so a missing file degrades to
-           a labelled box rather than a broken-image icon. -->
-      <figure class="hero-photo">
-        <img src="/assets/hero.jpg"
-             alt="Kailey Brown in a bookstore, holding a copy of Somewhere Between Dreaming &amp; You"
-             onerror="this.remove()">
-        <p class="placeholder">Hero photo<br>/assets/hero.jpg<br>2:3 portrait</p>
-      </figure>
     </div>
   </section>
 
   <!-- ════════ BOOKS ════════
-       One .book block per title. Copy the block to add another. Newest first. -->
-  <section class="section section-alt" id="books">
+       One .book row per title, covers alternating sides automatically via
+       nth-of-type. Add a new title by copying an <article> block. -->
+  <section class="section" id="books">
     <div class="wrap">
-      <div class="section-head fade-up">
-        <p class="eyebrow">Books</p>
-        <h2>The books.</h2>
+      <div class="section-head is-centered fade-up">
+        <p class="label is-red">The books</p>
+        <h2>Stories that stay with you.</h2>
+        <div class="rule" aria-hidden="true"></div>
       </div>
 
-      <div class="books">
-
-        <article class="book fade-up">
-          <div class="cover">
-            <!-- TODO(assets): /assets/book-1-cover.jpg -->
-            <p class="placeholder">Cover<br>/assets/book-1-cover.jpg</p>
-          </div>
-          <div>
-            <div class="book-meta">
-              <!-- TODO(brand): confirm the publication year. -->
-              <span class="book-status">Out now</span>
-              <span>Contemporary romance</span>
-              <span>2026</span>
-            </div>
-            <h3>Somewhere Between Dreaming &amp; You</h3>
-            <div class="book-blurb">
-              <!-- TODO(brand): the back-cover blurb. This is the single most
-                   important missing piece on the site. Two or three short
-                   paragraphs read better here than one long one. -->
-              <p>
-                The back-cover blurb goes here. Set up the situation, introduce
-                the person it happens to, and end on the question the reader
-                needs answered.
-              </p>
-            </div>
-            <div class="buy-row">
-              <!-- TODO(brand): the real Amazon URL, and any other retailer.
-                   Delete the ones that do not apply. -->
-              <a class="btn btn-primary" href="#" target="_blank" rel="noopener">Buy on Amazon</a>
-            </div>
-          </div>
-        </article>
-
-        <!-- Duplicate the article above for each additional book. -->
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ════════ PRAISE ════════
-       Delete this whole section until there are real quotes to put in it.
-       Invented praise is worse than no praise. -->
-  <section class="section" id="praise" hidden>
-    <div class="wrap">
-      <div class="section-head fade-up">
-        <p class="eyebrow">Praise</p>
-        <h2>What readers say.</h2>
-      </div>
-      <div class="praise fade-up">
-        <div class="quote">
-          <blockquote>A real quote from a real reviewer.</blockquote>
-          <cite>Reviewer name, publication</cite>
+      <article class="book fade-up">
+        <div class="book-cover">
+          <!-- TODO(assets): the cover at /assets/book-cover.jpg (2:3). -->
+          <img src="/assets/book-cover.jpg"
+               alt="Cover of Somewhere Between Dreaming &amp; You"
+               loading="lazy" onerror="this.remove()">
+          <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
         </div>
-        <div class="quote">
-          <blockquote>Another real quote.</blockquote>
-          <cite>Reviewer name, publication</cite>
+        <div class="book-body">
+          <div class="book-meta">
+            <span class="label is-red">Out now</span>
+            <span class="label muted">Contemporary romance</span>
+          </div>
+          <h3>Somewhere Between Dreaming &amp; You</h3>
+          <div class="book-blurb">
+            <!-- TODO(brand): the real back-cover blurb. -->
+            <p>
+              The back-cover blurb goes here. Set up the situation, introduce
+              the person it happens to, and end on the question the reader
+              needs answered.
+            </p>
+          </div>
+          <!-- TODO(brand): the real Amazon URL. -->
+          <a class="btn" href="#" target="_blank" rel="noopener">Buy now</a>
         </div>
-      </div>
+      </article>
+
+      <!-- Next book: copy the article above; the cover will sit on the right
+           automatically. -->
+
     </div>
   </section>
 
   <!-- ════════ ABOUT ════════ -->
-  <section class="section section-alt" id="about">
+  <section class="section" id="about">
     <div class="wrap about-grid">
-      <div class="portrait fade-up">
-        <!-- TODO(assets): author photo at /assets/author.jpg, portrait 4:5.
-             Replace with: <img src="/assets/author.jpg" alt="Kailey Brown"> -->
-        <p class="placeholder">Author photo<br>/assets/author.jpg<br>4:5 portrait</p>
+      <div class="about-photo fade-up">
+        <!-- TODO(assets): candid author photo at /assets/author.jpg (4:5). -->
+        <img src="/assets/author.jpg" alt="Kailey Brown" loading="lazy" onerror="this.remove()">
+        <p class="placeholder">Author photo<br>/assets/author.jpg</p>
       </div>
 
       <div class="about-body fade-up">
-        <p class="eyebrow">About</p>
-        <h2 style="margin:16px 0 20px;">Kailey Brown</h2>
+        <p class="label is-red">About Kailey</p>
+        <h2>Hi, I'm Kailey.</h2>
+        <div class="rule" aria-hidden="true"></div>
         <p class="lede">
           Kailey Brown writes contemporary romance stories for anyone who has
           ever wanted to feel seen. Her hope is that readers can step into her
@@ -435,20 +440,20 @@
           and grace in the middle of the mess, and trusting that even ordinary
           stories can hold extraordinary truth.
         </p>
+        <p class="signoff" aria-hidden="true">Kailey<span class="dot">.</span></p>
       </div>
     </div>
   </section>
 
-  <!-- ════════ NEWSLETTER ════════
-       The primary call to action on this site. Posts to the joinEarlyAccess
-       callable via /js/newsletter.js, which records the consent wording below
-       alongside the address. -->
+  <!-- ════════ THE INNER CIRCLE ════════
+       The primary call to action. Posts to the joinEarlyAccess callable via
+       /js/newsletter.js, which stores the consent wording below verbatim. -->
   <section class="section" id="newsletter">
     <div class="wrap-narrow signup">
-      <p class="eyebrow is-centered">Newsletter</p>
-      <h2 style="margin:16px 0 16px;">Know first.</h2>
-      <!-- TODO(brand): confirm what subscribers actually get and how often.
-           Specific beats vague. -->
+      <p class="label is-red">The Inner Circle</p>
+      <h2>Be the first to know.</h2>
+      <div class="rule" aria-hidden="true"></div>
+      <!-- TODO(brand): confirm what subscribers actually get and how often. -->
       <p class="lede muted">
         New releases, cover reveals, and the occasional note between books.
         No spam, and one click unsubscribes you.
@@ -456,8 +461,8 @@
 
       <form class="newsletter" id="newsletter-form" novalidate>
         <label for="newsletter-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Email address</label>
-        <input id="newsletter-email" type="email" placeholder="you@example.com" required autocomplete="email">
-        <button class="btn btn-primary" type="submit">Subscribe</button>
+        <input id="newsletter-email" type="email" placeholder="Your email address" required autocomplete="email">
+        <button class="btn btn-red" type="submit">Join</button>
       </form>
 
       <p class="consent muted" id="newsletter-consent">
@@ -473,40 +478,21 @@
 <!-- ════════ FOOTER ════════ -->
 <footer>
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <a class="wordmark" href="/">Kailey Brown</a>
-        <p class="muted" style="margin-top:14px;max-width:36ch;font-size:0.92rem;">
-          Contemporary romance.
-        </p>
-      </div>
-
-      <div>
-        <h4>Explore</h4>
-        <ul>
-          <li><a href="#books">Books</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#newsletter">Newsletter</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4>More</h4>
-        <ul>
-          <li><a href="/login.html">Reader sign in</a></li>
-          <li><a href="/privacy.html">Privacy</a></li>
-          <li><a href="/terms.html">Terms</a></li>
-          <!-- TODO(brand): the real profile URLs. -->
-          <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
-          <li><a href="#" target="_blank" rel="noopener">TikTok</a></li>
-        </ul>
-      </div>
+    <div class="footer-mark">
+      <span class="from">From the desk of</span>
+      <span class="name">Kailey Brown<span class="dot">.</span></span>
     </div>
 
-    <div class="footer-bottom">
-      <span>&copy; <span id="year"></span> Kailey Brown. All rights reserved.</span>
-      <a href="mailto:kailey@kaileybrown.com">kailey@kaileybrown.com</a>
-    </div>
+    <ul class="footer-links">
+      <!-- TODO(brand): the real profile URLs. -->
+      <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
+      <li><a href="#" target="_blank" rel="noopener">TikTok</a></li>
+      <li><a href="mailto:kailey@kaileybrown.com">Contact</a></li>
+      <li><a href="/privacy.html">Privacy</a></li>
+      <li><a href="/terms.html">Terms</a></li>
+    </ul>
+
+    <p class="footer-bottom">&copy; Copyright <span id="year"></span>. Kailey Brown. All rights reserved.</p>
   </div>
 </footer>
 
@@ -527,8 +513,7 @@
     }
   });
 
-  // Entrance animation. Exposed on window so anything injected after this
-  // script runs can re-hook it.
+  // Entrance animation. Exposed on window so injected content can re-hook it.
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
