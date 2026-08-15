@@ -76,12 +76,33 @@ function buildWidget() {
             </svg>
           </button>
           <button class="kb-bug-btn" id="kb-bug-btn" aria-label="Report a bug" title="Report a bug">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" clip-rule="evenodd"
-                d="M12 2C7.03 2 3 5.8 3 10.2c0 3.5 2 6.6 5 8.1V22h8v-3.7c3-1.5 5-4.6 5-8.1C21 5.8 16.97 2 12 2z
-                   M4.5 10a2.5 2 0 1 0 5 0 2.5 2 0 0 0-5 0z
-                   M14.5 10a2.5 2 0 1 0 5 0 2.5 2 0 0 0-5 0z
-                   M10 20h1.5v2H10z M12.5 20h1.5v2h-1.5z"/>
+            <!-- A caterpillar — the bookworm — climbing toward the head.
+                 Body, head and eye are one path so fill-rule="evenodd" cuts
+                 the eye as a real hole: it shows the button's own background,
+                 so it stays correct through the hover tint instead of needing
+                 a matching fill. Segments sit a hair apart rather than
+                 overlapping, since evenodd would punch holes where filled
+                 subpaths cross. -->
+            <svg class="kb-bug-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                d="M1.2,16.3a2.2,2.2 0 1,0 4.4,0a2.2,2.2 0 1,0 -4.4,0z
+                   M5.5,15.4a2.4,2.4 0 1,0 4.8,0a2.4,2.4 0 1,0 -4.8,0z
+                   M10.2,14.2a2.5,2.5 0 1,0 5,0a2.5,2.5 0 1,0 -5,0z
+                   M14.4,12.2a3.4,3.4 0 1,0 6.8,0a3.4,3.4 0 1,0 -6.8,0z
+                   M18.0,11.1a0.85,0.85 0 1,0 1.7,0a0.85,0.85 0 1,0 -1.7,0z"/>
+              <g fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round">
+                <!-- antennae -->
+                <path d="M16.5,9.4 15.4,7.3"/>
+                <path d="M19.4,9.2 20.2,7.1"/>
+                <!-- legs -->
+                <path d="M2.6,18.3 2.1,19.6"/>
+                <path d="M7.4,17.6 7.0,18.9"/>
+                <path d="M12.0,16.4 11.7,17.8"/>
+              </g>
+              <g fill="currentColor">
+                <circle cx="15.1" cy="6.6" r="0.85"/>
+                <circle cx="20.4" cy="6.4" r="0.85"/>
+              </g>
             </svg>
             <span class="kb-bug-lbl">report bug</span>
           </button>
@@ -1286,7 +1307,19 @@ function injectStyles() {
   transition: background .15s, color .15s;
 }
 .kb-bug-btn:hover { background: rgba(0,0,0,.05); color: var(--kb-ink-hi); }
-.kb-bug-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.kb-bug-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+/* It inches on hover: the body bunches, then the front end reaches forward.
+   transform-origin at the tail keeps the squash pulling from behind. */
+.kb-bug-btn:hover .kb-bug-icon { animation: kb-inch 1.05s ease-in-out infinite; }
+.kb-bug-icon { transform-origin: 10% 70%; }
+@keyframes kb-inch {
+  0%,100% { transform: translateX(0)     scaleX(1);    }
+  35%     { transform: translateX(0)     scaleX(.88);  }
+  70%     { transform: translateX(1.2px) scaleX(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-bug-btn:hover .kb-bug-icon { animation: none; }
+}
 .kb-bug-lbl {
   font-family: var(--kb-label);
   font-size: 7px;
