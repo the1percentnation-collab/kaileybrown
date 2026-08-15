@@ -58,6 +58,14 @@
     }
 
     img { max-width: 100%; display: block; }
+
+    /* Monochrome photography: every photo renders black & white so red is
+       the only color anywhere on the page. A small contrast lift keeps the
+       images from going muddy once their color is gone. Scoped to photo
+       slots, not all <img>, so the red logo mark is never desaturated. */
+    .hero-bg, .book-cover img, .about-photo img {
+      filter: grayscale(1) contrast(1.06);
+    }
     a { color: inherit; }
 
     .wrap { width: min(1140px, 100% - 48px); margin-inline: auto; }
@@ -116,19 +124,29 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 24px; }
-    /* Letterspaced caps, per the brand lockup — not the script signature,
-       which stays reserved for the footer sign-off. */
+    /* The brand lockup, per the brief: "From the desk of" in tiny tracked
+       caps over the script signature — the letter-from-the-author mark.
+       The red full stop is the wordmark's one pop of color. */
     .wordmark {
       text-decoration: none;
-      font-family: var(--sans-label);
-      font-weight: 400;
-      font-size: 1.25rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--ink-strong);
+      display: grid;
+      gap: 3px;
       white-space: nowrap;
       line-height: 1;
     }
+    .wordmark .from {
+      font-family: var(--sans-label);
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+    .wordmark .name {
+      font-family: var(--script);
+      font-size: 1.9rem;
+      color: var(--ink-strong);
+    }
+    .wordmark .dot { color: var(--red); }
 
     .nav-links { display: flex; gap: 34px; list-style: none; }
     .nav-links a {
@@ -324,7 +342,10 @@
 <!-- ════════ NAV ════════ -->
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="wordmark" href="/" aria-label="Kailey Brown, home">Kailey Brown</a>
+    <a class="wordmark" href="/" aria-label="Kailey Brown, home">
+      <span class="from">From the desk of</span>
+      <span class="name">Kailey Brown<span class="dot">.</span></span>
+    </a>
 
     <nav>
       <ul class="nav-links" id="nav-links">

@@ -4966,6 +4966,8 @@ body.academy-course #course-workspace {
   height: 100%;
   object-fit: cover;
   object-position: center 20%;
+  /* Monochrome photography: B&W so red stays the only color on the page. */
+  filter: grayscale(1) contrast(1.06);
 }
 .courses-hero-shape--photo::after {
   content: '';
