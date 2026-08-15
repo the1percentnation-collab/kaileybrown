@@ -1,4 +1,7 @@
-// Kailey Brown course advisor — voice + text chatbot widget.
+// Kailey Brown "Reading Room" — voice + text book-concierge widget.
+// Matches the site's paper / ink / signal-red editorial system (tokens.css).
+// The launcher is a detailed red book that opens — pages turning — on hover,
+// echoing the page-turn hover the site's buttons already use.
 // Animated sine-wave visualization, STT via Web Speech API, optional TTS.
 // Call init() once per page.
 
@@ -22,34 +25,42 @@ function buildWidget() {
   const root = document.createElement('div');
   root.id = 'kb-chat-widget';
   root.innerHTML = `
-    <!-- Floating Action Button -->
-    <button class="kb-fab" id="kb-fab" aria-label="Open course advisor" aria-expanded="false">
-      <span class="kb-fab-ring kb-fab-ring-1" aria-hidden="true"></span>
-      <span class="kb-fab-ring kb-fab-ring-2" aria-hidden="true"></span>
-      <span class="kb-fab-core" aria-hidden="true">
-        <svg class="kb-fab-icon" viewBox="0 0 28 20" fill="currentColor">
-          <rect x="0"  y="7"  width="4" height="6"  rx="2"/>
-          <rect x="6"  y="4"  width="4" height="12" rx="2"/>
-          <rect x="12" y="0"  width="4" height="20" rx="2"/>
-          <rect x="18" y="4"  width="4" height="12" rx="2"/>
-          <rect x="24" y="7"  width="4" height="6"  rx="2"/>
-        </svg>
+    <!-- Floating Action Button: the red book. Closed at rest; on hover (or
+         while the panel is open) the front cover lifts and three leaves turn
+         in sequence, caught mid-flight like a book being read. -->
+    <button class="kb-fab" id="kb-fab" aria-label="Open the Reading Room — book help and resources" aria-expanded="false">
+      <span class="kb-book" aria-hidden="true">
+        <span class="kb-book-shadow"></span>
+        <span class="kb-book-back"></span>
+        <span class="kb-book-block"></span>
+        <span class="kb-book-ribbon"></span>
+        <span class="kb-page kb-page-3"></span>
+        <span class="kb-page kb-page-2"></span>
+        <span class="kb-page kb-page-1"></span>
+        <span class="kb-book-cover">
+          <span class="kb-cover-face">
+            <span class="kb-cover-frame"></span>
+            <span class="kb-cover-groove"></span>
+            <span class="kb-cover-author">Kailey&nbsp;Brown</span>
+            <span class="kb-cover-monogram">K<i class="kb-cover-dot">.</i></span>
+            <span class="kb-cover-rule"></span>
+          </span>
+          <span class="kb-cover-inner"></span>
+        </span>
       </span>
     </button>
 
     <!-- Chat Panel -->
-    <div class="kb-panel" id="kb-panel" role="dialog" aria-modal="true" aria-label="Kailey Brown assistant">
-      <!-- Corner targeting marks -->
-      <i class="kb-crn kb-crn-tl" aria-hidden="true"></i>
-      <i class="kb-crn kb-crn-tr" aria-hidden="true"></i>
-      <i class="kb-crn kb-crn-bl" aria-hidden="true"></i>
-      <i class="kb-crn kb-crn-br" aria-hidden="true"></i>
-
-      <!-- Header -->
+    <div class="kb-panel" id="kb-panel" role="dialog" aria-modal="true" aria-label="The Reading Room — Kailey Brown book concierge">
+      <!-- Header: the title page. "From the desk of" lockup, same as the nav
+           wordmark, so the panel reads as a page of the site, not an app. -->
       <div class="kb-hdr">
         <div class="kb-hdr-left">
           <span class="kb-led" id="kb-led" aria-hidden="true"></span>
-          <span class="kb-hdr-title">Assistant</span>
+          <span class="kb-hdr-titles">
+            <span class="kb-hdr-eyebrow">From the desk of</span>
+            <span class="kb-hdr-title">The Reading Room</span>
+          </span>
         </div>
         <div class="kb-hdr-right">
           <button class="kb-tts-btn" id="kb-tts-btn" aria-label="Toggle voice output" title="Toggle voice output">
@@ -83,7 +94,7 @@ function buildWidget() {
         </div>
       </div>
 
-      <!-- Wave visualizer -->
+      <!-- Ink line: the wave reads as a pen stroke across the page. -->
       <div class="kb-viz" aria-hidden="true">
         <canvas id="kb-canvas" class="kb-canvas"></canvas>
         <div class="kb-viz-status" id="kb-viz-status">READY</div>
@@ -91,6 +102,15 @@ function buildWidget() {
 
       <!-- Messages -->
       <div class="kb-msgs" id="kb-msgs" role="log" aria-live="polite" aria-label="Conversation"></div>
+
+      <!-- Book-resource shortcuts. Hidden once the reader starts typing. -->
+      <div class="kb-chips" id="kb-chips" aria-label="Suggested questions">
+        <button class="kb-chip" data-q="Which of Kailey's books should I start with?">Where do I start?</button>
+        <button class="kb-chip" data-q="Where can I buy or download the books?">Get a copy</button>
+        <button class="kb-chip" data-q="Do you have a reading guide or book club questions I can use with my group?">Reading guide</button>
+        <button class="kb-chip" data-q="What free resources, worksheets or downloads come with the books?">Free resources</button>
+        <button class="kb-chip" data-q="What is the next book about and when does it come out?">What's next</button>
+      </div>
 
       <!-- Input bar -->
       <div class="kb-bar">
@@ -106,7 +126,7 @@ function buildWidget() {
         <textarea
           id="kb-input"
           class="kb-input"
-          placeholder="Type or speak your question…"
+          placeholder="Ask about the books, a reading guide, an event…"
           rows="1"
           maxlength="2000"
           aria-label="Your message"
@@ -142,6 +162,7 @@ function wireUp(root) {
   const sendBtn  = root.querySelector('#kb-send');
   const ttsBtn   = root.querySelector('#kb-tts-btn');
   const bugBtn   = root.querySelector('#kb-bug-btn');
+  const chips    = root.querySelector('#kb-chips');
 
   // ── State ──
   const S = { IDLE: 'idle', LISTEN: 'listen', THINK: 'think', SPEAK: 'speak' };
@@ -284,8 +305,24 @@ function wireUp(root) {
     input.focus();
     if (!greeted) {
       greeted = true;
-      setTimeout(() => addMsg('assistant', 'Hi. Ask me anything about our courses, your progress, or what you\'d like to learn next. You can type or tap the mic to speak.'), 350);
+      setTimeout(() => addMsg('assistant', 'Welcome to the Reading Room. I can help you find the right book to start with, track down a copy, pull up reading guides and book-club questions, or point you to the free resources that go with each title. Ask away — or tap the mic and speak.'), 350);
     }
+  }
+
+  // ── Suggested-question chips ──
+  // They are a starting nudge, so they retire the moment the reader engages:
+  // one tap sends the question, and any typed message hides the row for good.
+  function hideChips() {
+    if (chips) chips.classList.add('kb-chips-gone');
+  }
+  if (chips) {
+    chips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.kb-chip');
+      if (!chip) return;
+      input.value = chip.dataset.q || chip.textContent.trim();
+      hideChips();
+      doSend();
+    });
   }
 
   function closePanel() {
@@ -332,6 +369,7 @@ function wireUp(root) {
   async function doSend() {
     const text = input.value.trim();
     if (!text || loading) return;
+    hideChips();
     input.value = '';
     input.style.height = 'auto';
     stopListen();
@@ -556,8 +594,8 @@ function startWave(canvas, stateRef) {
 
     // Filled area under primary wave
     const fillGrad = ctx.createLinearGradient(0, H * 0.35, 0, H);
-    fillGrad.addColorStop(0, 'rgba(230,3,6,0.22)');
-    fillGrad.addColorStop(1, 'rgba(230,3,6,0)');
+    fillGrad.addColorStop(0, 'rgba(227,24,55,0.14)');
+    fillGrad.addColorStop(1, 'rgba(227,24,55,0)');
     ctx.save();
     ctx.beginPath();
     wave(ctx, W, H, a, cfg.speed, frame, 0);
@@ -566,15 +604,17 @@ function startWave(canvas, stateRef) {
     ctx.fill();
     ctx.restore();
 
-    // Wave layers (primary, secondary, highlight)
-    strokeWave(ctx, W, H, a,        cfg.speed, frame, 0,              '#C8102E',           1.00, 2.2);
-    strokeWave(ctx, W, H, a * 0.60, cfg.speed, frame, Math.PI / 2.2, 'rgba(255,80,80,.5)', 1.00, 1.4);
-    strokeWave(ctx, W, H, a * 0.28, cfg.speed, frame, Math.PI,       'rgba(255,255,255,.14)', 1.00, 1.0);
+    // Wave layers: red pen stroke, its lighter echo, and a faint ink trace.
+    // On paper the third layer has to be dark (it was white for the old black
+    // panel) or it disappears into the page.
+    strokeWave(ctx, W, H, a,        cfg.speed, frame, 0,             '#E31837',              1.00, 2.0);
+    strokeWave(ctx, W, H, a * 0.60, cfg.speed, frame, Math.PI / 2.2, 'rgba(163,46,58,.42)',  1.00, 1.3);
+    strokeWave(ctx, W, H, a * 0.28, cfg.speed, frame, Math.PI,       'rgba(26,26,26,.13)',   1.00, 1.0);
 
-    // Center glow line
+    // Center rule — the ruled line of the page
     ctx.save();
-    ctx.globalAlpha = 0.25 + 0.15 * Math.sin(frame * 0.05);
-    ctx.strokeStyle = '#C8102E';
+    ctx.globalAlpha = 0.20 + 0.12 * Math.sin(frame * 0.05);
+    ctx.strokeStyle = '#1A1A1A';
     ctx.lineWidth   = 0.5;
     ctx.setLineDash([3, 6]);
     ctx.beginPath();
@@ -614,6 +654,7 @@ function strokeWave(ctx, W, H, amp, speed, frame, phase, color, alpha, lw) {
   ctx.restore();
 }
 
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 function injectStyles() {
@@ -621,394 +662,578 @@ function injectStyles() {
   const el = document.createElement('style');
   el.id = 'kb-chat-css';
   el.textContent = `
-/* ── Widget root ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE READING ROOM — book concierge widget
+
+   Skinned from tokens.css: white paper, near-black ink, one signal red.
+   Every colour goes through a token with a literal fallback, so the widget
+   follows a palette change and still renders on pages that predate tokens.
+
+   The widget mounts on <body>, outside any .on-black scope, so it always
+   resolves the light roles even on the portal pages whose rails are black.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 #kb-chat-widget {
   position: fixed;
   bottom: 28px;
   right: 28px;
   z-index: 9999;
-  font-family: 'Jost', sans-serif;
+  font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+
+  /* Local aliases. Declared here rather than read from :root at each call
+     site so the fallbacks live in exactly one place. */
+  --kb-paper:  var(--paper, #FFFFFF);
+  --kb-surf:   var(--surface, #FAFAFA);
+  --kb-surf2:  var(--surface-2, #F1F1F1);
+  --kb-ink:    var(--ink, #1A1A1A);
+  --kb-ink-hi: var(--ink-strong, #000000);
+  --kb-muted:  var(--ink-muted, #6E6E6E);
+  --kb-line:   var(--border, rgba(0,0,0,.14));
+  --kb-red:    var(--red, #E31837);
+  --kb-red-dk: var(--red-dark, #B80D28);
+  --kb-red-mu: var(--red-muted, #A32E3A);
+  --kb-tint:   var(--red-tint, rgba(227,24,55,.08));
+  --kb-label:  var(--font-body, 'Jost', system-ui, sans-serif);
+  --kb-ease:   var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+
+  /* Board colours for the book itself — deeper than signal red so the
+     launcher reads as a cloth binding, not a button. */
+  --kb-board:  #C0122E;
+  --kb-board-2:#8E2733;
+  --kb-leaf:   #FBFAF6;
+  --kb-leaf-2: #EDE9DF;
 }
 
-/* ── FAB ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LAUNCHER — a book that opens
+
+   Built from stacked 3-D layers rather than an image so it inherits the
+   palette and stays crisp at any density: back board, text block, three
+   leaves and a front board, all hinged on a left-edge spine.
+
+   At rest the book is closed and squarely presented. On hover — or whenever
+   the panel is open — the front board swings open and the leaves turn in
+   sequence, on a loop, so the book reads as being actively read. Each leaf
+   fades out while face-away and fades back in flat, which hides the reset
+   and makes three leaves look like an endless stack.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .kb-fab {
   position: relative;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  /* Sized so the cover's stamped type still resolves: below about this the
+     author line degrades into texture rather than reading as a name. */
+  width: 86px;
+  height: 92px;
   border: none;
+  background: none;
+  padding: 0;
   cursor: pointer;
-  background: #0d0d0d;
-  box-shadow:
-    0 0 0 1.5px rgba(230,3,6,.55),
-    0 0 18px rgba(230,3,6,.35),
-    0 6px 24px rgba(0,0,0,.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow .2s ease, transform .18s ease;
+  perspective: 800px;
+  -webkit-tap-highlight-color: transparent;
 }
-.kb-fab:hover {
-  transform: scale(1.07);
-  box-shadow:
-    0 0 0 1.5px rgba(230,3,6,.8),
-    0 0 28px rgba(230,3,6,.55),
-    0 8px 32px rgba(0,0,0,.75);
-}
-.kb-fab:active { transform: scale(.96); }
+.kb-fab:focus-visible { outline: 2px solid var(--kb-red); outline-offset: 6px; }
 
-/* Pulse rings */
-.kb-fab-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(230,3,6,.45);
-  pointer-events: none;
-  animation: kb-ring 2.8s cubic-bezier(.215,.61,.355,1) infinite;
-}
-.kb-fab-ring-1 { inset: -10px; animation-delay: 0s; }
-.kb-fab-ring-2 { inset: -20px; animation-delay: .9s; }
-@keyframes kb-ring {
-  0%   { transform: scale(.88); opacity: .8; }
-  70%  { transform: scale(1.2); opacity: 0; }
-  100% { transform: scale(1.2); opacity: 0; }
-}
-
-/* Waveform bars in FAB icon */
-.kb-fab-core { color: #C8102E; display: flex; }
-.kb-fab-icon { width: 28px; height: 20px; }
-.kb-fab-icon rect {
-  transform-box: fill-box;
-  transform-origin: center bottom;
-  animation: kb-fab-bar 1.7s ease-in-out infinite;
-}
-.kb-fab-icon rect:nth-child(1) { animation-delay: 0s; }
-.kb-fab-icon rect:nth-child(2) { animation-delay: .12s; }
-.kb-fab-icon rect:nth-child(3) { animation-delay: .24s; }
-.kb-fab-icon rect:nth-child(4) { animation-delay: .12s; }
-.kb-fab-icon rect:nth-child(5) { animation-delay: 0s; }
-@keyframes kb-fab-bar {
-  0%, 100% { transform: scaleY(1); }
-  50%       { transform: scaleY(.35); }
-}
-
-/* ── Panel ───────────────────────────────────────────────────── */
-.kb-panel {
-  position: absolute;
-  bottom: 72px;
-  right: 0;
-  width: 380px;
-  max-width: calc(100vw - 40px);
-  border-radius: 18px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  /* Subtle grid overlay background */
-  background:
-    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
-    #090909;
-  background-size: 22px 22px, 22px 22px, auto;
-  border: 1px solid rgba(230,3,6,.38);
-  box-shadow:
-    0 0 0 1px rgba(230,3,6,.10),
-    0 0 40px rgba(230,3,6,.10),
-    0 24px 64px rgba(0,0,0,.85),
-    inset 0 1px 0 rgba(255,255,255,.06);
-  /* Scanline overlay */
-  --scan: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0,0,0,.06) 3px,
-    rgba(0,0,0,.06) 4px
-  );
-
-  /* Closed state */
-  transform: scale(.93) translateY(10px);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform .32s cubic-bezier(.34,1.56,.64,1),
-    opacity   .22s ease;
-}
-.kb-panel::after {
-  content: '';
+.kb-book {
   position: absolute;
   inset: 0;
-  background: var(--scan);
+  transform-style: preserve-3d;
+  /* A slight tilt away and to the left: the book sits on a desk, seen from
+     just above, rather than floating flat-on like an icon. */
+  transform: rotateX(12deg) rotateZ(-3deg);
+  transition: transform .5s var(--kb-ease);
+}
+.kb-fab:hover .kb-book,
+.kb-fab:focus-visible .kb-book,
+.kb-fab[aria-expanded="true"] .kb-book {
+  transform: rotateX(6deg) rotateZ(0deg) scale(1.05);
+}
+.kb-fab:active .kb-book { transform: rotateX(10deg) scale(.97); }
+
+.kb-book > span { position: absolute; }
+
+/* Contact shadow on the desk. It spreads as the book opens. */
+.kb-book-shadow {
+  left: 10px; right: 8px; bottom: 3px; height: 13px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.30), rgba(0,0,0,0) 70%);
+  filter: blur(2px);
+  transform: translateZ(-6px);
+  transition: transform .5s var(--kb-ease), opacity .5s var(--kb-ease);
+}
+.kb-fab:hover .kb-book-shadow,
+.kb-fab[aria-expanded="true"] .kb-book-shadow { transform: translateZ(-6px) scaleX(1.35); opacity: .8; }
+
+/* Back board — the half of the binding that stays put. */
+.kb-book-back {
+  left: 16px; right: 14px; top: 8px; bottom: 8px;
+  background: linear-gradient(115deg, var(--kb-board-2), var(--kb-board) 60%, var(--kb-board-2));
+  border-radius: 2px 4px 4px 2px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.32), inset -1px 0 0 rgba(0,0,0,.25);
+}
+
+/* Text block — the fore-edge of the paper, ruled with page striations so
+   you can count leaves at the edge. */
+/* The striations are the fore-edge only — the outer few millimetres of the
+   right side, where the stacked leaves are actually visible. Run them across
+   the whole face and the open book reads as corduroy, not paper. */
+.kb-book-block {
+  left: 18px; right: 16px; top: 10px; bottom: 10px;
+  border-radius: 1px 3px 3px 1px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0) calc(100% - 7px), rgba(0,0,0,.05) 100%),
+    repeating-linear-gradient(90deg,
+      var(--kb-leaf) 0 2px,
+      var(--kb-leaf-2) 2px 3px) right / 7px 100% no-repeat,
+    linear-gradient(100deg, #FFFDF8, var(--kb-leaf) 60%, var(--kb-leaf-2));
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.14), inset 1px 0 0 rgba(0,0,0,.10);
+}
+
+/* Place-keeper ribbon, tucked into the spine and trailing past the tail.
+   It lies between the leaves and the front board, so it must NOT be lifted
+   in Z — a translateZ here floats it in front of the closed cover. It reads
+   as a ribbon only once the board has opened. */
+.kb-book-ribbon {
+  left: 27px; top: 14px; width: 5px; bottom: 3px;
+  background: linear-gradient(var(--kb-red), var(--kb-red-mu));
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.28);
+}
+
+/* ── Leaves ─────────────────────────────────────────────────────────────
+   Hinged at the spine. The faint rules read as lines of type at this size;
+   the right-edge shading is the curl catching the light as it lifts. */
+.kb-page {
+  left: 17px; right: 15px; top: 9px; bottom: 9px;
+  transform-origin: left center;
+  transform: rotate3d(0.12, 1, 0, 0deg);
+  backface-visibility: hidden;
+  border-radius: 1px 3px 3px 1px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, rgba(0,0,0,0) 6px),
+    repeating-linear-gradient(180deg,
+      rgba(0,0,0,0) 0 5px,
+      rgba(26,26,26,.16) 5px 6px),
+    linear-gradient(100deg, #FFFDF8, var(--kb-leaf) 55%, var(--kb-leaf-2));
+  background-size: 100% 100%, 60% 62%, 100% 100%;
+  background-position: 0 0, 22% 50%, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+}
+.kb-fab:hover .kb-page,
+.kb-fab:focus-visible .kb-page,
+.kb-fab[aria-expanded="true"] .kb-page {
+  animation: kb-leaf-turn 2.1s cubic-bezier(.42,.02,.35,1) infinite;
+}
+.kb-page-1 { animation-delay: .10s; }
+.kb-page-2 { animation-delay: .80s; }
+.kb-page-3 { animation-delay: 1.50s; }
+
+@keyframes kb-leaf-turn {
+  0%   { transform: rotate3d(0.12, 1, 0, 0deg);    opacity: 1; box-shadow: 0 0 0 rgba(0,0,0,0); }
+  8%   { box-shadow: 10px 6px 20px rgba(0,0,0,.30); }
+  46%  { transform: rotate3d(0.12, 1, 0, -152deg); opacity: 1; }
+  /* Past square the leaf is face-away and clipped by backface-visibility,
+     so fading out here hides the snap back to flat entirely. */
+  56%  { transform: rotate3d(0.12, 1, 0, -172deg); opacity: 0; box-shadow: 0 0 0 rgba(0,0,0,0); }
+  57%  { transform: rotate3d(0.12, 1, 0, 0deg);    opacity: 0; }
+  72%  { opacity: 0; }
+  86%  { opacity: 1; }
+  100% { transform: rotate3d(0.12, 1, 0, 0deg);    opacity: 1; }
+}
+
+/* ── Front board ────────────────────────────────────────────────────────
+   Two faces on one hinge: the cloth cover, and the cream endpaper you see
+   once it has swung past square. */
+.kb-book-cover {
+  left: 16px; right: 14px; top: 8px; bottom: 8px;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transform: rotate3d(0.1, 1, 0, 0deg);
+  transition: transform .62s cubic-bezier(0.4, 0.1, 0.22, 1);
+}
+.kb-fab:hover .kb-book-cover,
+.kb-fab:focus-visible .kb-book-cover,
+.kb-fab[aria-expanded="true"] .kb-book-cover {
+  transform: rotate3d(0.1, 1, 0, -158deg);
+}
+/* The lift shadow lives on the faces, never on this hinge element: a filter
+   here flattens the preserve-3d subtree, which switches off backface-
+   visibility and leaves the open board showing a mirrored front cover
+   instead of its endpaper. */
+.kb-fab:hover .kb-cover-face,
+.kb-fab:focus-visible .kb-cover-face,
+.kb-fab[aria-expanded="true"] .kb-cover-face,
+.kb-fab:hover .kb-cover-inner,
+.kb-fab:focus-visible .kb-cover-inner,
+.kb-fab[aria-expanded="true"] .kb-cover-inner {
+  box-shadow: 8px 10px 18px rgba(0,0,0,.32), inset 0 0 0 1px rgba(0,0,0,.10);
+}
+
+.kb-cover-face,
+.kb-cover-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px 4px 4px 2px;
+  backface-visibility: hidden;
+}
+.kb-cover-face {
+  background:
+    linear-gradient(118deg, var(--kb-board-2) 0 6%, var(--kb-board) 26%, #D0163A 55%, var(--kb-board-2));
+  box-shadow: inset -1px 0 0 rgba(0,0,0,.28), 0 4px 12px rgba(0,0,0,.30);
+  overflow: hidden;
+}
+/* Endpaper: what the open board shows the reader. */
+.kb-cover-inner {
+  transform: rotateY(180deg);
+  background:
+    repeating-linear-gradient(135deg, rgba(163,46,58,.07) 0 2px, rgba(0,0,0,0) 2px 9px),
+    linear-gradient(200deg, #FFFDF8, var(--kb-leaf-2));
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.10);
+}
+
+/* Foil frame stamped a couple of millimetres in from the edges. Wider on
+   the left to clear the hinge groove, so the rule doesn't collide with it. */
+.kb-cover-frame {
+  position: absolute;
+  inset: 6px 5px 6px 10px;
+  border: 1px solid rgba(255,255,255,.40);
+  border-radius: 1px;
+}
+/* The hinge groove where the cloth folds over the board. */
+.kb-cover-groove {
+  position: absolute;
+  left: 3px; top: 0; bottom: 0; width: 1px;
+  background: rgba(0,0,0,.34);
+  box-shadow: 1px 0 0 rgba(255,255,255,.16);
+}
+/* The byline. Tracking is the first thing to go at this size — the letters
+   drift apart into texture — so it stays tight and the size does the work. */
+.kb-cover-author {
+  position: absolute;
+  left: 13px; right: 8px; top: 12px;
+  text-align: center;
+  font-family: var(--kb-label);
+  font-size: 5.2px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(255,255,255,.92);
+}
+.kb-cover-monogram {
+  position: absolute;
+  left: 10px; right: 5px; top: 50%;
+  transform: translateY(-52%);
+  text-align: center;
+  font-family: var(--font-display, 'Audrey', 'Jost', Georgia, serif);
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: .04em;
+  color: #fff;
+}
+/* The full stop, same device as the nav wordmark — but the wordmark's red
+   dot would vanish on a red board, so here it is the paper that pops. */
+.kb-cover-dot { font-style: normal; color: rgba(255,255,255,.62); }
+.kb-cover-rule {
+  position: absolute;
+  left: 52%; bottom: 15px;
+  width: 16px; height: 1px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-fab:hover .kb-page,
+  .kb-fab:focus-visible .kb-page,
+  .kb-fab[aria-expanded="true"] .kb-page { animation: none; }
+  .kb-book, .kb-book-cover, .kb-book-shadow { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE PANEL — a page from the site
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.kb-panel {
+  position: absolute;
+  bottom: 92px;
+  right: 0;
+  width: 384px;
+  max-width: calc(100vw - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--kb-paper);
+  /* Square corners and hairline rules: the site sets border-radius 0 on its
+     buttons and frames everything in 1px black. */
+  border: 1px solid var(--kb-line);
+  border-top: 2px solid var(--kb-red);
+  border-radius: 0;
+  box-shadow: 0 18px 48px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+
+  transform: translateY(10px) scale(.99);
+  opacity: 0;
   pointer-events: none;
-  border-radius: inherit;
-  z-index: 20;
+  transition: transform .34s var(--kb-ease), opacity .22s ease;
 }
 .kb-panel.kb-open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0) scale(1);
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Corner targeting marks */
-.kb-crn {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-  z-index: 2;
-}
-.kb-crn-tl { top:8px;    left:8px;  border-top:1.5px solid rgba(230,3,6,.7); border-left:1.5px solid rgba(230,3,6,.7); }
-.kb-crn-tr { top:8px;    right:8px; border-top:1.5px solid rgba(230,3,6,.7); border-right:1.5px solid rgba(230,3,6,.7); }
-.kb-crn-bl { bottom:8px; left:8px;  border-bottom:1.5px solid rgba(230,3,6,.7); border-left:1.5px solid rgba(230,3,6,.7); }
-.kb-crn-br { bottom:8px; right:8px; border-bottom:1.5px solid rgba(230,3,6,.7); border-right:1.5px solid rgba(230,3,6,.7); }
-
-/* ── Header ──────────────────────────────────────────────────── */
+/* ── Header: the title page ─────────────────────────────────────────────── */
 .kb-hdr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 12px;
-  background: rgba(5,5,5,.8);
-  border-bottom: 1px solid rgba(230,3,6,.18);
-  position: relative;
-  z-index: 1;
+  gap: 10px;
+  padding: 13px 14px 12px 16px;
+  background: var(--kb-surf2);
+  border-bottom: 1px solid var(--kb-line);
 }
-.kb-hdr-left  { display: flex; align-items: center; gap: 9px; }
-.kb-hdr-right { display: flex; align-items: center; gap: 4px; }
+.kb-hdr-left  { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kb-hdr-right { display: flex; align-items: center; gap: 2px; }
+.kb-hdr-titles { display: grid; gap: 3px; line-height: 1; min-width: 0; }
+.kb-hdr-eyebrow {
+  font-family: var(--kb-label);
+  font-size: 8px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+}
+.kb-hdr-title {
+  font-family: var(--font-display, 'Audrey', 'Jost', Georgia, serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--kb-ink-hi);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .kb-led {
-  width: 7px;
-  height: 7px;
+  width: 7px; height: 7px;
   border-radius: 50%;
-  background: #333;
+  background: rgba(0,0,0,.22);
   flex-shrink: 0;
   transition: background .25s, box-shadow .25s;
 }
 .kb-led-listen {
-  background: #C8102E;
-  box-shadow: 0 0 8px #C8102E;
+  background: var(--kb-red);
+  box-shadow: 0 0 0 3px var(--kb-tint);
   animation: kb-led-blink .7s ease-in-out infinite;
 }
 .kb-led-think {
-  background: #ff8800;
-  box-shadow: 0 0 7px #ff8800;
+  background: var(--kb-red-mu);
+  box-shadow: 0 0 0 3px var(--kb-tint);
   animation: kb-led-blink .45s ease-in-out infinite;
 }
-.kb-led-speak {
-  background: #C8102E;
-  box-shadow: 0 0 10px #C8102E;
-}
-@keyframes kb-led-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: .25; }
-}
-
-.kb-hdr-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  letter-spacing: .18em;
-  color: #d0d0d8;
-  font-weight: 700;
-}
-.kb-hdr-badge {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .12em;
-  color: #C8102E;
-  border: 1px solid rgba(230,3,6,.45);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
+.kb-led-speak { background: var(--kb-red); box-shadow: 0 0 0 3px var(--kb-tint); }
+@keyframes kb-led-blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
 
 .kb-tts-btn, .kb-close {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: none;
+  width: 30px; height: 30px;
   border: none;
+  border-radius: 0;
+  background: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background .15s, color .15s;
 }
-.kb-tts-btn { color: #444; }
-.kb-tts-btn:hover { background: rgba(255,255,255,.05); color: #888; }
-.kb-tts-btn.kb-tts-on  { color: #C8102E; }
+.kb-tts-btn { color: var(--kb-muted); }
+.kb-tts-btn:hover { background: rgba(0,0,0,.05); color: var(--kb-ink); }
+.kb-tts-btn.kb-tts-on { color: var(--kb-red); }
 .kb-tts-btn svg { width: 15px; height: 15px; }
-
-/* Show/hide speaker icons based on state */
 .kb-tts-btn .kb-spk-on  { display: none; }
 .kb-tts-btn .kb-spk-off { display: block; }
 .kb-tts-btn.kb-tts-on .kb-spk-on  { display: block; }
 .kb-tts-btn.kb-tts-on .kb-spk-off { display: none; }
 
-.kb-close { color: #555; }
-.kb-close:hover { background: rgba(255,255,255,.06); color: #ccc; }
+.kb-close { color: var(--kb-muted); }
+.kb-close:hover { background: rgba(0,0,0,.05); color: var(--kb-ink-hi); }
 .kb-close svg { width: 13px; height: 13px; }
 
-/* ── Wave visualizer ─────────────────────────────────────────── */
+/* ── Ink line ───────────────────────────────────────────────────────────── */
 .kb-viz {
-  background: #050505;
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  position: relative;
+  background: var(--kb-surf);
+  border-bottom: 1px solid var(--kb-line);
 }
-.kb-canvas {
-  display: block;
-  width: 100%;
-  height: 80px;
-}
+.kb-canvas { display: block; width: 100%; height: 62px; }
 .kb-viz-status {
   text-align: center;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .28em;
-  color: rgba(230,3,6,.75);
-  padding: 3px 0 7px;
+  font-family: var(--kb-label);
+  font-size: 8px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+  padding: 0 0 7px;
 }
 
-/* ── Messages ────────────────────────────────────────────────── */
+/* ── Messages ───────────────────────────────────────────────────────────── */
 .kb-msgs {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 14px 6px;
+  padding: 16px 16px 8px;
   min-height: 200px;
-  max-height: 280px;
+  max-height: 300px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+  background: var(--kb-paper);
   scrollbar-width: thin;
-  scrollbar-color: #2a2a2a transparent;
+  scrollbar-color: rgba(0,0,0,.22) transparent;
 }
 .kb-msgs::-webkit-scrollbar { width: 4px; }
-.kb-msgs::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+.kb-msgs::-webkit-scrollbar-thumb { background: rgba(0,0,0,.22); }
 
 .kb-row { display: flex; }
 .kb-row-user      { justify-content: flex-end; }
 .kb-row-assistant { justify-content: flex-start; }
 
 .kb-bub {
-  max-width: 80%;
+  max-width: 82%;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 0;
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
   animation: kb-msg-in .22s ease;
 }
 @keyframes kb-msg-in {
-  from { opacity: 0; transform: translateY(6px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* The reader speaks in red; the room answers in ink on paper. */
 .kb-bub-user {
-  background: linear-gradient(135deg, #c20204, #C8102E);
+  background: var(--kb-red);
   color: #fff;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 3px 14px rgba(230,3,6,.35);
+  box-shadow: 0 2px 10px rgba(227,24,55,.22);
 }
+/* A red margin rule down the left edge — the annotation in the gutter. */
 .kb-bub-assistant {
-  background: rgba(14,14,14,.95);
-  color: #e2e2e8;
-  border: 1px solid rgba(230,3,6,.22);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.45);
+  background: var(--kb-surf);
+  color: var(--kb-ink);
+  border: 1px solid var(--kb-line);
+  border-left: 2px solid var(--kb-red);
 }
 .kb-bub-err {
-  background: rgba(30,10,10,.95);
-  border-color: rgba(200,50,50,.5);
-  color: #f08888;
+  background: var(--kb-tint);
+  border-color: var(--border-red, rgba(227,24,55,.32));
+  border-left-color: var(--kb-red-dk);
+  color: var(--kb-red-dk);
 }
 
-/* Thinking dots */
 .kb-think-dots {
   display: flex !important;
   align-items: center;
   gap: 5px;
-  padding: 12px 16px !important;
+  padding: 13px 16px !important;
 }
 .kb-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px; height: 6px;
   border-radius: 50%;
-  background: #C8102E;
+  background: var(--kb-red);
   display: inline-block;
   animation: kb-dot-bounce 1.1s ease-in-out infinite;
 }
 .kb-dot:nth-child(2) { animation-delay: .18s; }
 .kb-dot:nth-child(3) { animation-delay: .36s; }
 @keyframes kb-dot-bounce {
-  0%, 80%, 100% { transform: translateY(0) scale(1); opacity: .7; }
-  40%            { transform: translateY(-8px) scale(1.15); opacity: 1; }
+  0%, 80%, 100% { transform: translateY(0); opacity: .55; }
+  40%           { transform: translateY(-7px); opacity: 1; }
 }
 
-/* ── Input bar ───────────────────────────────────────────────── */
+/* ── Suggested-question chips ───────────────────────────────────────────── */
+.kb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 16px 12px;
+  background: var(--kb-paper);
+}
+.kb-chips-gone { display: none; }
+.kb-chip {
+  font-family: var(--kb-label);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--kb-ink);
+  background: transparent;
+  border: 1px solid rgba(0,0,0,.28);
+  border-radius: 0;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color .18s var(--kb-ease), background .18s var(--kb-ease), border-color .18s var(--kb-ease);
+}
+.kb-chip:hover, .kb-chip:focus-visible {
+  color: #fff;
+  background: var(--kb-red-mu);
+  border-color: var(--kb-red-mu);
+}
+
+/* ── Input bar ──────────────────────────────────────────────────────────── */
 .kb-bar {
   display: flex;
   align-items: flex-end;
   gap: 8px;
   padding: 11px 13px;
-  background: rgba(5,5,5,.85);
-  border-top: 1px solid rgba(230,3,6,.15);
-  position: relative;
-  z-index: 1;
+  background: var(--kb-surf2);
+  border-top: 1px solid var(--kb-line);
 }
 
-/* Mic button */
 .kb-mic {
   flex-shrink: 0;
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   border-radius: 50%;
-  background: rgba(230,3,6,.07);
-  border: 1px solid rgba(230,3,6,.28);
-  color: #666;
+  background: var(--kb-paper);
+  border: 1px solid rgba(0,0,0,.28);
+  color: var(--kb-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+  transition: background .18s, border-color .18s, color .18s;
 }
 .kb-mic svg { width: 17px; height: 17px; }
-.kb-mic:hover {
-  background: rgba(230,3,6,.14);
-  border-color: rgba(230,3,6,.55);
-  color: #C8102E;
-}
+.kb-mic:hover { border-color: var(--kb-red); color: var(--kb-red); background: var(--kb-tint); }
 .kb-mic-active {
-  background: rgba(230,3,6,.22) !important;
-  border-color: #C8102E !important;
-  color: #C8102E !important;
-  box-shadow: 0 0 14px rgba(230,3,6,.45) !important;
+  background: var(--kb-red) !important;
+  border-color: var(--kb-red) !important;
+  color: #fff !important;
 }
 .kb-mic-ring {
   position: absolute;
   inset: -7px;
   border-radius: 50%;
-  border: 1px solid rgba(230,3,6,.5);
+  border: 1px solid var(--kb-red);
   pointer-events: none;
   opacity: 0;
 }
-.kb-mic-active .kb-mic-ring {
-  opacity: 1;
-  animation: kb-mic-pulse 1.1s ease-in-out infinite;
-}
+.kb-mic-active .kb-mic-ring { opacity: 1; animation: kb-mic-pulse 1.1s ease-in-out infinite; }
 @keyframes kb-mic-pulse {
-  0%   { transform: scale(.9);  opacity: .9; }
+  0%   { transform: scale(.9);  opacity: .8; }
   70%  { transform: scale(1.4); opacity: 0; }
   100% { transform: scale(1.4); opacity: 0; }
 }
 
-/* Textarea */
 .kb-input {
   flex: 1;
-  background: rgba(10,10,10,.95);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 11px;
-  color: #e8e8f0;
-  font-family: 'Jost', sans-serif;
+  background: var(--kb-paper);
+  border: 1px solid rgba(0,0,0,.28);
+  border-radius: 0;
+  color: var(--kb-ink);
+  font-family: var(--kb-label);
   font-size: 13.5px;
   line-height: 1.5;
-  padding: 9px 13px;
+  padding: 9px 12px;
   resize: none;
   outline: none;
   min-height: 40px;
@@ -1016,39 +1241,38 @@ function injectStyles() {
   transition: border-color .18s, box-shadow .18s;
 }
 .kb-input:focus {
-  border-color: rgba(230,3,6,.6);
-  box-shadow: 0 0 0 3px rgba(230,3,6,.12);
+  border-color: var(--kb-red);
+  box-shadow: 0 0 0 3px var(--kb-tint);
 }
-.kb-input::placeholder { color: #444; }
+.kb-input::placeholder { color: var(--kb-muted); }
 .kb-input:disabled { opacity: .45; }
 
-/* Send button */
 .kb-send {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  background: #C8102E;
-  border: none;
+  width: 40px; height: 40px;
+  border-radius: 0;
+  background: var(--kb-red);
+  border: 1px solid var(--kb-red);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background .15s, transform .1s, box-shadow .18s;
-  box-shadow: 0 3px 12px rgba(230,3,6,.4);
+  transition: background .15s, border-color .15s, transform .1s;
 }
-.kb-send:hover {
-  background: #c20205;
-  box-shadow: 0 4px 18px rgba(230,3,6,.6);
+.kb-send:hover { background: var(--kb-red-mu); border-color: var(--kb-red-mu); }
+.kb-send:active { transform: scale(.93); }
+.kb-send:disabled {
+  background: var(--kb-surf2);
+  border-color: var(--kb-line);
+  color: var(--kb-muted);
+  cursor: not-allowed;
 }
-.kb-send:active { transform: scale(.9); }
-.kb-send:disabled { background: #2a2a2a; box-shadow: none; cursor: not-allowed; }
 .kb-send svg { width: 17px; height: 17px; }
 
-/* ── Bug report button ───────────────────────────────────────── */
+/* ── Bug report ─────────────────────────────────────────────────────────── */
 .kb-bug-btn {
-  border-radius: 8px;
+  border-radius: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -1058,25 +1282,25 @@ function injectStyles() {
   justify-content: center;
   gap: 1px;
   padding: 4px 6px;
-  color: #888;
+  color: var(--kb-muted);
   transition: background .15s, color .15s;
 }
-.kb-bug-btn:hover { background: rgba(255,255,255,.05); color: #ff9500; }
-.kb-bug-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.kb-bug-btn:hover { background: rgba(0,0,0,.05); color: var(--kb-ink-hi); }
+.kb-bug-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .kb-bug-lbl {
-  font-family: 'Jost', sans-serif;
+  font-family: var(--kb-label);
   font-size: 7px;
-  letter-spacing: .04em;
+  letter-spacing: .1em;
   line-height: 1;
   white-space: nowrap;
-  text-transform: lowercase;
+  text-transform: uppercase;
 }
 
-/* ── Bug report inline form ──────────────────────────────────── */
 .kb-bug-form {
-  background: rgba(20,12,0,.95);
-  border: 1px solid rgba(255,149,0,.28);
-  border-radius: 12px;
+  background: var(--kb-surf);
+  border: 1px solid var(--kb-line);
+  border-left: 2px solid var(--kb-ink-hi);
+  border-radius: 0;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
@@ -1084,18 +1308,18 @@ function injectStyles() {
   animation: kb-msg-in .22s ease;
 }
 .kb-bug-form-lbl {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: .1em;
+  font-family: var(--kb-label);
+  font-size: 9px;
+  letter-spacing: .22em;
   text-transform: uppercase;
-  color: #ff9500;
+  color: var(--kb-muted);
 }
 .kb-bug-ta {
-  background: rgba(10,8,0,.9);
-  border: 1px solid rgba(255,149,0,.18);
-  border-radius: 8px;
-  color: #e8e8f0;
-  font-family: 'Jost', sans-serif;
+  background: var(--kb-paper);
+  border: 1px solid rgba(0,0,0,.22);
+  border-radius: 0;
+  color: var(--kb-ink);
+  font-family: var(--kb-label);
   font-size: 13px;
   line-height: 1.5;
   padding: 8px 10px;
@@ -1106,89 +1330,85 @@ function injectStyles() {
   box-sizing: border-box;
   transition: border-color .15s;
 }
-.kb-bug-ta:focus { border-color: rgba(255,149,0,.45); }
+.kb-bug-ta:focus { border-color: var(--kb-red); }
 .kb-bug-acts { display: flex; gap: 6px; }
 .kb-bug-submit {
   flex: 1;
-  background: #ff9500;
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 10px;
+  background: var(--kb-ink-hi);
+  border: 1px solid var(--kb-ink-hi);
+  border-radius: 0;
+  color: #fff;
+  font-family: var(--kb-label);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 8px 10px;
   cursor: pointer;
-  transition: background .15s, opacity .15s;
+  transition: background .15s, border-color .15s, opacity .15s;
 }
-.kb-bug-submit:hover { background: #ffaa22; }
+.kb-bug-submit:hover { background: var(--kb-red-mu); border-color: var(--kb-red-mu); }
 .kb-bug-submit:disabled { opacity: .5; cursor: not-allowed; }
 .kb-bug-cancel {
   background: none;
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px;
-  color: #666;
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
-  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,.22);
+  border-radius: 0;
+  color: var(--kb-muted);
+  font-family: var(--kb-label);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 8px 10px;
   cursor: pointer;
   transition: color .15s, border-color .15s;
 }
-.kb-bug-cancel:hover { color: #aaa; border-color: rgba(255,255,255,.22); }
+.kb-bug-cancel:hover { color: var(--kb-ink-hi); border-color: var(--kb-ink-hi); }
 
-
-/* ── Profile update toast ────────────────────────────────────── */
+/* ── Confirmation slip ──────────────────────────────────────────────────── */
 .kb-profile-toast {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: .1em;
+  font-family: var(--kb-label);
+  font-size: 9px;
+  letter-spacing: .2em;
   text-transform: uppercase;
-  color: #4ade80;
-  border: 1px solid rgba(74,222,128,.25);
-  border-radius: 8px;
-  padding: 6px 14px;
+  color: var(--kb-red-mu);
+  background: var(--kb-tint);
+  border: 1px solid var(--border-red, rgba(227,24,55,.32));
+  border-radius: 0;
+  padding: 7px 14px;
   text-align: center;
   margin: 4px auto;
-  max-width: 85%;
+  max-width: 88%;
   animation: kb-msg-in .22s ease;
 }
 
-/* ── Mobile ──────────────────────────────────────────────────── */
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  /* Widget spans full width at the bottom */
   #kb-chat-widget {
     bottom: 0; right: 0; left: 0; top: auto;
     pointer-events: none;
   }
-  /* FAB stays pinned to bottom-right */
   .kb-fab {
     position: fixed;
-    bottom: 18px; right: 18px;
+    bottom: 16px; right: 16px;
     pointer-events: auto;
   }
-  /* Bottom sheet: ~85vh, rounded top corners, slides up */
+  /* No hover on touch: the book opens as the panel does. */
   .kb-panel {
     position: fixed;
     bottom: 0; left: 0; right: 0; top: auto;
     width: 100%;
     max-width: 100%;
     height: 85vh;
-    border-radius: 20px 20px 0 0;
     transform: translateY(100%);
     opacity: 1;
     transition: transform .32s cubic-bezier(.25,.1,.25,1);
     pointer-events: none;
   }
-  .kb-panel.kb-open {
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  /* Messages fill remaining height */
+  .kb-panel.kb-open { transform: translateY(0); pointer-events: auto; }
   .kb-msgs { flex: 1; max-height: none; min-height: 0; }
   /* 16px prevents iOS auto-zoom on focus */
   .kb-input { font-size: 16px; }
-  /* Shorter wave on mobile to preserve message space */
-  .kb-canvas { height: 60px; }
+  .kb-canvas { height: 52px; }
 }
   `;
   document.head.appendChild(el);
