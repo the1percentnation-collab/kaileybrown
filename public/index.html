@@ -12,7 +12,7 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kailey Brown</title>
-  <meta name="description" content="Kailey Brown writes contemporary romance for anyone who has ever wanted to feel seen. Somewhere Between Dreaming &amp; You, out now.">
+  <meta name="description" content="Kailey Brown writes contemporary romance for anyone who has ever wanted to feel seen. Landed On You, out now.">
   <meta property="og:title" content="Kailey Brown">
   <meta property="og:description" content="Contemporary romance for anyone who has ever wanted to feel seen.">
   <meta property="og:type" content="website">
@@ -362,7 +362,12 @@
        mid-swing and the open reads as a wipe. */
     .book-cover {
       position: relative;
-      width: 100%; aspect-ratio: 2 / 3;
+      /* 5:8, the KDP/ebook cover standard the real covers are drawn to —
+         not 2:3, which was a guess made before any art existed. The img is
+         object-fit:cover, so a container that disagrees with the source
+         centre-crops it: at 2:3 these covers lost ~6% off the top and
+         bottom, which is exactly where the tagline and the author name sit. */
+      width: 100%; aspect-ratio: 5 / 8;
       /* Deep. A nearer viewpoint magnifies the swung cover enough that it
          overhangs the card and lands on the neighbouring title's labels. */
       perspective: 2400px;
@@ -684,7 +689,7 @@
         <!-- TODO(assets): the treated author photo at /assets/hero.jpg
              (3:4 — smiling with the open red book, bookstore aisle). -->
         <img src="/assets/hero.jpg"
-             alt="Kailey Brown reading her novel Somewhere Between Dreaming &amp; You"
+             alt="Kailey Brown holding an open book in a bookstore aisle"
              fetchpriority="high"
              onerror="this.closest('.hero').classList.remove('has-photo'); this.remove()">
       </div>
@@ -713,9 +718,8 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
-                  <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
-                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-cover.jpg</p>
+                  <img src="/assets/landed-on-you.jpg" alt="Cover of Landed On You" loading="lazy" onerror="this.remove()">
+                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/landed-on-you.jpg</p>
                 </div>
                 <div class="book-back" aria-hidden="true"></div>
               </div>
@@ -726,11 +730,12 @@
               <span class="label is-red">Out now</span>
               <span class="label muted">Contemporary romance</span>
             </div>
-            <h3>Somewhere Between Dreaming &amp; You</h3>
-            <div class="book-blurb">
-              <!-- TODO(brand): the real back-cover blurb. -->
-              <p>The back-cover blurb goes here. Set up the situation, introduce the person it happens to, and end on the question the reader needs answered.</p>
-            </div>
+            <h3>Landed On You</h3>
+            <!-- TODO(brand): the back-cover blurb. Deliberately absent rather
+                 than filled with stand-in prose — invented copy about a real
+                 book is worse than none, and the card reads fine without it. -->
+            <!-- TODO(brand): the retailer URL. Until it lands this button goes
+                 nowhere, so it must not ship pointing at "#". -->
             <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </article>
@@ -741,9 +746,8 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
-                  <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
-                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-2.jpg</p>
+                  <img src="/assets/12-days-of-awkward.jpg" alt="Cover of 12 Days of Awkward" loading="lazy" onerror="this.remove()">
+                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/12-days-of-awkward.jpg</p>
                 </div>
                 <div class="book-back" aria-hidden="true"></div>
               </div>
@@ -752,13 +756,11 @@
           <div class="book-body">
             <div class="book-meta">
               <span class="label is-red">Coming soon</span>
-              <span class="label muted">Contemporary romance</span>
+              <!-- Genre taken from the cover's own tagline, not assumed. -->
+              <span class="label muted">Holiday rom-com</span>
             </div>
-            <h3>Second Title</h3>
-            <div class="book-blurb">
-              <!-- TODO(brand): the real back-cover blurb. -->
-              <p>A line or two about the next book — enough to make a reader want the release date in their calendar.</p>
-            </div>
+            <h3>12 Days of Awkward</h3>
+            <!-- TODO(brand): the teaser line and the release date. -->
             <a class="btn" href="#newsletter">Get the date<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </article>
@@ -769,7 +771,7 @@
               <div class="book-pages" aria-hidden="true"></div>
               <div class="book-lid">
                 <div class="book-front">
-                  <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
+                  <!-- TODO(assets): cover art at /assets/book-3.jpg (5:8 portrait — the ebook standard, e.g. 1600x2560). -->
                   <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
                   <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-3.jpg</p>
                 </div>
@@ -782,11 +784,8 @@
               <span class="label muted">In progress</span>
               <span class="label muted">Contemporary romance</span>
             </div>
+            <!-- TODO(brand): the real title, and the cover at the path above. -->
             <h3>Third Title</h3>
-            <div class="book-blurb">
-              <!-- TODO(brand): the real back-cover blurb. -->
-              <p>The one being written now. Tease the premise and let the Inner Circle hear about it first.</p>
-            </div>
             <a class="btn" href="#newsletter">Follow along<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </article>
