@@ -307,7 +307,7 @@ function renderAvailableCourses() {
 // ─── Roadmap ─────────────────────────────────────────────────────────────
 
 const DRAFT_CHIP = '<span style="display:inline-block; margin-left:8px; padding:1px 7px; ' +
-  'border-radius:999px; background:#b91c1c; color:#fff; font-size:10px; letter-spacing:1px;">DRAFT</span>';
+  'border-radius:999px; background:#E31837; color:#fff; font-size:10px; letter-spacing:1px;">DRAFT</span>';
 
 function roadmapHtml(course, { modules, completedSet, currentId, certHref = null }) {
   // Count against the modules this course actually has today — progress docs
@@ -475,7 +475,7 @@ function renderPreviewBanner(course) {
     : '';
   const banner = document.createElement('div');
   banner.id = 'owner-preview-banner';
-  banner.style.cssText = 'position:sticky; top:0; z-index:50; background:#b91c1c; color:#fff; ' +
+  banner.style.cssText = 'position:sticky; top:0; z-index:50; background:#E31837; color:#fff; ' +
     'padding:8px 16px; font-size:13px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;';
   banner.innerHTML =
     `<span>👁 Preview mode (owner) — members see this course as <b>${escapeHtml(course.status || '—')}</b>. ` +

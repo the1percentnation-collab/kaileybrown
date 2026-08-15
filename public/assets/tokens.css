@@ -103,7 +103,10 @@
 .on-black,
 .sidebar,
 .courses-sidebar,
-.crm-sidebar {
+.crm-sidebar,
+.console-topbar,
+.academy-header,
+.crm-appbar {
   color-scheme: dark;
   --paper:      #0B0B0C;
   --surface:    #17171A;
@@ -137,5 +140,15 @@
 }
 .on-black {
   background: var(--paper);
+}
+/* color must be (re)declared ON the scope, not inherited: text color computed
+   at body resolves against the light tokens and would arrive here black. */
+.on-black,
+.sidebar,
+.courses-sidebar,
+.crm-sidebar,
+.console-topbar,
+.academy-header,
+.crm-appbar {
   color: var(--ink);
 }

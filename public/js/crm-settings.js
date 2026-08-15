@@ -47,8 +47,8 @@ function render() {
 function stageRowHtml(s, i, total) {
   const used = state.oppCountByStage[s.id] || 0;
   const locked = PROTECTED.has(s.id) || used > 0;
-  const flag = s.won ? '<span class="crm-stage-badge" style="--stage-color:#56D4A8">Won</span>'
-    : (s.lost ? '<span class="crm-stage-badge" style="--stage-color:#8B4A4A">Lost</span>' : '');
+  const flag = s.won ? '<span class="crm-stage-badge" style="--stage-color:#E31837">Won</span>'
+    : (s.lost ? '<span class="crm-stage-badge" style="--stage-color:#C4C4C4">Lost</span>' : '');
   return `
     <div class="crm-mini-row" data-stage-row="${escapeHtml(s.id)}">
       <input type="color" class="stage-color" data-id="${escapeHtml(s.id)}" value="${escapeHtml(s.color || '#A0A0A0')}" style="width:34px;height:34px;border:none;background:none;cursor:pointer;">
@@ -85,7 +85,7 @@ function wire() {
     syncFromInputs();
     const maxOrder = state.stages.reduce((m, s) => Math.max(m, s.order || 0), 0);
     const id = slug('stage') + '-' + Math.random().toString(36).slice(2, 6);
-    state.stages.push({ id, label: 'New Stage', color: '#5AA8E6', order: maxOrder + 1, probability: 0.5 });
+    state.stages.push({ id, label: 'New Stage', color: '#8A8A8A', order: maxOrder + 1, probability: 0.5 });
     render();
   });
   document.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => {

@@ -13,13 +13,15 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
+/* Stage colors follow the site's monochrome palette: greys deepening with
+   progress, red reserved for the win. */
 export const STAGES = [
-  { id: 'new',         label: 'New',         color: '#A0A0A0' },
-  { id: 'contacted',   label: 'Contacted',   color: '#5AA8E6' },
-  { id: 'qualified',   label: 'Qualified',   color: '#9B8CE8' },
-  { id: 'negotiating', label: 'Negotiating', color: '#E8C547' },
-  { id: 'customer',    label: 'Customer',    color: '#56D4A8' },
-  { id: 'lost',        label: 'Lost',        color: '#8B4A4A' }
+  { id: 'new',         label: 'New',         color: '#A8A8A8' },
+  { id: 'contacted',   label: 'Contacted',   color: '#8A8A8A' },
+  { id: 'qualified',   label: 'Qualified',   color: '#5E5E5E' },
+  { id: 'negotiating', label: 'Negotiating', color: '#2E2E2E' },
+  { id: 'customer',    label: 'Customer',    color: '#E31837' },
+  { id: 'lost',        label: 'Lost',        color: '#C4C4C4' }
 ];
 export const STAGE_IDS = STAGES.map((s) => s.id);
 export const SOURCES = ['Referral', 'Website', 'Event', 'Other'];
@@ -371,12 +373,12 @@ export function toDate(ts) {
 // from STAGES so existing contact.stage strings keep resolving 1:1.
 // ════════════════════════════════════════════════════════════════
 export const DEFAULT_PIPELINE_STAGES = [
-  { id: 'new',         label: 'New',         color: '#A0A0A0', order: 0, probability: 0.10 },
-  { id: 'contacted',   label: 'Contacted',   color: '#5AA8E6', order: 1, probability: 0.25 },
-  { id: 'qualified',   label: 'Qualified',   color: '#9B8CE8', order: 2, probability: 0.50 },
-  { id: 'negotiating', label: 'Negotiating', color: '#E8C547', order: 3, probability: 0.75 },
-  { id: 'customer',    label: 'Won',         color: '#56D4A8', order: 4, probability: 1.00, won: true },
-  { id: 'lost',        label: 'Lost',        color: '#8B4A4A', order: 5, probability: 0.00, lost: true }
+  { id: 'new',         label: 'New',         color: '#A8A8A8', order: 0, probability: 0.10 },
+  { id: 'contacted',   label: 'Contacted',   color: '#8A8A8A', order: 1, probability: 0.25 },
+  { id: 'qualified',   label: 'Qualified',   color: '#5E5E5E', order: 2, probability: 0.50 },
+  { id: 'negotiating', label: 'Negotiating', color: '#2E2E2E', order: 3, probability: 0.75 },
+  { id: 'customer',    label: 'Won',         color: '#E31837', order: 4, probability: 1.00, won: true },
+  { id: 'lost',        label: 'Lost',        color: '#C4C4C4', order: 5, probability: 0.00, lost: true }
 ];
 
 function pipelinesCol(companyId) { return collection(db, 'companies', companyId, 'pipelines'); }

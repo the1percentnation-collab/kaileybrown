@@ -61,9 +61,13 @@
           </nav>
         </div>
         <div class="courses-hero-visual">
-          <!-- TODO(assets): add a hero photo at /assets/courses-hero.jpg and
-               restore the <img> here. The shape renders as brand art until then. -->
-          <div class="courses-hero-shape">
+          <!-- The treated author photo at /assets/courses-hero.jpg. If it is
+               missing, onerror strips the --photo class and the shape renders
+               as the black-and-red brand art instead. -->
+          <div class="courses-hero-shape courses-hero-shape--photo">
+            <img class="courses-hero-photo" src="/assets/courses-hero.jpg"
+                 alt="Kailey Brown"
+                 onerror="this.closest('.courses-hero-shape').classList.remove('courses-hero-shape--photo'); this.remove()">
             <span class="courses-hero-caption">Steady · Deliberate · Yours</span>
           </div>
         </div>
