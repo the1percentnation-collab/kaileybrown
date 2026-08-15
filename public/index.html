@@ -94,14 +94,14 @@
        The single filled-red button on the page is the newsletter Subscribe. */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      padding: 15px 34px;
+      padding: 16px 35px;   /* +1px: the frame moved to ::before, see below */
       font-family: var(--sans-label);
       font-size: 11px; font-weight: 600;
       letter-spacing: 0.24em; text-transform: uppercase;
       text-decoration: none; cursor: pointer;
       background: transparent;
       color: var(--ink-strong);
-      border: 1px solid rgba(0, 0, 0, 0.35);
+      border: 0;
       border-radius: 0;
       /* Stage for the page turn below. isolation keeps the negative-z
          leaf layers inside the button so the label paints over them. */
@@ -117,6 +117,24 @@
       perspective: 650px;
       transition: color .2s var(--ease-out), border-color .3s var(--ease-out);
     }
+    /* The outline is a pseudo-element, NOT a real border. Per CSS painting
+       order, negative z-index children paint on top of their parent's own
+       background AND border — so the turning page (z-index:-1), whose outer
+       panel overhangs the right edge by ~0.6px, was painting over the right
+       border and leaving the frame open-ended. Drawn here at z-index 1 it
+       sits above the leaf and always closes. */
+    .btn::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 1;
+      border: 1px solid rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      transition: border-color .3s var(--ease-out);
+    }
+    .btn:hover::before,
+    .btn:focus-visible::before { border-color: var(--red-muted); }
+    .btn-red::before { border-color: var(--red); }
+    .btn-red:hover::before { border-color: var(--red-muted); }
+
     /* A page turn, not a wipe: the red never moves. It is the next page,
        already lying underneath — darkened toward the left like the gutter
        of a book — and the white face above lifts away to uncover it. */
@@ -199,10 +217,9 @@
        covered it, leaving white-on-white for a beat. No delay on the way out. */
     .btn:hover, .btn:focus-visible {
       color: #fff;
-      border-color: var(--red-muted);
-      transition: color .2s var(--ease-out) .16s, border-color .3s var(--ease-out);
+      transition: color .2s var(--ease-out) .16s;
     }
-    .btn-red { background: transparent; border-color: var(--red); color: #fff; }
+    .btn-red { background: transparent; color: #fff; }
     /* The filled button's vivid red face IS its top page; the muted red
        waits underneath, same as the white buttons. */
     .btn-red .page { background: linear-gradient(90deg, var(--red) 0 calc(50% + 1px), transparent calc(50% + 1px)); }
@@ -370,7 +387,7 @@
     .book-body h3 { font-size: clamp(1.35rem, 1.6vw, 1.7rem); }
     .book-blurb { font-size: 0.98rem; }
     .book-blurb p + p { margin-top: 12px; }
-    .book .btn { margin-top: auto; padding: 12px 26px; }
+    .book .btn { margin-top: auto; padding: 13px 27px; }
     /* A title with no cover yet still holds its place on the shelf. */
     .book.is-upcoming .book-cover { background: var(--surface); }
 
@@ -450,10 +467,10 @@
        masses: the Inner Circle band and the footer carry class="on-black",
        which re-skins the color tokens (see tokens.css). Only hardcoded
        borders need restating for the dark ground. */
-    .on-black .btn { border-color: rgba(255, 255, 255, 0.4); }
+    .on-black .btn::before { border-color: rgba(255, 255, 255, 0.4); }
     /* Same specificity as .btn:hover and declared later, so the hover border
        has to be restated here or the white outline would win on the band. */
-    .on-black .btn:hover { border-color: var(--red-muted); }
+    .on-black .btn:hover::before { border-color: var(--red-muted); }
     .on-black .newsletter input { border-color: rgba(255, 255, 255, 0.4); }
     @media (max-width: 560px) {
       .on-black .newsletter input { border-right: 1px solid rgba(255, 255, 255, 0.4); }
