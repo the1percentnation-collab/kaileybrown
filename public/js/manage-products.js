@@ -16,7 +16,7 @@ const state = { products: [] };
 function gate(msg) { $('gate-msg').innerHTML = `<div class="card"><div class="auth-error">${escapeHtml(msg)}</div></div>`; }
 
 function statusBadge(s) {
-  const color = { planned: '#A0A0A0', interest: '#5AA8E6', preorder: '#E8C547', live: '#56D4A8', archived: '#8B4A4A' }[s] || '#A0A0A0';
+  const color = { planned: '#A8A8A8', interest: '#8A8A8A', preorder: '#2E2E2E', live: '#E31837', archived: '#C4C4C4' }[s] || '#A8A8A8';
   return `<span class="crm-stage-badge" style="--stage-color:${color}">${escapeHtml(s)}</span>`;
 }
 

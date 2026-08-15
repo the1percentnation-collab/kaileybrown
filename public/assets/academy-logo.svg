@@ -6,11 +6,11 @@
        A text mark in SVG stays crisp at any size and needs no @2x raster.
        Audrey is the display face, with Jost as the fallback when the licensed
        webfont is not installed (see /assets/tokens.css). -->
-  <rect x="1" y="1" width="62" height="62" rx="14" fill="none" stroke="#C8102E" stroke-width="2"/>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="none" stroke="#E31837" stroke-width="2"/>
   <text x="32" y="42"
         text-anchor="middle"
         font-family="Audrey, Jost, Georgia, serif"
         font-size="30"
         letter-spacing="1.5"
-        fill="#C8102E">KB</text>
+        fill="#E31837">KB</text>
 </svg>

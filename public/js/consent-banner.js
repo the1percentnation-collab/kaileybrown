@@ -61,7 +61,7 @@
     var accept = document.createElement('button');
     accept.type = 'button';
     accept.textContent = 'Accept';
-    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#C8102E;color:#fff;cursor:pointer;font-weight:700;';
+    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#E31837;color:#fff;cursor:pointer;font-weight:700;';
 
     function close(choice) {
       save(choice);
