@@ -14,31 +14,23 @@ import {
   ReCaptchaV3Provider
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
 
-// ⚠️ TWO VALUES STILL REQUIRED BEFORE FIRST DEPLOY.
+// Web app config for the kaileybrown-48e22 project.
 //
-// The project-derived fields below are filled in for kaileybrown-48e22
-// (project number 192030174948). `apiKey` and `appId` are generated when the
-// Web app itself is registered, so they cannot be derived — copy them from:
-//   Project settings → General → Your apps → SDK setup and configuration.
-// If there is no Web app listed there yet, click the </> button to create one.
+// These are public by design and are meant to ship to the browser. Firebase web
+// API keys are not secrets: all security in this app comes from the Firestore
+// and Storage rules plus the callable-side auth checks. Do not try to hide them
+// or move them into environment variables — the client needs them to boot.
 //
-// The placeholders are deliberately invalid so a half-configured deploy fails
-// loudly instead of silently pointing at the wrong project.
-//
-// These are all public by design. Firebase web config ships to every browser;
-// security comes from the Firestore/Storage rules and the callable-side auth
-// checks, never from keeping these secret.
+// The real secret is the service-account key, which lives only in the GitHub
+// Actions secret and is never in this repo.
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
+  apiKey: "AIzaSyB3ebNvy_krUc3GrunmGSudcMln9IJhOZc",
   authDomain: "kaileybrown-48e22.firebaseapp.com",
   projectId: "kaileybrown-48e22",
-  // Projects created before ~Oct 2024 use "<id>.appspot.com" instead. Check the
-  // bucket name in the console under Storage if uploads 404.
   storageBucket: "kaileybrown-48e22.firebasestorage.app",
   messagingSenderId: "192030174948",
-  appId: "REPLACE_WITH_APP_ID",
-  // Optional: only used if you enable Google Analytics on the project.
-  measurementId: "REPLACE_WITH_GA4_MEASUREMENT_ID"
+  appId: "1:192030174948:web:01232f5f010ae808f446f1",
+  measurementId: "G-1Z4PKNDLHG"
 };
 
 // ── Firebase App Check (bot / abuse protection) ─────────────────────────────

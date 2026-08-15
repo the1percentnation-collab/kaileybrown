@@ -25,33 +25,41 @@ URL. **Do not add a build step** without treating it as its own project: bare
 | mammoth | 1 | .docx import |
 | html2canvas | 1.4.1 | bug-report screenshots |
 
-## Before this deploys
+## Project wiring
 
-These cannot be guessed and the site will not work until they are set.
+Already connected to Firebase project **`kaileybrown-48e22`** (project number
+`192030174948`), which is on the Blaze plan:
 
-1. **`public/js/firebase.js`** — two values left: `apiKey` and `appId`. They are
-   generated when the Web app is registered, so copy them from Firebase console
-   → Project settings → General → Your apps → SDK setup. Everything else is
-   already filled in for project `kaileybrown-48e22`. The placeholders are
-   deliberately invalid so a half-configured deploy fails loudly instead of
-   writing to the wrong project.
-2. **GA4** — replace `G-REPLACE_WITH_GA4_ID` across `public/*.html` with a real
-   measurement ID, or strip the analytics snippet.
-3. **Owner mailbox** — `kailey@kaileybrown.com` must exist and be reachable
+- `public/js/firebase.js` — full web config, including the GA4 measurement ID
+- `public/*.html` — GA4 tag `G-1Z4PKNDLHG`
+- `.firebaserc` and all three workflows — project ID
+
+CI needs one repo secret, `FIREBASE_SERVICE_ACCOUNT_KAILEY_BROWN`, holding the
+service-account JSON from Project settings → Service accounts. That key is the
+only real secret here; the web config above is public by design.
+
+## Still outstanding
+
+1. **Owner mailbox** — `kailey@kaileybrown.com` must exist and be reachable
    before first deploy: you sign up with it to claim ownership. It is a hard
    gate, not a display string, and must stay byte-identical in
    `functions/index.js` and `public/js/auth.js`.
-4. **Legal pages** — `privacy.html` and `terms.html` still contain
+2. **Legal pages** — `privacy.html` and `terms.html` still contain
    `[[PLACEHOLDER]]` tokens for legal business name, mailing address, governing
    state, refund policy and effective date. Fill them in and have counsel
    review.
-5. **Fonts** — `Audrey` is the display face and is **not** a Google Font. License
+3. **Fonts** — `Audrey` is the display face and is **not** a Google Font. License
    it for web use, convert to `.woff2`, and drop it at
    `public/assets/fonts/audrey.woff2`. Until then every display usage falls back
    to Jost, which is a near match, so nothing looks broken.
-6. **Images** — the previous brand's photography and video were removed rather
+4. **Images** — the previous brand's photography and video were removed rather
    than reused. Add your own at the paths marked `TODO(assets)` in
    `public/index.html` and `public/courses.html`.
+5. **Copy** — placeholder headlines, bio and FAQ answers are marked
+   `TODO(brand)`.
+6. **Third-party keys** (optional; every integration degrades gracefully when
+   unset): `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+   `TWILIO_*`, `ANTHROPIC_API_KEY`.
 
 See `AUTH_SETUP.md` for the full Firebase project checklist.
 
