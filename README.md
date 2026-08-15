@@ -29,10 +29,12 @@ URL. **Do not add a build step** without treating it as its own project: bare
 
 These cannot be guessed and the site will not work until they are set.
 
-1. **`public/js/firebase.js`** — replace every `REPLACE_WITH_*` value with the
-   real web config from Firebase console → Project settings → General → Your
-   apps → SDK setup. The placeholders are deliberately invalid so a
-   half-configured deploy fails loudly instead of writing to the wrong project.
+1. **`public/js/firebase.js`** — two values left: `apiKey` and `appId`. They are
+   generated when the Web app is registered, so copy them from Firebase console
+   → Project settings → General → Your apps → SDK setup. Everything else is
+   already filled in for project `kaileybrown-48e22`. The placeholders are
+   deliberately invalid so a half-configured deploy fails loudly instead of
+   writing to the wrong project.
 2. **GA4** — replace `G-REPLACE_WITH_GA4_ID` across `public/*.html` with a real
    measurement ID, or strip the analytics snippet.
 3. **Owner mailbox** — `kailey@kaileybrown.com` must exist and be reachable
@@ -60,9 +62,9 @@ Follow `AUTH_SETUP.md`, then:
 ```bash
 npx firebase-tools login
 cd functions && npm install && cd ..
-npx firebase-tools deploy --only firestore:rules,firestore:indexes,storage --project kailey-brown
-npx firebase-tools deploy --only functions --project kailey-brown
-npx firebase-tools deploy --only hosting --project kailey-brown
+npx firebase-tools deploy --only firestore:rules,firestore:indexes,storage --project kaileybrown-48e22
+npx firebase-tools deploy --only functions --project kaileybrown-48e22
+npx firebase-tools deploy --only hosting --project kaileybrown-48e22
 ```
 
 Or push to `main` and let the workflows run. CI needs a repo secret named

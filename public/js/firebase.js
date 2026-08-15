@@ -14,19 +14,30 @@ import {
   ReCaptchaV3Provider
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
 
-// ⚠️ REQUIRED BEFORE FIRST DEPLOY — these seven values cannot be guessed.
-// Copy them from the new Firebase project's console:
+// ⚠️ TWO VALUES STILL REQUIRED BEFORE FIRST DEPLOY.
+//
+// The project-derived fields below are filled in for kaileybrown-48e22
+// (project number 192030174948). `apiKey` and `appId` are generated when the
+// Web app itself is registered, so they cannot be derived — copy them from:
 //   Project settings → General → Your apps → SDK setup and configuration.
-// Nothing in the app works until these are real; the placeholders below are
-// deliberately invalid so a half-configured deploy fails loudly instead of
-// silently writing into the wrong project.
+// If there is no Web app listed there yet, click the </> button to create one.
+//
+// The placeholders are deliberately invalid so a half-configured deploy fails
+// loudly instead of silently pointing at the wrong project.
+//
+// These are all public by design. Firebase web config ships to every browser;
+// security comes from the Firestore/Storage rules and the callable-side auth
+// checks, never from keeping these secret.
 export const firebaseConfig = {
   apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
-  authDomain: "kailey-brown.firebaseapp.com",
-  projectId: "kailey-brown",
-  storageBucket: "kailey-brown.firebasestorage.app",
-  messagingSenderId: "REPLACE_WITH_MESSAGING_SENDER_ID",
+  authDomain: "kaileybrown-48e22.firebaseapp.com",
+  projectId: "kaileybrown-48e22",
+  // Projects created before ~Oct 2024 use "<id>.appspot.com" instead. Check the
+  // bucket name in the console under Storage if uploads 404.
+  storageBucket: "kaileybrown-48e22.firebasestorage.app",
+  messagingSenderId: "192030174948",
   appId: "REPLACE_WITH_APP_ID",
+  // Optional: only used if you enable Google Analytics on the project.
   measurementId: "REPLACE_WITH_GA4_MEASUREMENT_ID"
 };
 

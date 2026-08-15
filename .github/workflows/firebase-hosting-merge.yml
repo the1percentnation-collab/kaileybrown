@@ -14,4 +14,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KAILEY_BROWN }}
           channelId: live
-          projectId: kailey-brown
+          projectId: kaileybrown-48e22

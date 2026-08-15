@@ -2,7 +2,7 @@
 // Includes SendGrid email features: transactional emails (invite, welcome),
 // 1-on-1 contact emails, campaign broadcast, and the SendGrid Event Webhook.
 //
-// Deploy: `npx firebase-tools deploy --only functions --project kailey-brown`
+// Deploy: `npx firebase-tools deploy --only functions --project kaileybrown-48e22`
 
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
@@ -4439,7 +4439,7 @@ exports.reportBug = onCall(async (request) => {
       screenshotUrl
         ? `<p><a href="${screenshotUrl}" style="color:#c20000;">View Screenshot →</a> (link expires in 30 days)</p>`
         : '<p><em>No screenshot attached.</em></p>',
-      `<hr/><p><a href="https://kailey-brown.web.app/bug-reports.html" style="color:#c20000;">Review all bug reports →</a></p>`
+      `<hr/><p><a href="https://kaileybrown-48e22.web.app/bug-reports.html" style="color:#c20000;">Review all bug reports →</a></p>`
     ].join('');
 
     await sgMail.send({
@@ -4447,7 +4447,7 @@ exports.reportBug = onCall(async (request) => {
       from: { email: FROM_EMAIL, name: FROM_NAME_DEFAULT },
       replyTo: REPLY_TO,
       subject: `[Bug][${aiSeverity.toUpperCase()}] ${shortDesc}`,
-      text: `Bug Report\n\nSeverity: ${aiSeverity}\nPage: ${pageUrl || 'unknown'}\nReporter: ${uid || 'anonymous'}\n\nDescription:\n${description.trim()}\n\nAI Analysis:\n${aiAnalysis}\n\nReview: https://kailey-brown.web.app/bug-reports.html`,
+      text: `Bug Report\n\nSeverity: ${aiSeverity}\nPage: ${pageUrl || 'unknown'}\nReporter: ${uid || 'anonymous'}\n\nDescription:\n${description.trim()}\n\nAI Analysis:\n${aiAnalysis}\n\nReview: https://kaileybrown-48e22.web.app/bug-reports.html`,
       html: htmlBody
     });
   } catch (e) {

@@ -49,7 +49,7 @@ jobs:
         run: |
           npx --yes firebase-tools deploy \
             --only firestore:rules,firestore:indexes,storage \
-            --project kailey-brown \
+            --project kaileybrown-48e22 \
             --non-interactive \
             --force
 
@@ -63,10 +63,10 @@ jobs:
         run: |
           npx --yes firebase-tools deploy \
             --only functions \
-            --project kailey-brown \
+            --project kaileybrown-48e22 \
             --non-interactive \
             --force \
           || {
-            echo "::error::Cloud Functions deploy failed. Rules and indexes in the previous step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kailey-brown. See AUTH_SETUP.md step 1."
+            echo "::error::Cloud Functions deploy failed. Rules and indexes in the previous step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
             exit 1
           }
