@@ -349,36 +349,128 @@
     /* auto row for the cover, 1fr for the body: the body absorbs the height
        difference between cards so its CTA can sit at the bottom. */
     .book { display: grid; grid-template-rows: auto 1fr; gap: 22px; justify-items: start; }
+    /* The cover is now a hinged leaf over a real page block, so hovering
+       OPENS the book rather than tilting it. The resting frame is unchanged
+       — flat, spine gutter down the left, leaves along the fore edge — the
+       geometry behind it only becomes visible once the cover swings.
+
+       Note what does NOT live inside the 3D layer: the resting drop shadow.
+       A box-shadow on a preserve-3d child is rasterised into the 3D layer
+       and renders as a hard-edged grey slab beside the book instead of a
+       shadow, so it stays here on the flat perspective element. Likewise no
+       overflow:hidden and no clip-path — either one shaves the cover flat
+       mid-swing and the open reads as a wipe. */
     .book-cover {
-      display: grid; place-items: center;   /* centres the missing-cover note */
       position: relative;
       width: 100%; aspect-ratio: 2 / 3;
-      background: linear-gradient(150deg, var(--surface-2), var(--surface));
-      border: 1px solid var(--border);
+      /* Deep. A nearer viewpoint magnifies the swung cover enough that it
+         overhangs the card and lands on the neighbouring title's labels. */
+      perspective: 2400px;
       box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
-      overflow: hidden;
-      transform-origin: left center;
-      transition: transform .45s var(--ease-out), box-shadow .45s var(--ease-out);
+      transition: box-shadow .7s cubic-bezier(0.4, 0.1, 0.22, 1);
     }
-    .book-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-    /* The spine: a dark gutter with a highlight where the cover folds. */
-    .book-cover::before {
+    .book-stage {
+      position: absolute; inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      transition: transform .7s cubic-bezier(0.4, 0.1, 0.22, 1);
+    }
+
+    /* The bound edge: a slab standing at x=0 spanning the depth between the
+       page block and the cover. rotateY(-90deg) swings its +x axis to +z, so
+       it runs toward the viewer with its face pointing left — edge-on and
+       invisible while the book rests flat, revealed as the stage turns. */
+    .book-spine {
+      position: absolute; top: 0; bottom: 0; left: 0; width: 18px;
+      transform-origin: left center;
+      transform: rotateY(-90deg);
+      background: linear-gradient(90deg, #141414, #303030 60%, #1B1B1B);
+    }
+
+    /* The text block the open cover uncovers. Inset on the fore edge only,
+       where a real cover overhangs its pages. Striations are pinned to that
+       edge with background-size — run them the full width and the spread
+       reads as corrugated metal rather than paper. */
+    .book-pages {
+      position: absolute; inset: 0 2% 0 0;
+      transform: translateZ(2px);
+      background-image:
+        linear-gradient(90deg, rgba(60, 40, 15, 0.22), rgba(0, 0, 0, 0) 18%),
+        repeating-linear-gradient(90deg, rgba(120, 95, 55, 0.11) 0 1px, transparent 1px 5px),
+        linear-gradient(150deg, #FBF7EF, #F0E9DA);
+      background-size: 100% 100%, 11% 100%, 100% 100%;
+      background-position: left center, right center, left center;
+      background-repeat: no-repeat;
+    }
+    /* The raised cover darkening the gutter it stands over. An opacity-gated
+       overlay for the same reason as above — a box-shadow on the cover would
+       slab — and it is the truer effect anyway. Zero at rest. */
+    .book-pages::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.30), rgba(0, 0, 0, 0.04) 48%, transparent);
+      opacity: 0;
+      transition: opacity .7s cubic-bezier(0.4, 0.1, 0.22, 1);
+    }
+
+    /* The hinged leaf, with both faces authored: the artwork on the front,
+       cream board on the back, so the inside-front is not a mirror of the
+       cover art. */
+    .book-lid {
+      position: absolute; inset: 0;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transform: translateZ(18px) rotateY(0deg);
+      transition: transform .7s cubic-bezier(0.4, 0.1, 0.22, 1);
+    }
+    .book-front, .book-back {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .book-front {
+      display: grid; place-items: center;   /* centres the missing-cover note */
+      background: linear-gradient(150deg, var(--surface-2), var(--surface));
+    }
+    .book-front img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    /* The spine gutter and fore-edge leaves stay painted on the cover face,
+       exactly as before, so the resting shelf is unchanged. */
+    .book-front::before {
       content: '';
       position: absolute; top: 0; bottom: 0; left: 0; width: 11px; z-index: 2;
       background: linear-gradient(90deg,
         rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.16) 46%,
         rgba(255, 255, 255, 0.22) 62%, rgba(0, 0, 0, 0.10) 100%);
     }
-    /* The page block: the stacked leaves showing along the fore edge. */
-    .book-cover::after {
+    .book-front::after {
       content: '';
       position: absolute; top: 3px; bottom: 3px; right: 0; width: 5px; z-index: 2;
       background: repeating-linear-gradient(90deg,
         rgba(0, 0, 0, 0.16) 0 1px, rgba(255, 255, 255, 0.5) 1px 2px);
     }
-    .book:hover .book-cover {
-      transform: perspective(1100px) rotateY(-7deg) translateY(-5px);
-      box-shadow: 0 26px 48px rgba(0, 0, 0, 0.22);
+    .book-back {
+      transform: rotateY(180deg);
+      /* Mirrored gutter: on this face the binding is on the right. */
+      background:
+        linear-gradient(270deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0) 26%),
+        linear-gradient(150deg, #F3EDE2, #E8E0D0);
+    }
+
+    /* Past 90deg, not to it — a real cover falls a little beyond flat. The
+       stage turns with it so the spine slab comes into view. hover:hover
+       gates the whole thing: on a touch screen the book stays shut and the
+       card is simply tappable. */
+    @media (hover: hover) {
+      .book:hover .book-stage,
+      .book:focus-within .book-stage { transform: rotateY(10deg); }
+      .book:hover .book-lid,
+      .book:focus-within .book-lid { transform: translateZ(18px) rotateY(-112deg); }
+      .book:hover .book-pages::after,
+      .book:focus-within .book-pages::after { opacity: 1; }
+      /* An open book stands taller off the shelf than a closed one. */
+      .book:hover .book-cover,
+      .book:focus-within .book-cover { box-shadow: 0 26px 56px rgba(0, 0, 0, 0.22); }
     }
     /* Flex column rather than grid: margin-top:auto on the CTA only absorbs
        free space in a flex container, which is what lines the buttons up. */
@@ -389,7 +481,7 @@
     .book-blurb p + p { margin-top: 12px; }
     .book .btn { margin-top: auto; padding: 13px 27px; }
     /* A title with no cover yet still holds its place on the shelf. */
-    .book.is-upcoming .book-cover { background: var(--surface); }
+    .book.is-upcoming .book-front { background: var(--surface); }
 
     .placeholder {
       font-family: var(--sans-label); font-size: 10px;
@@ -508,6 +600,11 @@
       .fade-up { opacity: 1; transform: none; transition: none; }
       /* transition-delay too, or the button label lags the page turn by 160ms. */
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+      /* Zeroed durations alone would make the cover SNAP open on hover,
+         which is worse than not opening at all. Pin the book shut. */
+      .book:hover .book-stage, .book:focus-within .book-stage { transform: rotateY(0deg); }
+      .book:hover .book-lid, .book:focus-within .book-lid { transform: translateZ(18px) rotateY(0deg); }
+      .book:hover .book-pages::after, .book:focus-within .book-pages::after { opacity: 0; }
     }
 
     @media (max-width: 820px) {
@@ -606,10 +703,23 @@
 
       <div class="books-grid">
         <article class="book fade-up">
+          <!-- The divs inside .book-stage are the faces of the book. They
+               carry no content and their order matters: in a preserve-3d
+               context source order settles ties between faces at equal
+               depth. -->
           <div class="book-cover">
-            <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
-            <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
-            <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
+            <div class="book-stage">
+              <div class="book-spine" aria-hidden="true"></div>
+              <div class="book-pages" aria-hidden="true"></div>
+              <div class="book-lid">
+                <div class="book-front">
+                  <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
+                  <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
+                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-cover.jpg</p>
+                </div>
+                <div class="book-back" aria-hidden="true"></div>
+              </div>
+            </div>
           </div>
           <div class="book-body">
             <div class="book-meta">
@@ -626,9 +736,18 @@
         </article>
         <article class="book fade-up is-upcoming">
           <div class="book-cover">
-            <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
-            <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
-            <p class="placeholder">Cover<br>/assets/book-2.jpg</p>
+            <div class="book-stage">
+              <div class="book-spine" aria-hidden="true"></div>
+              <div class="book-pages" aria-hidden="true"></div>
+              <div class="book-lid">
+                <div class="book-front">
+                  <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
+                  <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
+                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-2.jpg</p>
+                </div>
+                <div class="book-back" aria-hidden="true"></div>
+              </div>
+            </div>
           </div>
           <div class="book-body">
             <div class="book-meta">
@@ -645,9 +764,18 @@
         </article>
         <article class="book fade-up is-upcoming">
           <div class="book-cover">
-            <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
-            <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
-            <p class="placeholder">Cover<br>/assets/book-3.jpg</p>
+            <div class="book-stage">
+              <div class="book-spine" aria-hidden="true"></div>
+              <div class="book-pages" aria-hidden="true"></div>
+              <div class="book-lid">
+                <div class="book-front">
+                  <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
+                  <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
+                  <p class="placeholder" aria-hidden="true">Cover<br>/assets/book-3.jpg</p>
+                </div>
+                <div class="book-back" aria-hidden="true"></div>
+              </div>
+            </div>
           </div>
           <div class="book-body">
             <div class="book-meta">
