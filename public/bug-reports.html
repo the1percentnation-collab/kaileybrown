@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bug Reports | Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -34,7 +35,7 @@
       padding: 2px 8px;
       border-radius: 4px;
     }
-    .status-open     { background: rgba(200, 16, 46,.15); color: #E60306; border: 1px solid rgba(200, 16, 46,.3); }
+    .status-open     { background: rgba(200, 16, 46,.15); color: #C8102E; border: 1px solid rgba(200, 16, 46,.3); }
     .status-resolved { background: rgba(74,222,128,.1); color: #4ade80; border: 1px solid rgba(74,222,128,.25); }
 
     .report-row {
@@ -104,7 +105,7 @@
     <div class="console-topbar">
       <div class="console-topbar-left">
         <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
-          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+          <img src="/assets/academy-logo.svg" alt="" class="console-brand-mark">
         </a>
         <a class="back-to-main" href="/owner.html">&larr; Owner Console</a>
       </div>
@@ -252,7 +253,7 @@
         </div>
         ${r.screenshotUrl ? `
         <h3>Screenshot</h3>
-        <p><a href="${escHtml(r.screenshotUrl)}" target="_blank" rel="noopener" style="color:#E60306;">Open screenshot →</a></p>
+        <p><a href="${escHtml(r.screenshotUrl)}" target="_blank" rel="noopener" style="color:#C8102E;">Open screenshot →</a></p>
         ` : ''}
         <h3>AI Analysis &amp; Fix Proposal</h3>
         <div class="ai-block">${escHtml(r.aiAnalysis || 'Not available.')}</div>

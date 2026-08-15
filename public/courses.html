@@ -12,17 +12,18 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Courses | Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body class="academy-course">
 
 <header class="academy-header">
   <div class="academy-header-inner">
     <a class="academy-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
-      <img src="/assets/academy-logo.png" alt="" class="academy-brand-mark">
+      <img src="/assets/academy-logo.svg" alt="" class="academy-brand-mark">
 
     </a>
     <a class="back-to-main" href="https://kaileybrown.com">← Main Site</a>
@@ -49,10 +50,10 @@
       <div class="courses-hero">
         <div class="courses-hero-text">
           <div class="academy-eyebrow">The Academy</div>
-          <h1 id="welcome-title">Find the right course to level up <span>your next 1%.</span></h1>
-          <p id="welcome-sub">Every course here is built to move you one percent better — grounded in mindset, structure, and consistent action. Pick where you want to grow and come back as often as you need to.</p>
+          <h1 id="welcome-title">Find the course that fits <span>where you are now.</span></h1>
+          <p id="welcome-sub">Every course here is self-paced and built to be applied, not just watched. Pick where you want to grow and come back as often as you need to.</p>
           <div class="academy-tagline">
-            <strong>Redefining Success.</strong> Realigning Purpose.
+            <strong>Clarity.</strong> Intention. Growth.
           </div>
           <nav class="courses-crumbs" aria-label="Breadcrumb">
             <a href="/dashboard.html">Home</a>
@@ -60,9 +61,10 @@
           </nav>
         </div>
         <div class="courses-hero-visual">
-          <div class="courses-hero-shape courses-hero-shape--photo">
-            <img src="/assets/founder-teaching.jpg" alt="Kailey Brown teaching a session" class="courses-hero-photo">
-            <span class="courses-hero-caption">Better · Every · Day</span>
+          <!-- TODO(assets): add a hero photo at /assets/courses-hero.jpg and
+               restore the <img> here. The shape renders as brand art until then. -->
+          <div class="courses-hero-shape">
+            <span class="courses-hero-caption">Steady · Deliberate · Yours</span>
           </div>
         </div>
       </div>
@@ -72,11 +74,10 @@
       <!-- Get-started band -->
       <section class="courses-cta">
         <div class="courses-cta-eyebrow">Get Started</div>
-        <h2>Ready to become <span>the one percent?</span></h2>
-        <p>Join the members building better futures through mindset, structure, and consistent action.<br>Take your first step today — one percent at a time.</p>
+        <h2>Ready to <span>start something steady?</span></h2>
+        <p>Join the members doing the work in small, deliberate steps.<br>Start wherever you are.</p>
         <div class="courses-cta-actions">
           <a class="btn btn-primary" href="#welcome-available">Start Learning Now ↗</a>
-          <a class="btn btn-ghost" href="/bundle.html">View Bundle ↗</a>
         </div>
       </section>
 
@@ -98,7 +99,7 @@
 
 <!-- ?v= is a cache buster: bump it when courses-page.js changes so long-lived
      signed-in tabs don't keep serving the previously cached module. -->
-<script type="module" src="js/courses-page.js?v=3"></script>
+<script type="module" src="js/courses-page.js?v=4"></script>
 <script type="module">
   import { init as initChatbot } from './js/chatbot.js';
   initChatbot();

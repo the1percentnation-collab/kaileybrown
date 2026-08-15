@@ -11,7 +11,6 @@ import {
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const $ = (id) => document.getElementById(id);
-const TOTAL_MODULES = 7;
 
 // ─── Edit mode ────────────────────────────────────────────────────────────
 function val(s) { return s == null ? '' : escapeHtml(String(s)); }
@@ -170,7 +169,7 @@ function renderEdit(me) {
           <div class="profile-privacy-actions" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
             <button class="btn btn-ghost" id="data-export-btn" type="button">Download my data</button>
             <button class="btn btn-ghost" id="account-delete-btn" type="button"
-              style="color:var(--red,#E60306);border-color:var(--red,#E60306);">Delete my account</button>
+              style="color:var(--red,#C8102E);border-color:var(--red,#C8102E);">Delete my account</button>
             <div id="privacy-status" class="profile-save-status"></div>
           </div>
         </section>
@@ -322,7 +321,6 @@ async function renderView(profile, viewer) {
     postsCount = c.data().count;
   } catch (e) { /* count queries may not be allowed — fine */ }
 
-  const pct = Math.min(100, Math.round((completedCount / TOTAL_MODULES) * 100));
   const linkRow = (label, val, href) => val ? `
     <div class="profile-view-link"><span class="profile-view-link-label">${label}</span>
       ${href ? `<a class="profile-view-link-val" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(val)}</a>` : `<span class="profile-view-link-val">${escapeHtml(val)}</span>`}
@@ -360,9 +358,8 @@ async function renderView(profile, viewer) {
           <div class="profile-view-stats">
             ${viewer && (viewer.uid === profile.uid || viewer.role === 'owner') ? `
               <div class="profile-view-stat">
-                <div class="profile-view-stat-label">Modules</div>
-                <div class="profile-view-stat-value">${completedCount}/${TOTAL_MODULES}</div>
-                <div class="c-progress-bar" style="margin-top:8px;"><div class="c-progress-fill" style="width:${pct}%"></div></div>
+                <div class="profile-view-stat-label">Lessons completed</div>
+                <div class="profile-view-stat-value">${completedCount}</div>
               </div>` : ''}
             ${postsCount != null ? `
               <div class="profile-view-stat">

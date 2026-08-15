@@ -59,7 +59,7 @@ export function renderCrmShell({ active = 'contacts', title = 'CRM', user = null
       <div class="crm-drawer-scrim" id="crm-drawer-scrim" hidden></div>
       <aside class="crm-sidebar" id="crm-sidebar">
         <a class="crm-sidebar-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
-          <img src="/assets/academy-logo.png" alt="" class="crm-sidebar-logo">
+          <img src="/assets/academy-logo.svg" alt="" class="crm-sidebar-logo">
           <span class="crm-sidebar-brandtext">CRM</span>
         </a>
         <nav class="crm-nav">

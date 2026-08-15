@@ -213,6 +213,9 @@ async function renderModuleMap() {
   const next = nextIncompleteModule(completion);
   const base = `/courses.html?course=${encodeURIComponent(primary.slug)}`;
 
+  const sectionLink = $('hub-progress-link');
+  if (sectionLink) sectionLink.href = base;
+
   slot.innerHTML = completion.modules.map((m, i) => {
     const done = completion.completed.has(m.id);
     const isCurrent = next && m.id === next.id;
@@ -380,8 +383,8 @@ async function renderReferral() {
     shareBtn.addEventListener('click', async () => {
       try {
         await navigator.share({
-          title: 'The One Percent Academy',
-          text: 'Join me in The One Percent Academy.',
+          title: 'Kailey Brown Academy',
+          text: 'Join me in Kailey Brown Academy.',
           url: shareUrl
         });
       } catch (e) { /* user dismissed the sheet */ }

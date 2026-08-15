@@ -12,6 +12,7 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
   <header class="academy-header">
     <div class="academy-header-inner">
       <a class="academy-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
-        <img src="/assets/academy-logo.png" alt="" class="academy-brand-mark">
+        <img src="/assets/academy-logo.svg" alt="" class="academy-brand-mark">
 
       </a>
 
@@ -50,9 +51,9 @@
       <div class="academy-eyebrow">Academy Dashboard</div>
       <h1 id="hub-greeting">Welcome back.</h1>
       <div class="hub-quote-label"><span class="hub-quote-dot"></span>Quote of the day</div>
-      <p id="hub-subtitle">Continue your work. Stay grounded in purpose. Move forward with intention — one percent better every day.</p>
+      <p id="hub-subtitle">Continue your work. Small steps, taken consistently.</p>
       <div class="academy-tagline">
-        <strong>Redefining Success.</strong> Realigning Purpose.
+        <strong>Clarity.</strong> Intention. Growth.
       </div>
     </section>
 
@@ -61,7 +62,9 @@
     <section id="hub-progress" class="hub-progress" hidden>
       <div class="academy-section-head">
         <h2>Your course arc</h2>
-        <a class="academy-section-meta" href="/courses.html?course=1p-clc" style="text-decoration:none;">Open course →</a>
+        <!-- href is set by renderModuleMap() in js/hub.js to whichever course
+             the map is showing; /courses.html is the safe default. -->
+        <a class="academy-section-meta" id="hub-progress-link" href="/courses.html" style="text-decoration:none;">Open course →</a>
       </div>
       <div id="hub-module-map" class="hub-module-map"></div>
     </section>

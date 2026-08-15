@@ -36,9 +36,9 @@
     bar.setAttribute('aria-label', 'Cookie consent');
     bar.style.cssText = [
       'position:fixed', 'left:16px', 'right:16px', 'bottom:16px', 'z-index:99999',
-      'max-width:720px', 'margin:0 auto', 'background:#111', 'color:#fff',
-      'border:1px solid rgba(255,255,255,.15)', 'border-radius:14px',
-      'box-shadow:0 18px 50px rgba(0,0,0,.5)', 'padding:16px 18px',
+      'max-width:720px', 'margin:0 auto', 'background:#FFFFFF', 'color:#3C3C3C',
+      'border:1px solid rgba(0,0,0,.12)', 'border-radius:14px',
+      'box-shadow:0 14px 36px rgba(0,0,0,.14)', 'padding:16px 18px',
       'font-family:Jost,system-ui,sans-serif', 'font-size:.95rem',
       'display:flex', 'flex-wrap:wrap', 'gap:12px', 'align-items:center',
       'justify-content:space-between'
@@ -47,7 +47,7 @@
     var text = document.createElement('div');
     text.style.cssText = 'flex:1 1 320px;line-height:1.5;';
     text.innerHTML = 'We use cookies for sign-in and to measure site usage. See our ' +
-      '<a href="/privacy.html" style="color:#ff5a5c;">Privacy Policy</a>. ' +
+      '<a href="/privacy.html" style="color:#C8102E;">Privacy Policy</a>. ' +
       'You can accept analytics cookies or decline non-essential ones.';
 
     var btns = document.createElement('div');
@@ -56,12 +56,12 @@
     var decline = document.createElement('button');
     decline.type = 'button';
     decline.textContent = 'Decline';
-    decline.style.cssText = 'padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;cursor:pointer;font-weight:600;';
+    decline.style.cssText = 'padding:9px 16px;border-radius:9px;border:1px solid rgba(0,0,0,.18);background:transparent;color:#1A1A1A;cursor:pointer;font-weight:600;';
 
     var accept = document.createElement('button');
     accept.type = 'button';
     accept.textContent = 'Accept';
-    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#E60306;color:#fff;cursor:pointer;font-weight:700;';
+    accept.style.cssText = 'padding:9px 18px;border-radius:9px;border:none;background:#C8102E;color:#fff;cursor:pointer;font-weight:700;';
 
     function close(choice) {
       save(choice);

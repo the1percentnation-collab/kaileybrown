@@ -18,7 +18,6 @@ import { getRoleInfo } from './roles.js';
 import { firebaseReady, functions } from './firebase.js';
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 import { getUserProfile, avatarHtml, escapeHtml } from './community.js';
-import { store } from './store.js';
 import { loadEnrollments, enrollInCourse, isEnrolled, enrolledCourses, availableCourses } from './enrollments.js';
 import { getRefCode } from './referral.js';
 import { certificateHref, courseCompleteHtml } from './certificate.js';
@@ -64,9 +63,9 @@ function moduleParam() {
 function sidebarEntryHtml(course, { isActive, completedCount = 0 } = {}) {
   const href = `/courses.html?course=${encodeURIComponent(course.slug)}`;
   let chip = '';
-  if (course.slug === '1p-clc') {
-    const total = course.moduleCount || 7;
-    const pct = Math.round((completedCount / total) * 100);
+  const total = course.moduleCount || 0;
+  if (total > 0) {
+    const pct = Math.min(100, Math.round((completedCount / total) * 100));
     chip = `<span class="course-entry-pct">${pct}%</span>`;
   }
   return `
@@ -83,11 +82,10 @@ function sidebarEntryHtml(course, { isActive, completedCount = 0 } = {}) {
   `;
 }
 
-function renderSidebar(activeSlug) {
+async function renderSidebar(activeSlug) {
   const list = $('courses-sidebar-list');
   if (!list) return;
   const enrolled = enrolledCourses();
-  const completedCount = store.completed ? store.completed.size : 0;
 
   if (enrolled.length === 0) {
     list.innerHTML = `
@@ -99,10 +97,15 @@ function renderSidebar(activeSlug) {
     return;
   }
 
-  const entries = enrolled.map((c) => sidebarEntryHtml(c, {
-    isActive: c.slug === activeSlug,
-    completedCount
-  })).join('');
+  // Progress is per course, so each entry resolves its own completion rather
+  // than sharing one global count across every enrolled course.
+  const entries = (await Promise.all(enrolled.map(async (c) => {
+    let completedCount = 0;
+    try {
+      completedCount = (await loadCourseCompletion(c)).done;
+    } catch (e) { /* a course that will not load simply shows no chip */ }
+    return sidebarEntryHtml(c, { isActive: c.slug === activeSlug, completedCount });
+  }))).join('');
 
   list.innerHTML = entries + `
     <a class="courses-sidebar-browse" href="/courses.html">
@@ -184,7 +187,7 @@ function renderAvailableCourses() {
     const saleBadge = p.onSale ? `<span class="course-badge is-sale">Sale</span>` : '';
     const joined = courseInterests.has(c.slug);
     const action = isBundle
-      ? `<a class="course-card-btn available-bundle-link" href="${escapeHtml(c.bundleHref || '/bundle.html')}">See Bundle ↗</a>`
+      ? `<a class="course-card-btn available-bundle-link" href="${escapeHtml(c.bundleHref || `/course.html?slug=${encodeURIComponent(c.slug)}`)}">See Bundle ↗</a>`
       : isLive
         ? `<button class="course-card-btn available-enroll" data-slug="${escapeHtml(c.slug)}">${p.isFree ? 'Join Free' : 'Join Course'}</button>`
         : `<button class="course-card-btn available-notify${joined ? ' is-joined' : ''}" data-slug="${escapeHtml(c.slug)}" data-title="${escapeHtml(c.title)}"${joined ? ' disabled' : ''}>${joined ? "✓ You're on the list" : 'Notify me when live'}</button>`;
@@ -400,12 +403,7 @@ async function renderRoadmap(course, { preview = false } = {}) {
   // of course keeps its completion state.
   const { modules, completed: completedSet } = await loadCourseCompletion(course, { includeDrafts: preview });
 
-  let currentId = 0;
-  if (course.slug === '1p-clc') {
-    currentId = typeof store.currentModule === 'number' ? store.currentModule : 0;
-  } else {
-    currentId = modules.length ? modules[0].id : 0;
-  }
+  const currentId = modules.length ? modules[0].id : 0;
 
   if (modules.length === 0) {
     const emptyNote = preview
@@ -511,7 +509,6 @@ async function main() {
 
   // Load courses + progress + enrollments before deciding what to render.
   try { await loadCourses(); } catch (e) {}
-  try { await store.load(); } catch (e) {}
   try { await loadEnrollments(); } catch (e) {}
   try { await loadCourseInterests(); } catch (e) {}
 
@@ -541,20 +538,20 @@ async function main() {
   renderAvailableCourses();
 
   if (!course) {
-    renderSidebar(null);
+    renderSidebar(null).catch(() => {});
     showWelcome();
   } else if (course.status !== 'live' && !preview) {
-    renderSidebar(null);
+    renderSidebar(null).catch(() => {});
     renderComingSoon(course);
     showComingSoon();
   } else if (!isEnrolled(course.slug) && !preview) {
     // User landed on a course they aren't enrolled in — bounce back to welcome
     // and surface it in the Available list.
-    renderSidebar(null);
+    renderSidebar(null).catch(() => {});
     showWelcome();
   } else if (moduleId != null) {
     // Module view — mount the shared course player at the requested module.
-    renderSidebar(course.slug);
+    renderSidebar(course.slug).catch(() => {});
     showModule();
     try {
       // A course migrated to the editor (contentSource === 'firestore') always
@@ -578,7 +575,7 @@ async function main() {
     } catch (e) { console.warn('[courses-page] mount failed', e); }
   } else {
     // Roadmap view — default landing for an enrolled course.
-    renderSidebar(course.slug);
+    renderSidebar(course.slug).catch(() => {});
     await renderRoadmap(course, { preview });
     showRoadmap();
   }

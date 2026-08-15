@@ -206,16 +206,16 @@ function descriptionHtml(course) {
 function methodHtml() {
   return `
     <section class="cl-block cl-method">
-      <h2 class="cl-h2">The 1% Method: Learn → Rewire → Measure</h2>
+      <h2 class="cl-h2">How every course works</h2>
       <div class="cl-method-grid">
         <div class="cl-method-step"><span class="cl-method-num">01</span>
-          <h3>Baseline</h3><p>Take a self-assessment before lesson one, so your growth is measured — not assumed.</p></div>
+          <h3>Baseline</h3><p>Take a short self-assessment before lesson one, so your progress is measured rather than assumed.</p></div>
         <div class="cl-method-step"><span class="cl-method-num">02</span>
-          <h3>Learn</h3><p>Short, plain-language lessons that teach the principle and the science behind it.</p></div>
+          <h3>Learn</h3><p>Short, plain-language lessons that teach one principle at a time.</p></div>
         <div class="cl-method-step"><span class="cl-method-num">03</span>
-          <h3>Rewire</h3><p>Every lesson ends with a rewirement — a small practice applied to your real life the same day.</p></div>
+          <h3>Apply</h3><p>Every lesson ends with one small practice you put into your real life the same day.</p></div>
         <div class="cl-method-step"><span class="cl-method-num">04</span>
-          <h3>Measure</h3><p>Finish with a 4-week 1% Challenge, retake your assessment, and see the change in numbers.</p></div>
+          <h3>Measure</h3><p>Retake the assessment at the end and see what actually changed.</p></div>
       </div>
     </section>`;
 }
@@ -270,7 +270,7 @@ function purchaseCardHtml(course, { enrolled }) {
   if (enrolled) {
     cta = `<a class="cl-cta" href="/courses.html?course=${encodeURIComponent(course.slug)}">Go to course →</a>`;
   } else if (isBundle) {
-    cta = `<a class="cl-cta" href="${escapeHtml(course.bundleHref || '/bundle.html')}">See bundle deal →</a>`;
+    cta = `<a class="cl-cta" href="${escapeHtml(course.bundleHref || `/course.html?slug=${encodeURIComponent(course.slug)}`)}">See bundle deal →</a>`;
   } else if (live) {
     cta = `<button class="cl-cta" id="cl-enroll">${p.isFree ? 'Enroll free' : 'Enroll now'}</button>`;
   } else {

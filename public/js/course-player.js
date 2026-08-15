@@ -81,7 +81,7 @@ export function mountCoursePlayer(config) {
 
     return `
       <div class="cp-sidebar-head">
-        <div class="cp-brand">${esc(config.brand || 'THE ONE PERCENT NATION')}</div>
+        <div class="cp-brand">${esc(config.brand || 'KAILEY BROWN')}</div>
         <div class="cp-course-title">${esc(config.courseTitle || '')}</div>
         <div class="cp-progress">
           <div class="cp-progress-bar"><div class="cp-progress-fill" style="width:${pct}%"></div></div>

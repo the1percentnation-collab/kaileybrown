@@ -3718,7 +3718,7 @@ textarea.mc-lines:focus { outline: none; border-color: rgba(200, 16, 46,0.5); }
 }
 
 /* ============================================================
-   THE ONE PERCENT ACADEMY — HUB SHELL
+   KAILEY BROWN ACADEMY — HUB SHELL
    The post-login landing wraps the existing app with a shared
    Academy header + tab bar. Course/community/admin pages keep
    their existing sidebar layout; the hub itself uses this shell.
@@ -4492,7 +4492,7 @@ body.course-page {
    COURSES PAGE — Academy header + course-library sidebar + main
    Default: sidebar lists all courses, main shows welcome.
    Click a course: sidebar highlights it (and nests module nav
-   for 1P-CLC), main swaps to that course's content.
+   for a code-authored course), main swaps to that course's content.
    ============================================================ */
 
 body.academy-course {
@@ -5529,7 +5529,7 @@ body.academy-course #course-workspace {
   display: block;
 }
 
-/* Legacy 1P-CLC lesson content renders its own big header inside the tab
+/* Lesson content that renders its own big header inside the tab
    pane; the player already shows the module title, so the duplicated
    heading is removed at bind time and the description stays. */
 .cp-tab-content .module-header { margin-bottom: 24px; padding-bottom: 0; border-bottom: none; }

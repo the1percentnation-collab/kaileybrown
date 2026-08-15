@@ -18,7 +18,8 @@
 //   2. The scroll/tilt animations in index.html run querySelectorAll once, at
 //      parse time. Cards injected later are never picked up, and .fade-up
 //      starts at opacity:0 — so without re-hooking them the section renders
-//      blank. index.html exposes __1pObserveFades / __1pAttachTilt for that.
+//      blank. index.html exposes __kbObserveFades (and optionally
+//      __kbAttachTilt) for that.
 
 import { loadCourses, getCourses } from './courses-data.js';
 
@@ -32,10 +33,12 @@ const GRID_ID = 'home-courses-grid';
 // top-N here would quietly override it. The grid is 3-up on desktop and wraps.
 
 // Alternating thumb backgrounds, matching the hand-written cards this replaces.
+// Light-ground cover art, rotated so a grid of coverless courses does not read
+// as one flat block. Empty first entry falls through to the CSS default.
 const THUMB_BGS = [
   '',
-  'linear-gradient(135deg, #0a0a0a 0%, #001a1a 100%)',
-  'linear-gradient(135deg, #0a0a0a 0%, #1a0a00 100%)'
+  'linear-gradient(135deg, var(--surface-2) 0%, var(--red-tint) 100%)',
+  'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)'
 ];
 
 function escapeHtml(s) {
@@ -199,6 +202,6 @@ export async function init() {
   section.hidden = false;
 
   // Re-hook the animations for the cards we just injected (see header note).
-  if (typeof window.__1pObserveFades === 'function') window.__1pObserveFades(grid);
-  if (typeof window.__1pAttachTilt === 'function') window.__1pAttachTilt(grid);
+  if (typeof window.__kbObserveFades === 'function') window.__kbObserveFades(grid);
+  if (typeof window.__kbAttachTilt === 'function') window.__kbAttachTilt(grid);
 }

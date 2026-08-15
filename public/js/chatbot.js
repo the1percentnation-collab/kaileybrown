@@ -567,14 +567,14 @@ function startWave(canvas, stateRef) {
     ctx.restore();
 
     // Wave layers (primary, secondary, highlight)
-    strokeWave(ctx, W, H, a,        cfg.speed, frame, 0,              '#E60306',           1.00, 2.2);
+    strokeWave(ctx, W, H, a,        cfg.speed, frame, 0,              '#C8102E',           1.00, 2.2);
     strokeWave(ctx, W, H, a * 0.60, cfg.speed, frame, Math.PI / 2.2, 'rgba(255,80,80,.5)', 1.00, 1.4);
     strokeWave(ctx, W, H, a * 0.28, cfg.speed, frame, Math.PI,       'rgba(255,255,255,.14)', 1.00, 1.0);
 
     // Center glow line
     ctx.save();
     ctx.globalAlpha = 0.25 + 0.15 * Math.sin(frame * 0.05);
-    ctx.strokeStyle = '#E60306';
+    ctx.strokeStyle = '#C8102E';
     ctx.lineWidth   = 0.5;
     ctx.setLineDash([3, 6]);
     ctx.beginPath();
@@ -674,7 +674,7 @@ function injectStyles() {
 }
 
 /* Waveform bars in FAB icon */
-.kb-fab-core { color: #E60306; display: flex; }
+.kb-fab-core { color: #C8102E; display: flex; }
 .kb-fab-icon { width: 28px; height: 20px; }
 .kb-fab-icon rect {
   transform-box: fill-box;
@@ -782,8 +782,8 @@ function injectStyles() {
   transition: background .25s, box-shadow .25s;
 }
 .kb-led-listen {
-  background: #E60306;
-  box-shadow: 0 0 8px #E60306;
+  background: #C8102E;
+  box-shadow: 0 0 8px #C8102E;
   animation: kb-led-blink .7s ease-in-out infinite;
 }
 .kb-led-think {
@@ -792,8 +792,8 @@ function injectStyles() {
   animation: kb-led-blink .45s ease-in-out infinite;
 }
 .kb-led-speak {
-  background: #E60306;
-  box-shadow: 0 0 10px #E60306;
+  background: #C8102E;
+  box-shadow: 0 0 10px #C8102E;
 }
 @keyframes kb-led-blink {
   0%, 100% { opacity: 1; }
@@ -811,7 +811,7 @@ function injectStyles() {
   font-family: 'Space Mono', monospace;
   font-size: 9px;
   letter-spacing: .12em;
-  color: #E60306;
+  color: #C8102E;
   border: 1px solid rgba(230,3,6,.45);
   border-radius: 4px;
   padding: 1px 6px;
@@ -831,7 +831,7 @@ function injectStyles() {
 }
 .kb-tts-btn { color: #444; }
 .kb-tts-btn:hover { background: rgba(255,255,255,.05); color: #888; }
-.kb-tts-btn.kb-tts-on  { color: #E60306; }
+.kb-tts-btn.kb-tts-on  { color: #C8102E; }
 .kb-tts-btn svg { width: 15px; height: 15px; }
 
 /* Show/hide speaker icons based on state */
@@ -900,7 +900,7 @@ function injectStyles() {
 }
 
 .kb-bub-user {
-  background: linear-gradient(135deg, #c20204, #E60306);
+  background: linear-gradient(135deg, #c20204, #C8102E);
   color: #fff;
   border-bottom-right-radius: 4px;
   box-shadow: 0 3px 14px rgba(230,3,6,.35);
@@ -929,7 +929,7 @@ function injectStyles() {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #E60306;
+  background: #C8102E;
   display: inline-block;
   animation: kb-dot-bounce 1.1s ease-in-out infinite;
 }
@@ -972,12 +972,12 @@ function injectStyles() {
 .kb-mic:hover {
   background: rgba(230,3,6,.14);
   border-color: rgba(230,3,6,.55);
-  color: #E60306;
+  color: #C8102E;
 }
 .kb-mic-active {
   background: rgba(230,3,6,.22) !important;
-  border-color: #E60306 !important;
-  color: #E60306 !important;
+  border-color: #C8102E !important;
+  color: #C8102E !important;
   box-shadow: 0 0 14px rgba(230,3,6,.45) !important;
 }
 .kb-mic-ring {
@@ -1028,7 +1028,7 @@ function injectStyles() {
   width: 40px;
   height: 40px;
   border-radius: 11px;
-  background: #E60306;
+  background: #C8102E;
   border: none;
   color: #fff;
   cursor: pointer;

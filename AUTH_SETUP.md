@@ -1,4 +1,4 @@
-# 1P-CLC Auth — One-Time Setup Checklist
+# Kailey Brown — Auth & Setup Checklist
 
 Do these steps IN ORDER before auth will work end-to-end. Everything below happens in the Google/Firebase consoles — code is already wired up.
 
@@ -6,7 +6,7 @@ Do these steps IN ORDER before auth will work end-to-end. Everything below happe
 
 ## 1. Upgrade to Blaze plan (required for Cloud Functions)
 
-1. Open <https://console.firebase.google.com/project/the-1p-leadership/usage/details>
+1. Open <https://console.firebase.google.com/project/kailey-brown/usage/details>
 2. Click **Modify plan** → choose **Blaze (pay as you go)**.
 3. Link a billing account. (Free quotas still apply; you only pay for overage.)
 
@@ -16,7 +16,7 @@ Why: Cloud Functions v2 cannot deploy on the Spark plan.
 
 ## 2. Enable Firestore Database
 
-1. Open <https://console.firebase.google.com/project/the-1p-leadership/firestore>
+1. Open <https://console.firebase.google.com/project/kailey-brown/firestore>
 2. Click **Create database**.
 3. Region: **us-central1** (nam5 also fine, but keep it consistent with Functions).
 4. Start in **Production mode** — the custom rules in `firestore.rules` will be deployed on push.
@@ -25,7 +25,7 @@ Why: Cloud Functions v2 cannot deploy on the Spark plan.
 
 ## 3. Enable Auth sign-in methods
 
-1. Open <https://console.firebase.google.com/project/the-1p-leadership/authentication/providers>
+1. Open <https://console.firebase.google.com/project/kailey-brown/authentication/providers>
 2. Enable **Email/Password**.
 3. Enable **Google** (pick a project support email — the owner email is fine).
 
@@ -36,11 +36,11 @@ Why: Cloud Functions v2 cannot deploy on the Spark plan.
 1. Push to `main` — this triggers BOTH workflows:
    - `firebase-hosting-merge.yml` (already existed) → deploys `public/`
    - `firebase-deploy-backend.yml` (new) → deploys `firestore.rules` + `functions/`
-2. Once the backend workflow is green, visit <https://the-1p-leadership.web.app/signup.html> and create an account with **the1percentnation@gmail.com**. (Or sign in with that Google account.)
-3. Go to <https://the-1p-leadership.web.app/owner.html>. You'll see a notice that you are not yet an owner. Click **Run bootstrapOwner**.
+2. Once the backend workflow is green, visit <https://kailey-brown.web.app/signup.html> and create an account with **kailey@kaileybrown.com**. (Or sign in with that Google account.)
+3. Go to <https://kailey-brown.web.app/owner.html>. You'll see a notice that you are not yet an owner. Click **Run bootstrapOwner**.
 4. The page reloads. You now have the `role=owner` custom claim and can create companies.
 
-> If bootstrapOwner fails with `permission-denied`, double-check that you are signed in as exactly `the1percentnation@gmail.com` (case-insensitive, but it must be that address).
+> If bootstrapOwner fails with `permission-denied`, double-check that you are signed in as exactly `kailey@kaileybrown.com` (case-insensitive, but it must be that address).
 
 ---
 
@@ -48,8 +48,8 @@ Why: Cloud Functions v2 cannot deploy on the Spark plan.
 
 The existing secret `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` grants hosting deploys. For Firestore rules + Functions deploys it needs more.
 
-1. Open <https://console.cloud.google.com/iam-admin/iam?project=the-1p-leadership>
-2. Find the service account tied to the existing GitHub workflow (looks like `github-action-XXXXXXXXX@the-1p-leadership.iam.gserviceaccount.com`).
+1. Open <https://console.cloud.google.com/iam-admin/iam?project=kailey-brown>
+2. Find the service account tied to the existing GitHub workflow (looks like `github-action-XXXXXXXXX@kailey-brown.iam.gserviceaccount.com`).
 3. Add these roles:
    - **Firebase Rules Admin** (`roles/firebaserules.admin`)
    - **Cloud Functions Developer** (`roles/cloudfunctions.developer`)
@@ -63,7 +63,7 @@ The existing secret `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` grants hosting 
 ```bash
 npx firebase-tools login
 cd functions && npm install && cd ..
-npx firebase-tools deploy --only firestore:rules,functions --project the-1p-leadership
+npx firebase-tools deploy --only firestore:rules,functions --project kailey-brown
 ```
 
 Firestore rules deploy **separately** from hosting. Hosting continues to auto-deploy via the existing workflow on every push.
@@ -72,7 +72,7 @@ Firestore rules deploy **separately** from hosting. Hosting continues to auto-de
 
 ## Smoke test after setup
 
-1. `https://the-1p-leadership.web.app/login.html` — sign in as the owner email.
+1. `https://kailey-brown.web.app/login.html` — sign in as the owner email.
 2. `/owner.html` — create a company, assign an admin by email. (That admin must have already signed up at `/signup.html` so their user doc exists.)
 3. That admin signs in and goes to `/admin.html` — they should see the roster + can generate invites.
 4. Send the invite link to an employee. They open it, sign up, and land on `/index.html`. Their `companyId` is now set and seats used has incremented.

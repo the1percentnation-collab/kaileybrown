@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chatbot Knowledge Base | Kailey Brown Academy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -92,7 +93,7 @@
       transition: border-color .15s;
       box-sizing: border-box;
     }
-    .kb-field input:focus, .kb-field textarea:focus { border-color: #E60306; }
+    .kb-field input:focus, .kb-field textarea:focus { border-color: #C8102E; }
     .kb-field textarea { min-height: 180px; resize: vertical; line-height: 1.6; }
     .kb-field-row { display: flex; gap: 14px; }
     .kb-field-row .kb-field { flex: 1; }
@@ -107,7 +108,7 @@
       background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
       color: #666; transition: all .15s;
     }
-    .btn-icon:hover { border-color: #E60306; color: #E60306; background: rgba(200, 16, 46,.06); }
+    .btn-icon:hover { border-color: #C8102E; color: #C8102E; background: rgba(200, 16, 46,.06); }
     .btn-icon.btn-del:hover { border-color: #c00; color: #f66; background: rgba(200,0,0,.08); }
     .btn-icon svg { width: 15px; height: 15px; }
 
@@ -130,7 +131,7 @@
     <div class="console-topbar">
       <div class="console-topbar-left">
         <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
-          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+          <img src="/assets/academy-logo.svg" alt="" class="console-brand-mark">
         </a>
         <a class="back-to-main" href="/owner.html">&larr; Owner Console</a>
       </div>
@@ -183,12 +184,12 @@
       <h3 id="modal-title">Add Knowledge Entry</h3>
 
       <div class="kb-field">
-        <label for="f-title">Title <span style="color:#E60306">*</span></label>
+        <label for="f-title">Title <span style="color:#C8102E">*</span></label>
         <input type="text" id="f-title" placeholder="e.g. Refund Policy, About Coach Marcus, Community Rules…" maxlength="200">
       </div>
 
       <div class="kb-field">
-        <label for="f-body">Content <span style="color:#E60306">*</span></label>
+        <label for="f-body">Content <span style="color:#C8102E">*</span></label>
         <textarea id="f-body" placeholder="Write everything the chatbot should know about this topic. Be specific — the more detail, the better the answers."></textarea>
         <p class="kb-hint">Plain text only. Max 8,000 characters.</p>
       </div>
@@ -200,7 +201,7 @@
         </div>
         <div class="kb-field" style="display:flex; align-items:flex-end; padding-bottom:0;">
           <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:13px; color:#ccc; margin-bottom:10px; text-transform:none; letter-spacing:0;">
-            <input type="checkbox" id="f-active" checked style="width:16px; height:16px; accent-color:#E60306;">
+            <input type="checkbox" id="f-active" checked style="width:16px; height:16px; accent-color:#C8102E;">
             Active (included in chatbot context)
           </label>
         </div>

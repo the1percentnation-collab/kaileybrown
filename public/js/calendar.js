@@ -52,7 +52,7 @@ function render() {
       <div class="cal-cell ${isToday ? 'cal-today' : ''}" data-day="${day}">
         <div class="cal-daynum">${day}</div>
         ${list.slice(0, 3).map((a) => `
-          <button class="cal-appt" data-appt="${a.id}" title="${escapeHtml(a.title)}" style="--stage-color:${a.status === 'completed' ? '#56D4A8' : (a.status === 'canceled' || a.status === 'noshow' ? '#8B4A4A' : '#E60306')}">
+          <button class="cal-appt" data-appt="${a.id}" title="${escapeHtml(a.title)}" style="--stage-color:${a.status === 'completed' ? '#56D4A8' : (a.status === 'canceled' || a.status === 'noshow' ? '#8B4A4A' : '#C8102E')}">
             ${fmtTime(a._d)} ${escapeHtml(a.title)}
           </button>`).join('')}
         ${list.length > 3 ? `<div class="cal-more">+${list.length - 3} more</div>` : ''}

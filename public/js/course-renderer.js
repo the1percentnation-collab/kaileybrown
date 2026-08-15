@@ -1,10 +1,10 @@
 // Generic course workspace renderer — mounts any course whose content lives
 // in Firestore (`courses/{slug}/modules/{id}`, authored in /manage-courses.html)
 // into the shared Coursera-style player (course-player.js), so admin-authored
-// courses look identical to code-built courses (I Can't, 1P-CLC).
+// courses look identical to courses that ship their lessons in code.
 //
 // Progress is namespaced per course: users/{uid}/progress/{slug}__m{id}
-// (the shared store.js owns the un-namespaced ids used by 1P-CLC).
+// (each course namespaces its progress ids by slug).
 
 import { auth, db, firebaseReady } from './firebase.js';
 import {
@@ -130,12 +130,12 @@ function workbookTabHtml(slug, m) {
       <div style="display:flex;flex-direction:column;gap:20px;">
         ${w.reflection ? `
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;">
-          <div style="font-size:10px;letter-spacing:2px;color:#E60306;font-weight:600;margin-bottom:8px;">REFLECTION PROMPT</div>
+          <div style="font-size:10px;letter-spacing:2px;color:#C8102E;font-weight:600;margin-bottom:8px;">REFLECTION PROMPT</div>
           <p style="color:#CCC;line-height:1.6;font-size:14px;margin:0;">${esc(w.reflection)}</p>
         </div>` : ''}
         ${(w.action || prompts) ? `
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;">
-          <div style="font-size:10px;letter-spacing:2px;color:#E60306;font-weight:600;margin-bottom:8px;">ACTION PROMPT</div>
+          <div style="font-size:10px;letter-spacing:2px;color:#C8102E;font-weight:600;margin-bottom:8px;">ACTION PROMPT</div>
           ${w.action ? `<p style="color:#CCC;line-height:1.6;font-size:14px;margin-bottom:20px;">${esc(w.action)}</p>` : ''}
           <div style="display:flex;flex-direction:column;gap:14px;">${prompts}</div>
         </div>` : ''}
@@ -169,11 +169,11 @@ function resourcesHtml(m) {
       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.name || 'Download')}</span>
       <span style="flex:1;"></span>
       <span style="color:#888;font-size:12px;flex-shrink:0;">${esc(fmtSize(a.size))}</span>
-      <span style="color:#E60306;font-size:12px;flex-shrink:0;">Download ↓</span>
+      <span style="color:#C8102E;font-size:12px;flex-shrink:0;">Download ↓</span>
     </a>`).join('');
   return `
     <div style="margin-top:28px;">
-      <div style="font-size:10px;letter-spacing:2px;color:#E60306;font-weight:600;margin-bottom:12px;">RESOURCES</div>
+      <div style="font-size:10px;letter-spacing:2px;color:#C8102E;font-weight:600;margin-bottom:12px;">RESOURCES</div>
       <div style="display:flex;flex-direction:column;gap:10px;">${rows}</div>
     </div>`;
 }
@@ -183,12 +183,12 @@ function summaryTabHtml(m) {
   if (!items.length) return emptyTabCard('This lesson has no summary.');
   const rows = items.map((item, i) => `
     <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#111;border:1px solid #1E1E1E;border-radius:8px;">
-      <div style="font-family:'Audrey',sans-serif;font-size:28px;color:#E60306;line-height:1;flex-shrink:0;width:20px;">${i + 1}</div>
+      <div style="font-family:'Audrey',sans-serif;font-size:28px;color:#C8102E;line-height:1;flex-shrink:0;width:20px;">${i + 1}</div>
       <p style="color:#D0D0D0;line-height:1.6;font-size:13px;margin:0;">${esc(item)}</p>
     </div>`).join('');
   return `
     <div>
-      <div style="font-size:10px;letter-spacing:2px;color:#E60306;font-weight:600;margin-bottom:14px;">KEY TAKEAWAYS</div>
+      <div style="font-size:10px;letter-spacing:2px;color:#C8102E;font-weight:600;margin-bottom:14px;">KEY TAKEAWAYS</div>
       <div style="display:flex;flex-direction:column;gap:10px;">${rows}</div>
     </div>`;
 }

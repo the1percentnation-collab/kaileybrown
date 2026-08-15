@@ -391,17 +391,6 @@ async function migrateCourseLessons(slug) {
   }
 }
 
-async function migrateIcant() {
-  const out = $('seed-result');
-  if (!confirm('Migrate "I Can’t: The Course" into the course builder? This copies its 8 lessons into the database (workbook + summary become editable tabs) and switches the live course to render from there. You can re-run it safely.')) return;
-  showView('courses');
-  out.innerHTML = '<div style="color:var(--gray-light); font-size:12px;">Migrating "I Can’t"…</div>';
-  try {
-    const wrote = await migrateIcantCore();
-    ok(out, `Migrated ${wrote} lessons. "I Can’t: The Course" is now fully editable in the builder — including its Workbook and Summary tabs.`);
-    await refreshCourses();
-  } catch (e) { err(out, e); }
-}
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
@@ -450,7 +439,6 @@ async function main() {
   document.addEventListener('click', closeKebabs);
 
   $('btn-seed').addEventListener('click', seedDefaults);
-  $('btn-migrate-icant').addEventListener('click', migrateIcant);
   $('btn-add-course').addEventListener('click', openNewCourseModal);
   $('btn-ai-course').addEventListener('click', () => openAiGeneratorModal({
     userEmail: _userEmail,

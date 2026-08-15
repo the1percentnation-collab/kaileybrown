@@ -7,12 +7,11 @@ import { getRoleInfo } from './roles.js';
 import { listMembers, getUserProfile, avatarHtml, escapeHtml } from './community.js';
 
 const $ = (id) => document.getElementById(id);
-const TOTAL_MODULES = 7; // 7 completable modules per spec (progress = completedCount / 7)
+
 
 function memberCardHtml(m) {
   // completedCount may come from members subcollection digest OR from the user doc (owner view).
   const cc = typeof m.completedCount === 'number' ? m.completedCount : 0;
-  const pct = Math.min(100, Math.round((cc / TOTAL_MODULES) * 100));
   const role = m.role || null;
   const roleBadge = role === 'owner'
     ? `<span class="c-role-badge c-role-owner">Owner</span>`
@@ -24,8 +23,7 @@ function memberCardHtml(m) {
       <div class="c-member-name">${escapeHtml(m.displayName || m.email || 'Member')} ${roleBadge}</div>
       <div class="c-member-bio">${bio}</div>
       <div class="c-member-progress">
-        <div class="c-progress-bar"><div class="c-progress-fill" style="width:${pct}%"></div></div>
-        <span class="c-progress-pct">${pct}%</span>
+        <span class="c-progress-pct">${cc} lesson${cc === 1 ? '' : 's'} completed</span>
       </div>
     </a>
   `;
