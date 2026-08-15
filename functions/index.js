@@ -3461,7 +3461,7 @@ async function emailForUid(db, uid) {
 
 function reminderHtml(title, lines) {
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;">
-    <h2 style="color:#E60306;margin:0 0 12px;">${title}</h2>
+    <h2 style="color:#C8102E;margin:0 0 12px;">${title}</h2>
     ${lines.map((l) => `<p style="font-size:15px;color:#222;margin:6px 0;">${l}</p>`).join('')}
     <p style="font-size:13px;color:#8A8A8A;margin-top:18px;">— Kailey Brown CRM</p>
   </div>`;
@@ -3504,7 +3504,7 @@ const _disabled_taskReminders = onSchedule(
             `<strong>${t.title}</strong>`,
             t.contactName ? `Contact: ${t.contactName}` : '',
             `Due: ${due.toLocaleString()}`,
-            `<a href="${APP_BASE_URL}/tasks.html" style="color:#E60306;">Open Tasks →</a>`
+            `<a href="${APP_BASE_URL}/tasks.html" style="color:#C8102E;">Open Tasks →</a>`
           ].filter(Boolean)),
           text: `Task reminder: ${t.title} — due ${due.toLocaleString()}`
         });
@@ -3549,7 +3549,7 @@ const _disabled_appointmentReminders = onSchedule(
             a.contactName ? `With: ${a.contactName}` : '',
             `When: ${start.toLocaleString()}`,
             a.location ? `Where: ${a.location}` : '',
-            `<a href="${APP_BASE_URL}/calendar.html" style="color:#E60306;">Open Calendar →</a>`
+            `<a href="${APP_BASE_URL}/calendar.html" style="color:#C8102E;">Open Calendar →</a>`
           ].filter(Boolean)),
           text: `Appointment: ${a.title} at ${start.toLocaleString()}`
         });
@@ -3800,30 +3800,49 @@ exports.registerProductInterest = onCall(async (request) => {
   return { ok: true, alreadyJoined: !isNew, count: (product.interestCount || 0) + (isNew ? 1 : 0) };
 });
 
-// joinEarlyAccess({ name, email, consent }) — general "future products" list.
+// joinEarlyAccess({ name, email, consent, source }) — general mailing-list capture.
+//
+// `source` labels where the signup came from so the CRM can tell a newsletter
+// subscriber apart from someone waiting on a specific launch. It is echoed into
+// the contact's source field, its tag, and the consent record, so the audit
+// trail says what the person actually agreed to. Unknown values fall back to
+// the early-access default rather than being trusted verbatim.
+const SIGNUP_SOURCES = {
+  'newsletter':    { label: 'Newsletter',    activity: 'Subscribed to the newsletter' },
+  'early-access':  { label: 'Early Access',  activity: 'Joined the early-access list' }
+};
+
 exports.joinEarlyAccess = onCall(async (request) => {
   const db = admin.firestore();
   const data = request.data || {};
   const name = (data.name || '').toString().trim().slice(0, 120);
   const email = (data.email || '').toString().trim().toLowerCase().slice(0, 160);
   const consent = !!data.consent;
+  const src = SIGNUP_SOURCES[(data.source || '').toString()] || SIGNUP_SOURCES['early-access'];
   if (!EMAIL_RE.test(email)) throw new HttpsError('invalid-argument', 'Please enter a valid email.');
+
+  // Throttle: this is unauthenticated, so it is rate limited by IP.
+  await rateLimitCaller(db, request, { action: 'joinEarlyAccess', max: 20, windowSec: 600 });
+
   try {
     const companyId = await resolveAcademyCompanyId(db);
     if (companyId) {
       const FV = admin.firestore.FieldValue;
-      const tags = ['Early Access'];
+      const tags = [src.label];
       if (consent) tags.push('Opt-In: Calls/SMS/Email');
-      const ref = await upsertCrmContact(db, companyId, { name: name || null, email, source: 'Early Access', tags });
+      const ref = await upsertCrmContact(db, companyId, { name: name || null, email, source: src.label, tags });
       if (consent) {
+        // Prefer the exact wording the person saw, so the consent record can be
+        // defended later. Falls back to a generic line if the client sent none.
+        const shownText = (data.consentText || '').toString().trim().slice(0, 500);
         await ref.set({
           marketingConsent: true, marketingConsentAt: FV.serverTimestamp(),
-          marketingConsentText: 'Opted in via early-access form'
+          marketingConsentText: shownText || `Opted in via the ${src.label.toLowerCase()} form`
         }, { merge: true });
       }
       await ref.collection('activities').add({
-        type: 'early_access', description: 'Joined the early-access list',
-        actorUid: 'system', actorName: 'Early access', createdAt: FV.serverTimestamp()
+        type: 'signup', description: src.activity,
+        actorUid: 'system', actorName: src.label, createdAt: FV.serverTimestamp()
       });
     }
   } catch (e) { console.warn('[joinEarlyAccess]', e && e.message); }
@@ -3838,10 +3857,10 @@ async function sendProductLaunchEmails(db, productId, product) {
   if (!recipients.length) return 0;
   sgMail.setApiKey(sendgridKey.value());
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;">
-    <h2 style="color:#E60306;margin:0 0 10px;">It's here: ${product.name}</h2>
+    <h2 style="color:#C8102E;margin:0 0 10px;">It's here: ${product.name}</h2>
     <p style="font-size:15px;color:#222;">You asked to be the first to know — ${product.name} is now available.</p>
     ${product.summary ? `<p style="font-size:14px;color:#444;">${product.summary}</p>` : ''}
-    <p style="margin:18px 0;"><a href="${APP_BASE_URL}" style="background:#E60306;color:#fff;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Check it out →</a></p>
+    <p style="margin:18px 0;"><a href="${APP_BASE_URL}" style="background:#C8102E;color:#fff;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Check it out →</a></p>
     <p style="font-size:12px;color:#8A8A8A;">— Kailey Brown</p>
   </div>`;
   let sent = 0;
@@ -4426,20 +4445,20 @@ exports.reportBug = onCall(async (request) => {
     sgMail.setApiKey(sgKey);
     const shortDesc = description.trim().slice(0, 80);
     const htmlBody = [
-      `<h2 style="color:#c20000;">Bug Report — ${textToHtml(shortDesc)}</h2>`,
+      `<h2 style="color:#C8102E;">Bug Report — ${textToHtml(shortDesc)}</h2>`,
       `<table style="border-collapse:collapse;font-size:13px;">`,
       `<tr><td style="padding:4px 12px 4px 0;color:#888;">Severity</td><td><strong>${aiSeverity}</strong></td></tr>`,
       `<tr><td style="padding:4px 12px 4px 0;color:#888;">Page</td><td>${textToHtml(pageUrl || 'unknown')}</td></tr>`,
       `<tr><td style="padding:4px 12px 4px 0;color:#888;">Reporter</td><td>${uid || 'anonymous'}</td></tr>`,
       `</table>`,
       `<h3>Description</h3>`,
-      `<blockquote style="border-left:3px solid #c20000;margin:0;padding:8px 14px;background:#fff8f8;">${textToHtml(description.trim())}</blockquote>`,
+      `<blockquote style="border-left:3px solid #C8102E;margin:0;padding:8px 14px;background:#fff8f8;">${textToHtml(description.trim())}</blockquote>`,
       `<h3>AI Analysis &amp; Fix Proposal</h3>`,
       `<pre style="white-space:pre-wrap;font-family:monospace;font-size:13px;background:#f5f5f5;padding:12px;border-radius:6px;line-height:1.5;">${textToHtml(aiAnalysis)}</pre>`,
       screenshotUrl
-        ? `<p><a href="${screenshotUrl}" style="color:#c20000;">View Screenshot →</a> (link expires in 30 days)</p>`
+        ? `<p><a href="${screenshotUrl}" style="color:#C8102E;">View Screenshot →</a> (link expires in 30 days)</p>`
         : '<p><em>No screenshot attached.</em></p>',
-      `<hr/><p><a href="https://kaileybrown-48e22.web.app/bug-reports.html" style="color:#c20000;">Review all bug reports →</a></p>`
+      `<hr/><p><a href="https://kaileybrown-48e22.web.app/bug-reports.html" style="color:#C8102E;">Review all bug reports →</a></p>`
     ].join('');
 
     await sgMail.send({
