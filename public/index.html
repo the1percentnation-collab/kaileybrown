@@ -107,13 +107,10 @@
          leaf layers inside the button so the label paints over them. */
       position: relative;
       isolation: isolate;
-      /* Not overflow:hidden — that clips the lifting page flat at the box
-         and the turn reads as a wipe. Negative insets extend the clip
-         outward on top/right/bottom so the leaf can loom out of the button,
-         while 0 on the left cuts everything behind the spine — the same way
-         a book's earlier pages hide a fully-turned leaf. Without this the
-         curl segment ends its roll as a mirrored sliver left of the button. */
-      clip-path: inset(-60px -60px 0 0);
+      /* No clip-path and no overflow:hidden. Clipping at the box edge either
+         flattens the lifting page (reads as a wipe) or shaves the button's
+         own 1px border, which is what put gaps in the outline. End-of-turn
+         artifacts are handled by fading the leaf out instead — see .page. */
       /* Near enough for the leaf to loom, far enough that a toward-the-
          viewer rotation doesn't project wider than the button (which would
          hide the red until ~55deg and collapse the reveal into a late wipe). */
@@ -129,61 +126,75 @@
       background: linear-gradient(90deg, #8E2733 0%, var(--red-muted) 22%);
     }
     /* The white page itself — real elements, because the flipbook roll needs
-       nested 3D transforms and pseudo-elements cannot nest. .page is the
-       spine half of the leaf: it rests flat (var(--paper), so white on the
-       page and near-black on the on-black band automatically), hinges at
-       the left edge and lifts toward the viewer. Its background only paints
-       the LEFT half — the right half belongs to the curl child, so the red
-       shows through the moment the curl lifts away. */
+       nested 3D transforms and pseudo-elements cannot nest.
+
+       The leaf is three panels hinged in a chain: .page holds the spine half,
+       .seg-1 the middle, .seg-2 the outer edge. Each rotates a little further
+       than its parent, so the edge rolls through an arc instead of creasing
+       once — that progression is what reads as a page flipping.
+
+       Every panel is OPAQUE paper and overlaps its neighbour by 1px. The
+       hairline in the resting button came from panels meeting exactly at 50%:
+       subpixel rounding left a sliver of the red underlay showing through.
+       Overlapping opaque panels cannot gap, whatever the button's width
+       rounds to. var(--paper) means white on the page and near-black on the
+       on-black band automatically. */
     .btn .page {
       position: absolute; inset: 0; z-index: -1;
-      background: linear-gradient(90deg, var(--paper) 0%, var(--paper) 50%, transparent 50%);
+      background: linear-gradient(90deg, var(--paper) 0 calc(50% + 1px), transparent calc(50% + 1px));
       transform-origin: left center;
       /* rotate3d with a touch of X in the axis: the page comes up and over
          slightly diagonally, the way a hand turns it from the corner. */
       transform: rotate3d(0.12, 1, 0, 0deg);
-      /* The child must rotate in this element's plane, not flat on screen. */
       transform-style: preserve-3d;
       backface-visibility: hidden;
       /* Shadow only exists in flight — at rest it would halo the button. */
       box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      opacity: 1;
       transition: transform .55s cubic-bezier(0.4, 0.1, 0.22, 1),
-                  box-shadow .55s cubic-bezier(0.4, 0.1, 0.22, 1);
+                  box-shadow .55s cubic-bezier(0.4, 0.1, 0.22, 1),
+                  opacity .1s linear;
     }
-    /* The curling half: the outer 50% of the page, hinged at the page's
-       midline. It folds AHEAD of the page body (shorter, sharper timing),
-       so mid-flight the edge is rolled back over the leaf with its shaded
-       underside showing — the flipbook curl. backface stays VISIBLE: the
-       visible roll IS this segment's backface once it folds past 90deg.
-       Width 50.5% so no hairline seam shows at the midline. */
-    .btn .page > span {
-      position: absolute; top: 0; bottom: 0; left: 50%; width: 50.5%;
-      /* Opaque paper: translucent shading here would let the red underlay
-         bleed through the resting button as a stripe at the midline. */
+    /* Each panel hinges on its left edge, at the previous panel's right edge.
+       Percentages are of the parent, so .seg-2 sits at the end of .seg-1. */
+    .btn .page .seg {
+      position: absolute; top: 0; bottom: 0;
       background: var(--paper);
       transform-origin: left center;
+      transform-style: preserve-3d;
       transform: rotateY(0deg);
-      transition: transform .38s cubic-bezier(0.5, 0.05, 0.3, 1);
     }
-    /* Fold-line shading lives on an overlay that only exists in flight, so
-       the resting page stays perfectly flat and unshaded. Mirrored on the
-       segment's backface it reads as the shadow inside the curl. */
-    .btn .page > span::before {
+    .btn .page .seg-1 { left: 50%; width: calc(30% + 1px); transition: transform .42s cubic-bezier(0.5, 0.05, 0.3, 1); }
+    .btn .page .seg-2 { left: calc(100% - 1px); width: calc(66.7% + 1px); transition: transform .34s cubic-bezier(0.5, 0.05, 0.3, 1); }
+    /* Fold shading rides an overlay that only exists in flight, so the
+       resting page stays perfectly flat and unshaded. Mirrored on a panel's
+       backface it becomes the shadow inside the curl. */
+    .btn .page .seg::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(90deg, rgba(0, 0, 0, 0.14), transparent 42%);
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0) 60%);
       opacity: 0;
-      transition: opacity .38s cubic-bezier(0.5, 0.05, 0.3, 1);
+      transition: opacity .34s cubic-bezier(0.5, 0.05, 0.3, 1);
     }
-    .btn:hover .page > span::before,
-    .btn:focus-visible .page > span::before { opacity: 1; }
     .btn:hover .page,
     .btn:focus-visible .page {
-      transform: rotate3d(0.12, 1, 0, -104deg);
+      transform: rotate3d(0.12, 1, 0, -100deg);
       box-shadow: 12px 6px 26px rgba(0, 0, 0, 0.35);
+      /* Held at full opacity through the turn, then dropped once the red is
+         already revealed. Cheaper and safer than clipping: it removes the
+         fully-rolled edge without touching the button's border. Reverting
+         has no delay, so the page is back the instant the pointer leaves. */
+      opacity: 0;
+      transition: transform .55s cubic-bezier(0.4, 0.1, 0.22, 1),
+                  box-shadow .55s cubic-bezier(0.4, 0.1, 0.22, 1),
+                  opacity .1s linear .5s;
     }
-    .btn:hover .page > span,
-    .btn:focus-visible .page > span { transform: rotateY(-56deg); }
+    .btn:hover .page .seg-1,
+    .btn:focus-visible .page .seg-1 { transform: rotateY(-34deg); }
+    .btn:hover .page .seg-2,
+    .btn:focus-visible .page .seg-2 { transform: rotateY(-48deg); }
+    .btn:hover .page .seg::before,
+    .btn:focus-visible .page .seg::before { opacity: 1; }
     /* The delay matters: without it the label goes white before the page has
        covered it, leaving white-on-white for a beat. No delay on the way out. */
     .btn:hover, .btn:focus-visible {
@@ -194,8 +205,8 @@
     .btn-red { background: transparent; border-color: var(--red); color: #fff; }
     /* The filled button's vivid red face IS its top page; the muted red
        waits underneath, same as the white buttons. */
-    .btn-red .page { background: linear-gradient(90deg, var(--red) 0%, var(--red) 50%, transparent 50%); }
-    .btn-red .page > span { background: var(--red); }
+    .btn-red .page { background: linear-gradient(90deg, var(--red) 0 calc(50% + 1px), transparent calc(50% + 1px)); }
+    .btn-red .page .seg { background: var(--red); }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
     /* ── Nav: slim light-grey band, Audrey wordmark top-left ─────────────
@@ -302,32 +313,60 @@
     .section-head.is-centered { justify-items: center; text-align: center; }
     .section-head .rule { width: 44px; height: 1px; background: var(--red); }
 
-    /* ── Books: alternating image / text rows ────────────────────────────── */
-    .book {
+    /* ── Books: a shelf of covers, three up, info beneath each ──────────
+       Each cover is a standing book: a spine down the left edge, a page
+       block on the right, and a shadow it casts on the shelf. Hovering
+       eases it open a few degrees — the same 3D language as the buttons. */
+    .books-grid {
       display: grid;
-      grid-template-columns: minmax(220px, 340px) 1fr;
-      gap: clamp(36px, 6vw, 80px);
-      align-items: center;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(28px, 4vw, 56px);
+      align-items: start;
+      /* Narrower than the page: three covers at full width read as posters,
+         not books on a shelf. */
+      max-width: 920px;
+      margin-inline: auto;
     }
-    .book + .book { margin-top: clamp(64px, 9vw, 110px); }
-    /* Alternate: even rows put the cover on the right for visual rhythm. */
-    .book:nth-of-type(even) { grid-template-columns: 1fr minmax(220px, 340px); }
-    .book:nth-of-type(even) .book-cover { order: 2; }
-
+    .book { display: grid; gap: 22px; justify-items: start; }
     .book-cover {
-      aspect-ratio: 2 / 3;
+      display: grid; place-items: center;   /* centres the missing-cover note */
+      position: relative;
+      width: 100%; aspect-ratio: 2 / 3;
       background: linear-gradient(150deg, var(--surface-2), var(--surface));
       border: 1px solid var(--border);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
-      display: grid; place-items: center;
-      overflow: hidden; position: relative;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
+      overflow: hidden;
+      transform-origin: left center;
+      transition: transform .45s var(--ease-out), box-shadow .45s var(--ease-out);
     }
     .book-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-    .book-body { display: grid; gap: 18px; justify-items: start; }
-    .book-meta { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
-    .book-blurb { max-width: 58ch; }
-    .book-blurb p + p { margin-top: 14px; }
+    /* The spine: a dark gutter with a highlight where the cover folds. */
+    .book-cover::before {
+      content: '';
+      position: absolute; top: 0; bottom: 0; left: 0; width: 11px; z-index: 2;
+      background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.16) 46%,
+        rgba(255, 255, 255, 0.22) 62%, rgba(0, 0, 0, 0.10) 100%);
+    }
+    /* The page block: the stacked leaves showing along the fore edge. */
+    .book-cover::after {
+      content: '';
+      position: absolute; top: 3px; bottom: 3px; right: 0; width: 5px; z-index: 2;
+      background: repeating-linear-gradient(90deg,
+        rgba(0, 0, 0, 0.16) 0 1px, rgba(255, 255, 255, 0.5) 1px 2px);
+    }
+    .book:hover .book-cover {
+      transform: perspective(1100px) rotateY(-7deg) translateY(-5px);
+      box-shadow: 0 26px 48px rgba(0, 0, 0, 0.22);
+    }
+    .book-body { display: grid; gap: 12px; justify-items: start; }
+    .book-meta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .book-body h3 { font-size: clamp(1.35rem, 1.6vw, 1.7rem); }
+    .book-blurb { font-size: 0.98rem; }
+    .book-blurb p + p { margin-top: 12px; }
+    .book .btn { margin-top: 4px; padding: 12px 26px; }
+    /* A title with no cover yet still holds its place on the shelf. */
+    .book.is-upcoming .book-cover { background: var(--surface); }
 
     .placeholder {
       font-family: var(--sans-label); font-size: 10px;
@@ -449,9 +488,8 @@
     }
 
     @media (max-width: 820px) {
-      .book, .book:nth-of-type(even) { grid-template-columns: 1fr; }
-      .book:nth-of-type(even) .book-cover { order: 0; }
-      .book-cover { max-width: 260px; }
+      .books-grid { grid-template-columns: 1fr; max-width: 340px; margin-inline: auto; }
+      .book { justify-items: stretch; }
       .about-grid { grid-template-columns: 1fr; }
       .about-photo { max-width: 340px; }
       .nav-links { display: none; }
@@ -517,8 +555,8 @@
           stories can hold extraordinary truth.
         </p>
         <div class="hero-actions">
-          <a class="btn" href="#books">The book<span class="page" aria-hidden="true"><span></span></span></a>
-          <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span></span></span></a>
+          <a class="btn" href="#books">The book<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
         </div>
       </div>
 
@@ -534,8 +572,8 @@
   </section>
 
   <!-- ════════ BOOKS ════════
-       One .book row per title, covers alternating sides automatically via
-       nth-of-type. Add a new title by copying an <article> block. -->
+       A shelf of titles, three across: cover on top, info beneath. Add a
+       title by copying an <article> block; the grid reflows on its own. -->
   <section class="section" id="books">
     <div class="wrap">
       <div class="section-head is-centered fade-up">
@@ -543,36 +581,65 @@
         <div class="rule" aria-hidden="true"></div>
       </div>
 
-      <article class="book fade-up">
-        <div class="book-cover">
-          <!-- TODO(assets): the cover at /assets/book-cover.jpg (2:3). -->
-          <img src="/assets/book-cover.jpg"
-               alt="Cover of Somewhere Between Dreaming &amp; You"
-               loading="lazy" onerror="this.remove()">
-          <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
-        </div>
-        <div class="book-body">
-          <div class="book-meta">
-            <span class="label is-red">Out now</span>
-            <span class="label muted">Contemporary romance</span>
+      <div class="books-grid">
+        <article class="book fade-up">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-cover.jpg (2:3 portrait). -->
+            <img src="/assets/book-cover.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-cover.jpg</p>
           </div>
-          <h3>Somewhere Between Dreaming &amp; You</h3>
-          <div class="book-blurb">
-            <!-- TODO(brand): the real back-cover blurb. -->
-            <p>
-              The back-cover blurb goes here. Set up the situation, introduce
-              the person it happens to, and end on the question the reader
-              needs answered.
-            </p>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label is-red">Out now</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Somewhere Between Dreaming &amp; You</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>The back-cover blurb goes here. Set up the situation, introduce the person it happens to, and end on the question the reader needs answered.</p>
+            </div>
+            <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
-          <!-- TODO(brand): the real Amazon URL. -->
-          <a class="btn" href="#" target="_blank" rel="noopener">Buy now<span class="page" aria-hidden="true"><span></span></span></a>
-        </div>
-      </article>
-
-      <!-- Next book: copy the article above; the cover will sit on the right
-           automatically. -->
-
+        </article>
+        <article class="book fade-up is-upcoming">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-2.jpg (2:3 portrait). -->
+            <img src="/assets/book-2.jpg" alt="Cover of Second Title" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-2.jpg</p>
+          </div>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label is-red">Coming soon</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Second Title</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>A line or two about the next book — enough to make a reader want the release date in their calendar.</p>
+            </div>
+            <a class="btn" href="#newsletter">Get the date<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          </div>
+        </article>
+        <article class="book fade-up is-upcoming">
+          <div class="book-cover">
+            <!-- TODO(assets): cover art at /assets/book-3.jpg (2:3 portrait). -->
+            <img src="/assets/book-3.jpg" alt="Cover of Third Title" loading="lazy" onerror="this.remove()">
+            <p class="placeholder">Cover<br>/assets/book-3.jpg</p>
+          </div>
+          <div class="book-body">
+            <div class="book-meta">
+              <span class="label muted">In progress</span>
+              <span class="label muted">Contemporary romance</span>
+            </div>
+            <h3>Third Title</h3>
+            <div class="book-blurb">
+              <!-- TODO(brand): the real back-cover blurb. -->
+              <p>The one being written now. Tease the premise and let the Inner Circle hear about it first.</p>
+            </div>
+            <a class="btn" href="#newsletter">Follow along<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -594,7 +661,7 @@
           pages, get lost for a while, and come back to your own life feeling
           a little less alone.
         </p>
-        <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span></span></span></a>
+        <a class="btn" href="#newsletter">Join the Inner Circle<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
       </div>
     </div>
   </section>
@@ -617,7 +684,7 @@
       <form class="newsletter" id="newsletter-form" novalidate>
         <label for="newsletter-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Email address</label>
         <input id="newsletter-email" type="email" placeholder="Your email address" required autocomplete="email">
-        <button class="btn btn-red" type="submit">Join<span class="page" aria-hidden="true"><span></span></span></button>
+        <button class="btn btn-red" type="submit">Join<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></button>
       </form>
 
       <p class="consent muted" id="newsletter-consent">
