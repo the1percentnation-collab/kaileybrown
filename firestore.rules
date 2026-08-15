@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Defense in depth. The app reads and writes through the Admin SDK, which
+// bypasses these rules, but they stop a browser client from reaching Firestore
+// directly with a stolen or ordinary ID token.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Public site copy: anyone may read, only admins may write.
+    match /siteContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // A user may read their own record. Role changes are admin-only, so users
+    // cannot promote themselves.
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if isAdmin()
+        || (request.auth.uid == userId
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      allow delete: if isAdmin();
+    }
+
+    // Everything else is closed until its rules are written deliberately.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
