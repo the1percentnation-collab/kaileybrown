@@ -1,0 +1,62 @@
+{
+      "hosting": {
+              "public": "public",
+              "cleanUrls": true,
+              "ignore": [
+                        "firebase.json",
+                        "**/.*",
+                        "**/node_modules/**"
+              ],
+              "rewrites": [
+                        {
+                                    "source": "**",
+                                    "destination": "/index.html"
+                        }
+              ],
+              "headers": [
+                        {
+                                    "source": "**",
+                                    "headers": [
+                                              { "key": "Cache-Control", "value": "no-cache" },
+                                              { "key": "X-Content-Type-Options", "value": "nosniff" },
+                                              { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+                                              { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+                                              { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+                                              { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
+                                    ]
+                        },
+                        {
+                                    "source": "**/*.@(mp4|webm)",
+                                    "headers": [
+                                              { "key": "Cache-Control", "value": "public, max-age=604800" }
+                                    ]
+                        },
+                        {
+                                    "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|ico|woff|woff2|ttf|eot)",
+                                    "headers": [
+                                              { "key": "Cache-Control", "value": "public, max-age=604800" }
+                                    ]
+                        },
+                        {
+                                    "source": "**/*.@(js|css)",
+                                    "headers": [
+                                              { "key": "Cache-Control", "value": "no-cache" }
+                                    ]
+                        }
+              ]
+      },
+      "firestore": {
+              "rules": "firestore.rules",
+              "indexes": "firestore.indexes.json"
+      },
+      "storage": {
+              "rules": "storage.rules"
+      },
+      "functions": [
+              {
+                        "source": "functions",
+                        "codebase": "default",
+                        "runtime": "nodejs20"
+              }
+      ]
+}

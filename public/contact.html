@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">&larr; Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+        <div class="crm-contact-header">
+          <a href="/crm.html" class="crm-back-link">← Back to CRM</a>
+        </div>
+
+        <div class="card">
+          <div class="crm-contact-top">
+            <div class="crm-contact-name-wrap">
+              <input id="ct-name" class="crm-contact-name-input" placeholder="Name" />
+              <div class="crm-contact-sub" id="ct-sub"></div>
+            </div>
+            <div class="crm-contact-actions">
+              <div class="crm-field">
+                <label>Stage</label>
+                <select id="ct-stage" class="c-input crm-select"></select>
+              </div>
+              <div class="crm-field">
+                <label>Owner</label>
+                <select id="ct-owner" class="c-input crm-select"></select>
+              </div>
+              <button class="btn btn-primary" id="btn-send-email">Send Email</button>
+              <button class="btn btn-ghost" id="btn-delete-contact">Delete</button>
+            </div>
+          </div>
+
+          <div class="crm-contact-grid">
+            <div class="crm-field">
+              <label>Email</label>
+              <input id="ct-email" class="c-input" placeholder="name@example.com" />
+            </div>
+            <div class="crm-field">
+              <label>Phone</label>
+              <input id="ct-phone" class="c-input" placeholder="+1 555…" />
+            </div>
+            <div class="crm-field">
+              <label>Company</label>
+              <input id="ct-company" class="c-input" placeholder="Acme Inc." />
+            </div>
+            <div class="crm-field">
+              <label>Source</label>
+              <select id="ct-source" class="c-input crm-select"></select>
+            </div>
+          </div>
+
+          <div class="crm-tags-block">
+            <label class="crm-field-label">Tags</label>
+            <div id="ct-tags" class="crm-tags"></div>
+            <form class="crm-add-tag" id="ct-add-tag-form">
+              <input id="ct-add-tag" class="c-input" placeholder="Add a tag and press Enter" />
+            </form>
+          </div>
+
+          <div class="crm-save-row">
+            <span id="ct-save-status" class="crm-save-status"></span>
+            <button class="btn btn-primary" id="btn-save-contact">Save changes</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="crm-feed-tabs">
+            <button class="crm-tab active" data-feed-tab="notes">Notes</button>
+            <button class="crm-tab" data-feed-tab="deals">Deals</button>
+            <button class="crm-tab" data-feed-tab="tasks">Tasks</button>
+            <button class="crm-tab" data-feed-tab="appts">Appointments</button>
+            <button class="crm-tab" data-feed-tab="sms">Text</button>
+            <button class="crm-tab" data-feed-tab="activity">Activity</button>
+          </div>
+
+          <div id="feed-appts" class="crm-feed-pane" style="display:none;">
+            <div class="crm-note-compose-actions" style="margin-bottom:12px;">
+              <button class="btn btn-primary" id="btn-add-appt">+ New Appointment</button>
+            </div>
+            <div id="appts-list"></div>
+          </div>
+
+          <div id="feed-sms" class="crm-feed-pane" style="display:none;">
+            <div id="sms-pane"></div>
+          </div>
+
+          <div id="feed-deals" class="crm-feed-pane" style="display:none;">
+            <div class="crm-note-compose-actions" style="margin-bottom:12px;">
+              <button class="btn btn-primary" id="btn-add-deal">+ New Deal</button>
+            </div>
+            <div id="deals-list"></div>
+          </div>
+
+          <div id="feed-tasks" class="crm-feed-pane" style="display:none;">
+            <div class="crm-note-compose-actions" style="margin-bottom:12px;">
+              <button class="btn btn-primary" id="btn-add-task">+ New Task</button>
+            </div>
+            <div id="tasks-list"></div>
+          </div>
+
+          <div id="feed-notes" class="crm-feed-pane">
+            <div class="crm-note-compose">
+              <textarea id="note-body" class="c-textarea" rows="3" placeholder="Add a note (deal context, conversation summary, follow-up next step)…"></textarea>
+              <div class="crm-note-compose-actions">
+                <button class="btn btn-primary" id="btn-add-note">Add note</button>
+              </div>
+            </div>
+            <div id="notes-list" class="crm-notes-list"></div>
+          </div>
+
+          <div id="feed-activity" class="crm-feed-pane" style="display:none;">
+            <div class="crm-activity-actions">
+              <span class="crm-activity-label">Log:</span>
+              <button class="crm-chip" data-manual="manual_call">Call</button>
+              <button class="crm-chip" data-manual="manual_meeting">Meeting</button>
+              <button class="crm-chip" data-manual="manual_email">Email</button>
+              <button class="crm-chip" data-manual="manual_sms">SMS</button>
+            </div>
+            <div id="activity-list" class="crm-activity-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script type="module" src="js/contact-page.js"></script>
+</body>
+</html>

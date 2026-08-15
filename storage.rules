@@ -1,0 +1,86 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Mirrors firestore.rules isAnyAdmin(): owner custom claim OR
+    // users/{uid}.role == 'admin' (cross-service Firestore lookup).
+    function isCourseAdmin() {
+      return request.auth != null && (
+        request.auth.token.role == 'owner' ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // courses/{slug}/images — inline lesson images inserted via the course
+    // builder's editor. Shown to members (and on public sales pages), so
+    // reads are public like product-images.
+    match /courses/{slug}/images/{fileName} {
+      allow read: if true;
+      allow write: if isCourseAdmin()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // courses/{slug}/attachments — downloadable lesson resources
+    // (PDFs, docs, slides, sheets, zips, audio, images).
+    match /courses/{slug}/attachments/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if isCourseAdmin()
+                   && request.resource.size < 25 * 1024 * 1024
+                   && request.resource.contentType.matches('application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\..*|application/vnd\\.ms-excel|application/vnd\\.ms-powerpoint|text/csv|text/plain|application/zip|application/x-zip-compressed|image/.*|audio/.*');
+    }
+
+    // courses/{slug}/videos — uploaded lesson videos played via a native
+    // <video> tag in the course player.
+    match /courses/{slug}/videos/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if isCourseAdmin()
+                   && request.resource.size < 500 * 1024 * 1024
+                   && request.resource.contentType.matches('video/(mp4|webm)');
+    }
+
+    // avatars/{uid}/{filename} — readable by any signed-in user, writable only by that uid.
+    match /avatars/{uid}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // posts/{postId}/{filename} — readable by any signed-in user. Writable by any signed-in
+    // user (the client attaches the postId after creating the post doc, which is itself
+    // guarded by Firestore rules tying authorUid to auth.uid). Extra hardening (5MB, images)
+    // is applied here.
+    match /posts/{postId}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // events/{eventId}/{filename} — flyer/cover images. Readable by any signed-in
+    // user; writable by any signed-in user (the event doc write is owner/admin-gated
+    // by Firestore rules). Hardened to images under 10MB.
+    match /events/{eventId}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // product-images/{uid}/{filename} — product covers shown on the PUBLIC
+    // /upcoming page, so reads are public. Writable by any signed-in user
+    // (the product doc itself is admin/owner-gated by Firestore rules).
+    match /product-images/{uid}/{filename} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // bug-screenshots/{filename} — written by the reportBug Cloud Function
+    // (Admin SDK). No client read or write; owner access is via signed URLs
+    // generated server-side and included in the email notification.
+    match /bug-screenshots/{filename} {
+      allow read, write: if false;
+    }
+  }
+}

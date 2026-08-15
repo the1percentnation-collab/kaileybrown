@@ -1,21 +1,22 @@
+# Node
 node_modules/
-.next/
-out/
-build/
-dist/
+functions/node_modules/
+functions/npm-debug.log
 
-# Env and secrets. Never commit real credentials.
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+functions/firebase-debug.log
+
+# Env
 .env
-.env.local
-.env*.local
-*-service-account*.json
-serviceAccountKey.json
+.env.*
+!.env.example
 
+# macOS
 .DS_Store
-*.pem
-npm-debug.log*
-yarn-error.log*
-.vercel
-.netlify
-next-env.d.ts
-tsconfig.tsbuildinfo
+
+# Editor
+.vscode/
+.idea/

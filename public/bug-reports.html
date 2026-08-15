@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reports | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .sev-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .sev-critical { background: #FDE7EA; color: #8A0B20; }
+    .sev-high     { background: #FDF0E0; color: #8A4B00; }
+    .sev-medium   { background: #FBF5DD; color: #6B5600; }
+    .sev-low      { background: #E6F4E6; color: #1F5C1F; }
+    .sev-unknown  { background: var(--surface-2); color: var(--ink-muted); }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .status-open     { background: rgba(200, 16, 46,.15); color: #E60306; border: 1px solid rgba(200, 16, 46,.3); }
+    .status-resolved { background: rgba(74,222,128,.1); color: #4ade80; border: 1px solid rgba(74,222,128,.25); }
+
+    .report-row {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      background: var(--surface);
+    }
+    .report-row:hover { border-color: rgba(200, 16, 46,.4); background: rgba(200, 16, 46,.04); }
+    .report-row-top { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .report-desc { flex: 1; font-size: 13.5px; line-height: 1.5; min-width: 0; word-break: break-word; }
+    .report-meta { font-size: 11px; color: var(--gray-light); margin-top: 5px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 24px 16px;
+    }
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .modal-box {
+      width: 100%;
+      max-width: 760px;
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 28px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--gray-light);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: rgba(0,0,0,.06); color: var(--text); }
+    .ai-block {
+      background: rgba(0,0,0,.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Jost', sans-serif;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+        </a>
+        <a class="back-to-main" href="/owner.html">&larr; Owner Console</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+            <h2 style="margin:0;">Bug Reports</h2>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="font-size:12px; color:var(--gray-light);">
+                Status:
+                <select id="filter-status" style="margin-left:6px; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:12px;">
+                  <option value="open" selected>Open</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="all">All</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:16px;">
+            AI-analyzed bug reports submitted by users. Click a report to view the screenshot and fix proposal, then mark it resolved.
+          </p>
+          <div id="reports-list"></div>
+          <div id="reports-empty" style="display:none; padding:24px 0; text-align:center; color:var(--gray-light); font-size:13px;">No reports match this filter.</div>
+          <div id="reports-loading" style="padding:24px 0; text-align:center; color:var(--gray-light); font-size:13px;">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      collection, query, where, orderBy, limit, getDocs, doc, updateDoc, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const gateMsg   = document.getElementById('gate-msg');
+    const panel     = document.getElementById('panel');
+    const userChip  = document.getElementById('user-chip');
+    const listEl    = document.getElementById('reports-list');
+    const emptyEl   = document.getElementById('reports-empty');
+    const loadingEl = document.getElementById('reports-loading');
+    const filterSel = document.getElementById('filter-status');
+    const modal     = document.getElementById('modal');
+    const modalClose= document.getElementById('modal-close');
+    const modalContent = document.getElementById('modal-content');
+
+    let allReports = [];
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        gateMsg.innerHTML = '<p class="alert alert-warn">Sign in as owner to view bug reports.</p>';
+        return;
+      }
+      const token = await user.getIdTokenResult();
+      if (token.claims.role !== 'owner') {
+        gateMsg.innerHTML = '<p class="alert alert-warn">Owner access required.</p>';
+        return;
+      }
+      userChip.textContent = user.displayName || user.email || 'Owner';
+      panel.style.display = '';
+      await loadReports();
+    });
+
+    async function loadReports() {
+      loadingEl.style.display = '';
+      listEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'bugReports'), orderBy('createdAt', 'desc'), limit(200))
+        );
+        allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderList();
+      } catch (e) {
+        listEl.innerHTML = `<p style="color:#f08888;">Failed to load: ${e.message}</p>`;
+      } finally {
+        loadingEl.style.display = 'none';
+      }
+    }
+
+    function renderList() {
+      const filterVal = filterSel.value;
+      const filtered = allReports.filter(r => {
+        if (filterVal === 'all') return true;
+        return (r.status || 'open') === filterVal;
+      });
+      listEl.innerHTML = '';
+      if (!filtered.length) { emptyEl.style.display = ''; return; }
+      emptyEl.style.display = 'none';
+      filtered.forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'report-row';
+        const sev = (r.aiSeverity || 'unknown').toLowerCase();
+        const status = r.status || 'open';
+        const dateStr = r.createdAt
+          ? new Date(r.createdAt.toMillis()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : 'unknown date';
+        row.innerHTML = `
+          <div class="report-row-top">
+            <div class="report-desc">${escHtml(r.description || '').slice(0, 200)}</div>
+            <span class="sev-badge sev-${sev}">${sev}</span>
+            <span class="status-badge status-${status}">${status}</span>
+          </div>
+          <div class="report-meta">
+            <span>${dateStr}</span>
+            ${r.pageUrl ? `<span>${escHtml(r.pageUrl.replace(/^https?:\/\/[^/]+/, ''))}</span>` : ''}
+            ${r.reportedByUid ? `<span>uid: ${escHtml(r.reportedByUid.slice(0, 8))}…</span>` : '<span>anonymous</span>'}
+          </div>
+        `;
+        row.addEventListener('click', () => openModal(r));
+        listEl.appendChild(row);
+      });
+    }
+
+    function openModal(r) {
+      const sev = (r.aiSeverity || 'unknown').toLowerCase();
+      const status = r.status || 'open';
+      const dateStr = r.createdAt
+        ? new Date(r.createdAt.toMillis()).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+        : '—';
+      modalContent.innerHTML = `
+        <div style="display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+          <span class="sev-badge sev-${sev}">${sev}</span>
+          <span class="status-badge status-${status}">${status}</span>
+          <span style="font-size:12px; color:var(--gray-light); margin-left:auto;">${dateStr}</span>
+        </div>
+        <h3 style="margin-top:0;">Description</h3>
+        <p style="white-space:pre-wrap; word-break:break-word; font-size:13.5px; line-height:1.6; background:rgba(0,0,0,.03); border:1px solid var(--border); border-radius:8px; padding:12px;">${escHtml(r.description || '')}</p>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--gray-light); margin-bottom:16px;">
+          <span><strong>Page:</strong> ${escHtml(r.pageUrl || '—')}</span>
+          <span><strong>Reporter:</strong> ${escHtml(r.reportedByUid || 'anonymous')}</span>
+        </div>
+        ${r.screenshotUrl ? `
+        <h3>Screenshot</h3>
+        <p><a href="${escHtml(r.screenshotUrl)}" target="_blank" rel="noopener" style="color:#E60306;">Open screenshot →</a></p>
+        ` : ''}
+        <h3>AI Analysis &amp; Fix Proposal</h3>
+        <div class="ai-block">${escHtml(r.aiAnalysis || 'Not available.')}</div>
+        ${status === 'open' ? `
+        <div style="margin-top:18px; display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+          <textarea id="resolution-note" placeholder="Resolution note (optional)…" rows="2"
+            style="flex:1; min-width:200px; background:rgba(0,0,0,.04); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Jost',sans-serif; font-size:13px; padding:8px 10px; resize:none; outline:none;"></textarea>
+          <button id="resolve-btn" class="btn btn-primary" style="height:fit-content;" data-id="${escHtml(r.id)}">Mark Resolved</button>
+        </div>
+        ` : `<p style="margin-top:16px; color:#4ade80; font-size:13px;">✓ Resolved${r.resolution ? ` — ${escHtml(r.resolution)}` : ''}</p>`}
+      `;
+      const resolveBtn = modalContent.querySelector('#resolve-btn');
+      if (resolveBtn) {
+        resolveBtn.addEventListener('click', async () => {
+          resolveBtn.disabled = true;
+          resolveBtn.textContent = 'Saving…';
+          const note = (modalContent.querySelector('#resolution-note') || {}).value || '';
+          try {
+            const patch = { status: 'resolved', resolvedAt: serverTimestamp() };
+            if (note.trim()) patch.resolution = note.trim().slice(0, 1000);
+            await updateDoc(doc(db, 'bugReports', r.id), patch);
+            // Update local state
+            const idx = allReports.findIndex(x => x.id === r.id);
+            if (idx !== -1) Object.assign(allReports[idx], patch, { status: 'resolved' });
+            modal.classList.remove('open');
+            renderList();
+          } catch (e) {
+            resolveBtn.disabled = false;
+            resolveBtn.textContent = 'Mark Resolved';
+            alert('Failed to update: ' + e.message);
+          }
+        });
+      }
+      modal.classList.add('open');
+    }
+
+    modalClose.addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+    filterSel.addEventListener('change', renderList);
+
+    function escHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

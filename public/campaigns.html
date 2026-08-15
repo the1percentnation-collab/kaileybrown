@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaigns | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">&larr; Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+
+      <!-- List view -->
+      <div id="panel-list" style="display:none;">
+        <div class="camp-toolbar">
+          <div class="camp-toolbar-spacer"></div>
+          <button class="btn btn-primary" id="btn-new-campaign">+ New Campaign</button>
+        </div>
+
+        <div class="card">
+          <h2>All campaigns</h2>
+          <div class="camp-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                  <th>Sent</th>
+                  <th>Recipients</th>
+                  <th>Opens</th>
+                  <th>Clicks</th>
+                </tr>
+              </thead>
+              <tbody id="campaigns-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail view -->
+      <div id="panel-detail" style="display:none;">
+        <div class="crm-contact-header">
+          <a href="#" id="camp-back-link" class="crm-back-link">← Back to campaigns</a>
+        </div>
+
+        <div class="card">
+          <div class="camp-detail-header">
+            <div>
+              <div class="camp-detail-title" id="camp-d-name"></div>
+              <div class="camp-detail-sub" id="camp-d-sub"></div>
+            </div>
+            <div>
+              <span class="camp-status-badge" id="camp-d-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="camp-stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Recipients</div>
+            <div class="stat-value" id="camp-d-recipients">0</div>
+            <div class="stat-sub" id="camp-d-accepted"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Delivered</div>
+            <div class="stat-value" id="camp-d-delivered">0</div>
+            <div class="stat-sub" id="camp-d-delivered-rate"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Opens</div>
+            <div class="stat-value gold" id="camp-d-opens">0</div>
+            <div class="stat-sub" id="camp-d-opens-rate"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clicks</div>
+            <div class="stat-value red" id="camp-d-clicks">0</div>
+            <div class="stat-sub" id="camp-d-clicks-rate"></div>
+          </div>
+        </div>
+
+        <div class="card" id="camp-d-errors-wrap" style="display:none;">
+          <h2>Errors</h2>
+          <div id="camp-d-errors" class="camp-error-sample"></div>
+        </div>
+
+        <div class="card">
+          <h2>Subject &amp; body</h2>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--gray-light); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:6px;">Subject</div>
+          <div id="camp-d-subject" style="color:var(--white); margin-bottom:18px; font-weight:500;"></div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--gray-light); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:6px;">Body</div>
+          <div id="camp-d-body" style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:14px; color:var(--white-dim); font-size:13px; line-height:1.55; white-space:pre-wrap;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Event timeline</h2>
+          <div id="camp-d-events" class="camp-event-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script type="module" src="js/campaigns.js"></script>
+</body>
+</html>

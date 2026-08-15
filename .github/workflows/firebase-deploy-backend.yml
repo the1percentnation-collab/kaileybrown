@@ -1,0 +1,72 @@
+name: Deploy Firestore rules + Storage rules + Cloud Functions
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'storage.rules'
+      - 'firebase.json'
+      - 'functions/**'
+      - '.github/workflows/firebase-deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Write service account key
+        id: sa
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KAILEY_BROWN }}
+        run: |
+          echo "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+          echo "path=$RUNNER_TEMP/sa.json" >> "$GITHUB_OUTPUT"
+          echo "SA client_email: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["client_email"])' "$RUNNER_TEMP/sa.json")"
+
+      # Rules deploy FIRST, and on its own.
+      #
+      # These two deploys have different requirements: rules and indexes need
+      # no billing, while a functions deploy reads Secret Manager, which does.
+      # They used to run as a single `firebase deploy` command, so when billing
+      # lapsed the whole command aborted on the secrets lookup and the rules —
+      # already compiled and valid — were never pushed. Security rules silently
+      # stopped deploying for weeks while the workflow reported the failure as
+      # "functions".
+      #
+      # Rules also go before `npm install` so a dependency problem in
+      # functions/ can't block a security-rule change either.
+      - name: Deploy Firestore rules + indexes + Storage rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
+        run: |
+          npx --yes firebase-tools deploy \
+            --only firestore:rules,firestore:indexes,storage \
+            --project kailey-brown \
+            --non-interactive \
+            --force
+
+      - name: Install function deps
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+
+      - name: Deploy Cloud Functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
+        run: |
+          npx --yes firebase-tools deploy \
+            --only functions \
+            --project kailey-brown \
+            --non-interactive \
+            --force \
+          || {
+            echo "::error::Cloud Functions deploy failed. Rules and indexes in the previous step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kailey-brown. See AUTH_SETUP.md step 1."
+            exit 1
+          }

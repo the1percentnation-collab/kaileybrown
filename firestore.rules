@@ -1,40 +1,859 @@
 rules_version = '2';
-
-// Defense in depth. The app reads and writes through the Admin SDK, which
-// bypasses these rules, but they stop a browser client from reaching Firestore
-// directly with a stolen or ordinary ID token.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // ────────────────────────────────────────────────────────────────
+    // Helpers
+    // ────────────────────────────────────────────────────────────────
+    function isSignedIn() { return request.auth != null; }
+    function isOwner() { return isSignedIn() && request.auth.token.role == 'owner'; }
+    function isSelf(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // Owner, or any user whose users/{uid}.role == 'admin' (company admins).
+    function isAnyAdmin() {
+      return isOwner()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
-    function isAdmin() {
+    // A post's `category` is a channel key. Members create channels at
+    // channels/{key}, so this can NOT be a fixed enum — hardcoding one silently
+    // rejected every post into a custom channel. Accept the four seeded keys
+    // unconditionally (their channel docs may not exist yet — the client falls
+    // back to a default list), plus any channel that really exists.
+    function isLegalChannel(data) {
+      return !('category' in data)
+        || data.category in ['general','wins','questions','announcements']
+        || exists(/databases/$(database)/documents/channels/$(data.category));
+    }
+
+    // Has the caller bought (or been granted) course `slug`?
+    //
+    // `enrolledCourseSlugs` is the single source of truth for course access.
+    // It is frozen against self-writes in the users/{uid} rules below, so only
+    // the Admin SDK (enrollFree callable + the Stripe webhook) can add to it —
+    // which is what makes this safe to gate paid content on. Cancelling a
+    // subscription arrayRemoves the slug, so access is revoked here too.
+    //
+    // Deliberately written against `request.auth` and the path variable only —
+    // no `resource` — so it is provable for `list` queries as well as `get`.
+    function isEnrolledIn(slug) {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        && slug in get(/databases/$(database)/documents/users/$(request.auth.uid))
+             .data.get('enrolledCourseSlugs', []);
     }
 
-    // Public site copy: anyone may read, only admins may write.
-    match /siteContent/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    // Is the caller an admin of company `cid`? We read the company doc and check adminUids.
+    function isCompanyAdmin(cid) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/companies/$(cid))
+        && request.auth.uid in get(/databases/$(database)/documents/companies/$(cid)).data.adminUids;
     }
 
-    // A user may read their own record. Role changes are admin-only, so users
-    // cannot promote themselves.
-    match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create, update: if isAdmin()
-        || (request.auth.uid == userId
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
-      allow delete: if isAdmin();
+    // When an admin reads another user's top-level doc, we only allow reads if the user's
+    // companyId matches a company the caller admins. We can't query here, so we compare to
+    // the existing doc's companyId.
+    function callerAdminsSameCompanyAs(userDocData) {
+      return userDocData.companyId != null && isCompanyAdmin(userDocData.companyId);
     }
 
-    // Everything else is closed until its rules are written deliberately.
-    match /{document=**} {
+    // Restrict admin reads of user docs to metadata fields only (NOT progress/notes/capstone —
+    // those live in subcollections and are separately denied below). This function is advisory:
+    // subcollections are the real protection.
+    // ────────────────────────────────────────────────────────────────
+
+    // users/{uid}
+    match /users/{uid} {
+      // Read:
+      //  - owner: always
+      //  - self: always
+      //  - admin: if the target user is in one of their companies
+      allow get: if isOwner()
+                 || isSelf(uid)
+                 || (isSignedIn() && callerAdminsSameCompanyAs(resource.data));
+
+      // Only the owner can list the full users collection. Admins read their roster via
+      // companies/{cid}/members/{uid} (mirrored by the acceptInvite Cloud Function).
+      // Owner tooling (owner.html) also uses this to look up uid-by-email.
+      // Leaderboard reads happen server-side via the `getLeaderboard` callable.
+      allow list: if isOwner();
+
+      // Write:
+      //  - owner: always
+      //  - self: can create/update own doc, BUT privilege fields (role, tier,
+      //          companyId) and the leaderboard mirror fields are frozen — those
+      //          change ONLY server-side (Admin SDK) via the acceptInvite /
+      //          enrollFree callables and the Stripe webhook. This prevents a
+      //          signed-in user from self-assigning role:'admin' (which would
+      //          unlock every company's CRM/PII) or granting themselves paid
+      //          courses / a different company.
+      //
+      // On CREATE the privilege fields must start at their unprivileged defaults:
+      //   role == 'user' (or absent), tier == 'individual' (or absent),
+      //   companyId == null (or absent). Invite-driven signups still work because
+      //   acceptInvite runs server-side AFTER the doc is created and bumps role /
+      //   companyId with the Admin SDK (which bypasses these rules).
+      allow create: if isOwner() || (isSelf(uid)
+                     && (!('role' in request.resource.data)
+                         || request.resource.data.role == 'user')
+                     && (!('tier' in request.resource.data)
+                         || request.resource.data.tier == 'individual')
+                     && (!('companyId' in request.resource.data)
+                         || request.resource.data.companyId == null)
+                     && (!('statsPoints' in request.resource.data)
+                         || request.resource.data.statsPoints == 0)
+                     && (!('statsWeekPoints' in request.resource.data)
+                         || request.resource.data.statsWeekPoints == 0)
+                     && (!('unreadNotifCount' in request.resource.data)
+                         || request.resource.data.unreadNotifCount == 0)
+                     && (!('enrolledCourseSlugs' in request.resource.data)
+                         || request.resource.data.enrolledCourseSlugs == [])
+                     // Referral bookkeeping is server-only (getMyReferralCode /
+                     // acceptCommunityInvite / submitOnboarding). A user who could
+                     // set these could point referralToken at someone else's code
+                     // to read their stats, or reset referralCredited to have their
+                     // referrer paid again.
+                     && !('referralToken' in request.resource.data)
+                     && !('referralCredited' in request.resource.data)
+                     && !('invitedByToken' in request.resource.data)
+                     && !('invitedByUid' in request.resource.data));
+      // On UPDATE the privilege fields must be byte-for-byte unchanged from the
+      // existing doc. (Owner writes bypass; server writes use the Admin SDK.)
+      allow update: if isOwner() || (isSelf(uid)
+                     && request.resource.data.get('role', 'user') == resource.data.get('role', 'user')
+                     && request.resource.data.get('tier', 'individual') == resource.data.get('tier', 'individual')
+                     && request.resource.data.get('companyId', null) == resource.data.get('companyId', null)
+                     && request.resource.data.get('statsPoints', 0) == resource.data.get('statsPoints', 0)
+                     && request.resource.data.get('statsWeekPoints', 0) == resource.data.get('statsWeekPoints', 0)
+                     && request.resource.data.get('unreadNotifCount', 0) == resource.data.get('unreadNotifCount', 0)
+                     // Enrollment writes are server-only (enrollFree callable +
+                     // Stripe webhook) so users can't grant themselves paid courses.
+                     && request.resource.data.get('enrolledCourseSlugs', []) == resource.data.get('enrolledCourseSlugs', [])
+                     // Referral bookkeeping — server-only, same reasoning as create.
+                     && request.resource.data.get('referralToken', '') == resource.data.get('referralToken', '')
+                     && request.resource.data.get('referralCredited', false) == resource.data.get('referralCredited', false)
+                     && request.resource.data.get('invitedByToken', '') == resource.data.get('invitedByToken', '')
+                     && request.resource.data.get('invitedByUid', '') == resource.data.get('invitedByUid', ''));
+      allow delete: if isOwner();
+
+      // users/{uid}/progress/{moduleId} — STRICTLY private to the user (and owner).
+      match /progress/{moduleId} {
+        allow read, write: if isOwner() || isSelf(uid);
+      }
+
+      // users/{uid}/capstone — same.
+      match /capstone/{docId=**} {
+        allow read, write: if isOwner() || isSelf(uid);
+      }
+
+      // users/{uid}/certificates/{courseSlug} — the record of a completed
+      // course, written by /certificate.html the first time the member opens
+      // their certificate. It freezes the issue date; the certificate itself is
+      // still gated on progress at render time, and progress lives in the
+      // equally self-writable /progress docs above, so this grants nothing new.
+      match /certificates/{courseSlug} {
+        allow read, write: if isOwner() || isSelf(uid);
+      }
+
+      // users/{uid}/stats/{statId} (Phase 2 leaderboard) — server-only writes.
+      // Reads are permitted to any signed-in user so client-side leaderboard
+      // panels can hydrate level badges via the getLeaderboard callable's
+      // returned uids. (The callable itself uses Admin SDK and bypasses rules.)
+      match /stats/{statId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+      }
+
+      // users/{uid}/notifications/{notifId} (Phase 3) — per-user inbox.
+      // Server fan-out (Admin SDK) creates notifications when someone likes,
+      // comments on, or @mentions the user. Self can mark them read; only
+      // self/owner can read or delete.
+      match /notifications/{notifId} {
+        allow read: if isOwner() || isSelf(uid);
+        allow create: if false;
+        // Self may mark a notification read (or unread). All other fields
+        // must be unchanged.
+        allow update: if isSelf(uid)
+          && request.resource.data.fromUid == resource.data.fromUid
+          && request.resource.data.type == resource.data.type
+          && request.resource.data.postId == resource.data.postId
+          && request.resource.data.get('commentId', null) == resource.data.get('commentId', null)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.get('preview', '') == resource.data.get('preview', '')
+          && request.resource.data.get('fromName', '') == resource.data.get('fromName', '')
+          && request.resource.data.get('fromAvatar', null) == resource.data.get('fromAvatar', null);
+        allow delete: if isOwner() || isSelf(uid);
+      }
+
+      // users/{uid}/registrations/{eventId} — a per-member mirror of the
+      // events they've registered for, written by the registerForEvent Cloud
+      // Function (Admin SDK). Self/owner read; server-only writes.
+      match /registrations/{eventId} {
+        allow read: if isOwner() || isSelf(uid);
+        allow write: if false;
+      }
+
+      // users/{uid}/courseInterests/{slug} — a per-member mirror of the
+      // course waitlists they've joined, written by the registerCourseInterest
+      // Cloud Function (Admin SDK). Self/owner read; server-only writes.
+      match /courseInterests/{slug} {
+        allow read: if isOwner() || isSelf(uid);
+        allow write: if false;
+      }
+
+      // users/{uid}/purchases/{sessionId} — written by the Stripe webhook
+      // (Admin SDK). Self/owner read; server-only writes.
+      match /purchases/{purchaseId} {
+        allow read: if isOwner() || isSelf(uid);
+        allow write: if false;
+      }
+    }
+
+    // companies/{companyId}
+    match /companies/{cid} {
+      // Reads: owner, or any admin in adminUids, or members whose companyId == cid (so
+      // employees can see basic company info like name/seatCount).
+      allow get: if isOwner()
+                 || (isSignedIn() && request.auth.uid in resource.data.adminUids)
+                 || (isSignedIn()
+                     && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                     && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == cid);
+
+      allow list: if isOwner();
+
+      // Create/delete: owner only.
+      allow create, delete: if isOwner();
+
+      // Update: owner, or an admin currently in adminUids. Admins cannot change adminUids.
+      allow update: if isOwner()
+                    || (isSignedIn()
+                        && request.auth.uid in resource.data.adminUids
+                        && request.resource.data.adminUids == resource.data.adminUids);
+
+      // companies/{cid}/invites/{inviteId} — readable by anyone (so new signups can look up by
+      // code); writable by company admins and owner. Cloud Function mutates on accept.
+      match /invites/{inviteId} {
+        allow read: if true;
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+      }
+
+      // companies/{cid}/members/{uid} — mirrored roster entries written by the
+      // acceptInvite Cloud Function. Readable by owner + any admin of the company
+      // + any member of the same company (so members.html can render peers).
+      // Members can read their own entry. Writes are server-only (admin SDK bypasses rules).
+      match /members/{mUid} {
+        allow read: if isOwner()
+                     || isCompanyAdmin(cid)
+                     || (isSignedIn() && request.auth.uid == mUid)
+                     || (isSignedIn()
+                         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == cid);
+        allow list: if isOwner()
+                     || isCompanyAdmin(cid)
+                     || (isSignedIn()
+                         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == cid);
+        // Allow the company admin/owner to delete a member entry when revoking a seat.
+        allow delete: if isOwner() || isCompanyAdmin(cid);
+        // Owner can write freely; members can update their own aggregate digest fields
+        // (completedCount, lastActiveAt, capstoneStatus) but not reassign their uid.
+        allow create, update: if isOwner()
+                               || (isSignedIn() && request.auth.uid == mUid);
+      }
+
+      // ──────────────────────────────────────────────────────────────
+      // CRM (Phase 2): contacts + notes + activities.
+      // Scoped to the company. Only company admins + owner can read/write.
+      // Activities are create-only from the client (immutable audit trail).
+      // ──────────────────────────────────────────────────────────────
+      match /contacts/{contactId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+
+        match /notes/{noteId} {
+          allow read: if isOwner() || isCompanyAdmin(cid);
+          allow create: if (isOwner() || isCompanyAdmin(cid))
+                         && request.resource.data.authorUid == request.auth.uid;
+          allow update: if (isOwner() || isCompanyAdmin(cid))
+                         && resource.data.authorUid == request.auth.uid
+                         && request.resource.data.authorUid == resource.data.authorUid;
+          allow delete: if isOwner() || isCompanyAdmin(cid);
+        }
+
+        match /activities/{activityId} {
+          allow read: if isOwner() || isCompanyAdmin(cid);
+          // Create-only: act as immutable audit trail. actorUid must match caller.
+          allow create: if (isOwner() || isCompanyAdmin(cid))
+                         && request.resource.data.actorUid == request.auth.uid;
+          allow update: if false;
+          // Deletes only by owner — admins cannot tamper with history.
+          allow delete: if isOwner();
+        }
+      }
+
+      // ──────────────────────────────────────────────────────────────
+      // Sales suite (GHL-style): pipelines, opportunities (deals), tasks.
+      // Same owner/company-admin model as contacts.
+      // ──────────────────────────────────────────────────────────────
+      match /pipelines/{pipelineId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+      }
+      match /opportunities/{oppId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+      }
+      match /tasks/{taskId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+      }
+      match /appointments/{apptId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+      }
+
+      // SMS conversations + messages. Messages are written only by the Twilio
+      // Cloud Functions (Admin SDK), so client writes to messages are denied.
+      match /conversations/{conversationId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update: if isOwner() || isCompanyAdmin(cid);
+        allow delete: if isOwner();
+        match /messages/{messageId} {
+          allow read: if isOwner() || isCompanyAdmin(cid);
+          allow write: if false;
+        }
+      }
+
+      // ──────────────────────────────────────────────────────────────
+      // Campaigns (Phase 3): email broadcasts + per-event telemetry.
+      // ──────────────────────────────────────────────────────────────
+      match /campaigns/{campaignId} {
+        allow read: if isOwner() || isCompanyAdmin(cid);
+        allow create, update, delete: if isOwner() || isCompanyAdmin(cid);
+
+        // Events subcollection — written by the webhook via Admin SDK (bypasses rules).
+        // Clients get read access only.
+        match /events/{eventId} {
+          allow read: if isOwner() || isCompanyAdmin(cid);
+          allow write: if false;
+        }
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Community feed
+    // ────────────────────────────────────────────────────────────────
+    // posts/{postId}
+    //  Scope: companyId == null  -> global (owner-authored, visible to all)
+    //         companyId == <cid>  -> company-scoped, visible to that company + owner
+    match /posts/{postId} {
+      // Can the caller see this post?
+      function callerCompanyId() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+               ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId
+               : null;
+      }
+      function canReadPost() {
+        return isSignedIn() && (
+          isOwner()
+          || resource.data.companyId == null
+          || resource.data.companyId == callerCompanyId()
+        );
+      }
+
+      allow get: if canReadPost();
+      // list: we can't evaluate resource.data per-query here across companyId == null OR ==
+      // user's cid easily; clients run two queries (one per companyId filter). Allow list to
+      // any signed-in user — individual documents still filter via `get` rules above.
+      allow list: if isSignedIn();
+
+      // Create: authorUid must match auth.uid. Counters must start at 0. companyId must be
+      // null (global) only if the caller is owner, otherwise it must match caller's own cid.
+      // Category (Phase 1 channels) must name a real channel when present — see isLegalChannel.
+      // mentionedUids (Phase 3) must be a list of strings, capped at 10 to bound trigger fan-out.
+      allow create: if isSignedIn()
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.likeCount == 0
+        && request.resource.data.commentCount == 0
+        && isLegalChannel(request.resource.data)
+        && (!('pinned' in request.resource.data) || request.resource.data.pinned == false)
+        && (
+          !('mentionedUids' in request.resource.data)
+          || (request.resource.data.mentionedUids is list
+              && request.resource.data.mentionedUids.size() <= 10)
+        )
+        && (
+          (request.resource.data.companyId == null && isOwner())
+          || (request.resource.data.companyId != null
+              && request.resource.data.companyId == callerCompanyId())
+        );
+
+      // Update:
+      //   - author may update their own post (text, imageUrl, category, updatedAt) but not counters or `pinned`
+      //   - any signed-in reader may increment/decrement likeCount by ±1 (via toggleLike txn)
+      //   - any signed-in reader may increment/decrement commentCount by ±1 (via addComment txn)
+      //   - owner or same-company admin may flip `pinned` (and only `pinned`); counters/content unchanged.
+      // We enforce ±1 delta on counters; content edits only if authorUid matches.
+      allow update: if isSignedIn() && canReadPost() && (
+        (
+          // Like toggle: likeCount diffs by ±1, commentCount & content unchanged.
+          request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.text == resource.data.text
+          && request.resource.data.imageUrl == resource.data.imageUrl
+          && request.resource.data.commentCount == resource.data.commentCount
+          && request.resource.data.get('category', null) == resource.data.get('category', null)
+          && request.resource.data.get('pinned', false) == resource.data.get('pinned', false)
+          && request.resource.data.get('mentionedUids', []) == resource.data.get('mentionedUids', [])
+          && (
+            request.resource.data.likeCount == resource.data.likeCount + 1
+            || request.resource.data.likeCount == resource.data.likeCount - 1
+          )
+        )
+        || (
+          // Comment add/delete: commentCount diffs by ±1, likeCount & content unchanged.
+          request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.text == resource.data.text
+          && request.resource.data.imageUrl == resource.data.imageUrl
+          && request.resource.data.likeCount == resource.data.likeCount
+          && request.resource.data.get('category', null) == resource.data.get('category', null)
+          && request.resource.data.get('pinned', false) == resource.data.get('pinned', false)
+          && request.resource.data.get('mentionedUids', []) == resource.data.get('mentionedUids', [])
+          && (
+            request.resource.data.commentCount == resource.data.commentCount + 1
+            || request.resource.data.commentCount == resource.data.commentCount - 1
+          )
+        )
+        || (
+          // Author editing own post content — counters and `pinned` unchanged. Category and
+          // mentionedUids may change (treated as content edits); category stays in enum, and
+          // mentionedUids stays a list capped at 10.
+          resource.data.authorUid == request.auth.uid
+          && request.resource.data.likeCount == resource.data.likeCount
+          && request.resource.data.commentCount == resource.data.commentCount
+          && request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.get('pinned', false) == resource.data.get('pinned', false)
+          && isLegalChannel(request.resource.data)
+          && (
+            !('mentionedUids' in request.resource.data)
+            || (request.resource.data.mentionedUids is list
+                && request.resource.data.mentionedUids.size() <= 10)
+          )
+        )
+        || (
+          // Moderator pinning — owner or same-company admin may flip `pinned` only.
+          // Everything else (counters, content, scope, category, mentions) must be unchanged.
+          (isOwner() || (resource.data.companyId != null && isCompanyAdmin(resource.data.companyId)))
+          && request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.text == resource.data.text
+          && request.resource.data.imageUrl == resource.data.imageUrl
+          && request.resource.data.likeCount == resource.data.likeCount
+          && request.resource.data.commentCount == resource.data.commentCount
+          && request.resource.data.get('category', null) == resource.data.get('category', null)
+          && request.resource.data.get('mentionedUids', []) == resource.data.get('mentionedUids', [])
+        )
+      );
+
+      // Delete: author, owner, or same-company admin.
+      allow delete: if isSignedIn() && (
+        resource.data.authorUid == request.auth.uid
+        || isOwner()
+        || (resource.data.companyId != null && isCompanyAdmin(resource.data.companyId))
+      );
+
+      // comments/{commentId}
+      match /comments/{commentId} {
+        function parentPost() {
+          return get(/databases/$(database)/documents/posts/$(postId));
+        }
+        function callerCompanyId() {
+          return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                 ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId
+                 : null;
+        }
+        function canReadParent() {
+          return isSignedIn() && (
+            isOwner()
+            || parentPost().data.companyId == null
+            || parentPost().data.companyId == callerCompanyId()
+          );
+        }
+
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && canReadParent()
+          && request.resource.data.authorUid == request.auth.uid
+          && (
+            !('mentionedUids' in request.resource.data)
+            || (request.resource.data.mentionedUids is list
+                && request.resource.data.mentionedUids.size() <= 10)
+          );
+        allow update: if isSignedIn()
+          && resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == resource.data.authorUid
+          && (
+            !('mentionedUids' in request.resource.data)
+            || (request.resource.data.mentionedUids is list
+                && request.resource.data.mentionedUids.size() <= 10)
+          );
+        allow delete: if isSignedIn() && (
+          resource.data.authorUid == request.auth.uid
+          || isOwner()
+          || (parentPost().data.companyId != null && isCompanyAdmin(parentPost().data.companyId))
+        );
+      }
+
+      // likes/{uid} — doc id must equal auth.uid.
+      match /likes/{likeUid} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && request.auth.uid == likeUid;
+        allow update: if false;
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Channels (Phase 1) — categories for the community feed.
+    // Doc id == channel key (e.g. 'general', 'wins'). Owner-only writes;
+    // any signed-in user may read so the sidebar can render the list.
+    // ────────────────────────────────────────────────────────────────
+    // A channel is private when visibility == 'private'. Membership lives in
+    // memberUids on the channel doc, so a single read of that doc gates both the
+    // channel and everything under it.
+    function channelDoc(key) {
+      return get(/databases/$(database)/documents/channels/$(key));
+    }
+    function isChannelMember(key) {
+      return isSignedIn() && (
+        isAnyAdmin()
+        || request.auth.uid in channelDoc(key).data.get('memberUids', [])
+      );
+    }
+    match /channels/{key} {
+      // Two independent axes:
+      //   listed     — does the channel appear in everyone's sidebar
+      //   visibility — can you read the posts inside it
+      // A listed+private channel is visible to all (they get "Request access");
+      // an unlisted one is invisible unless you're a member or staff.
+      //
+      // This is written against `resource`, so a `list` query is only permitted
+      // when the client constrains it — see listChannels(), which queries
+      // `listed == true` and `memberUids array-contains me` and merges. That
+      // depends on every channel doc carrying an explicit `listed` field, since
+      // `==` skips docs where the field is ABSENT; backfillChannelDefaults()
+      // writes it and MUST have run before these rules ship, or the sidebar
+      // goes empty for every non-staff member.
+      allow get, list: if isSignedIn() && (
+        isAnyAdmin()
+        || resource.data.listed == true
+        || request.auth.uid in resource.data.get('memberUids', [])
+      );
+      allow create, update, delete: if isOwner();
+
+      // Access requests. Doc id IS the requesting uid, which makes one open
+      // request per person per channel structurally impossible to duplicate.
+      //
+      // Staff decide via the decideChannelAccess callable (Admin SDK), not from
+      // here — the channel doc itself is owner-only writable, so an admin
+      // approving from the browser would be denied. These rules exist so the
+      // requester can create/see their own row and staff can list the queue.
+      match /requests/{requestUid} {
+        allow get: if isSignedIn() && (request.auth.uid == requestUid || isAnyAdmin());
+        allow list: if isAnyAdmin();
+        // In practice requests are written by the requestChannelAccess callable
+        // (Admin SDK), which is where the real validation lives. This path is
+        // defence in depth, so it bounds the answers list too.
+        allow create: if isSignedIn()
+          && request.auth.uid == requestUid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.uid == request.auth.uid
+          && (
+            !('answers' in request.resource.data)
+            || (request.resource.data.answers is list
+                && request.resource.data.answers.size() <= 12)
+          );
+        // Deciding is staff-only: a requester must never approve themselves.
+        allow update, delete: if isAnyAdmin();
+      }
+
+      // Posts in a PRIVATE channel live here rather than in the top-level
+      // `posts` collection. That is the whole point of the subcollection: the
+      // channel key is in the path, so one membership check secures every
+      // read — including list queries, which per-document rules cannot protect.
+      // Public channels keep using /posts and are unaffected.
+      match /posts/{postId} {
+        allow get, list: if isChannelMember(key);
+
+        allow create: if isChannelMember(key)
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.likeCount == 0
+          && request.resource.data.commentCount == 0
+          && request.resource.data.category == key
+          && (!('pinned' in request.resource.data) || request.resource.data.pinned == false)
+          && (
+            !('mentionedUids' in request.resource.data)
+            || (request.resource.data.mentionedUids is list
+                && request.resource.data.mentionedUids.size() <= 10)
+          );
+
+        // Same shape as the public feed: authors edit their own content,
+        // any member may move a counter by ±1, staff may pin.
+        allow update: if isChannelMember(key) && (
+          (
+            // Like / comment counter toggle: content and authorship unchanged.
+            request.resource.data.authorUid == resource.data.authorUid
+            && request.resource.data.text == resource.data.text
+            && request.resource.data.imageUrl == resource.data.imageUrl
+            && request.resource.data.get('pinned', false) == resource.data.get('pinned', false)
+            && (
+              (request.resource.data.likeCount == resource.data.likeCount + 1
+               || request.resource.data.likeCount == resource.data.likeCount - 1
+               || request.resource.data.likeCount == resource.data.likeCount)
+              && (request.resource.data.commentCount == resource.data.commentCount + 1
+                  || request.resource.data.commentCount == resource.data.commentCount - 1
+                  || request.resource.data.commentCount == resource.data.commentCount)
+            )
+          )
+          || (
+            // Author editing their own post.
+            resource.data.authorUid == request.auth.uid
+            && request.resource.data.authorUid == resource.data.authorUid
+            && request.resource.data.likeCount == resource.data.likeCount
+            && request.resource.data.commentCount == resource.data.commentCount
+            && request.resource.data.get('pinned', false) == resource.data.get('pinned', false)
+            && request.resource.data.category == resource.data.category
+          )
+          || (
+            // Staff pinning: only `pinned` may move.
+            isAnyAdmin()
+            && request.resource.data.text == resource.data.text
+            && request.resource.data.imageUrl == resource.data.imageUrl
+            && request.resource.data.likeCount == resource.data.likeCount
+            && request.resource.data.commentCount == resource.data.commentCount
+            && request.resource.data.authorUid == resource.data.authorUid
+          )
+        );
+
+        allow delete: if isSignedIn() && (
+          resource.data.authorUid == request.auth.uid || isAnyAdmin()
+        );
+
+        match /comments/{commentId} {
+          allow read: if isChannelMember(key);
+          allow create: if isChannelMember(key)
+            && request.resource.data.authorUid == request.auth.uid
+            && (
+              !('mentionedUids' in request.resource.data)
+              || (request.resource.data.mentionedUids is list
+                  && request.resource.data.mentionedUids.size() <= 10)
+            );
+          allow update: if isChannelMember(key)
+            && resource.data.authorUid == request.auth.uid
+            && request.resource.data.authorUid == resource.data.authorUid;
+          allow delete: if isChannelMember(key) && (
+            resource.data.authorUid == request.auth.uid || isAnyAdmin()
+          );
+        }
+
+        match /likes/{likeUid} {
+          allow read: if isChannelMember(key);
+          allow create, delete: if isChannelMember(key) && request.auth.uid == likeUid;
+          allow update: if false;
+        }
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Community invite tokens. Server-only — clients reach them via
+    // the createCommunityInvite / acceptCommunityInvite callables.
+    // Tokens are sensitive (anyone with one can be tied to your account
+    // on signup), so the collection is invisible to clients.
+    // ────────────────────────────────────────────────────────────────
+    match /communityInvites/{tokenId} {
       allow read, write: if false;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Events (Stage 4) — community events visible to any signed-in
+    // user; owner / company-admin can create / update / delete.
+    // No field-level validation in v1; the events-page UI gates input.
+    // ────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
+    // Courses — Firestore-backed course catalog managed from
+    // /manage-courses.html. Public read (marketing surface, like /events);
+    // owner + admins write. The `stripe` map is server-only (written by
+    // Cloud Functions when syncing products/prices).
+    // ────────────────────────────────────────────────────────────────
+    match /courses/{slug} {
+      allow read: if true;
+      allow create: if isAnyAdmin() && !('stripe' in request.resource.data);
+      allow update: if isAnyAdmin()
+        && request.resource.data.get('stripe', {}) == resource.data.get('stripe', {});
+      allow delete: if isOwner();
+
+      // Lesson documents. These hold the actual paid content — `html`,
+      // `videoUrl`, `videoFile`, `workbook`, `attachments` — so they are NOT
+      // public. They used to be `allow read: if true`, which meant anyone with
+      // the (public) web API key could read a paid course end to end; the
+      // enrollment check in courses-page.js is browser-side only and stops
+      // nobody. Now the database enforces it.
+      //
+      // This does not touch the marketing surface: the public sales page
+      // renders its "Course content" outline from the `curriculum` array on
+      // the parent course doc (see curriculumHtml in course-landing.js, and
+      // syncCurriculumFromLessons in course-builder.js, which copies lesson
+      // titles and durations into it), and that doc stays world-readable
+      // above. Only the lesson bodies moved behind the paywall.
+      match /modules/{moduleId} {
+        allow read: if isAnyAdmin() || isEnrolledIn(slug);
+        allow create, update, delete: if isAnyAdmin();
+      }
+    }
+
+    // Products — generic pre-order / interest items (courses, books, services…).
+    // Public can read visible statuses; admins manage. Interests/preorders are
+    // written only by Cloud Functions (Admin SDK), so client writes are denied.
+    match /products/{productId} {
+      allow read: if isAnyAdmin()
+        || (resource.data.status in ['interest', 'preorder', 'live']);
+      allow create, update, delete: if isAnyAdmin();
+      match /interests/{interestId} {
+        allow read: if isAnyAdmin();
+        allow write: if false;
+      }
+      match /preorders/{preorderId} {
+        allow read: if isAnyAdmin();
+        allow write: if false;
+      }
+    }
+
+    // Coupon codes — created in /manage-courses.html, synced to Stripe by the
+    // syncCoupon callable (which writes stripePromotionCodeId server-side).
+    match /coupons/{code} {
+      allow read: if true;
+      allow create: if isAnyAdmin() && !('stripePromotionCodeId' in request.resource.data);
+      allow update: if isAnyAdmin()
+        && request.resource.data.get('stripePromotionCodeId', null) == resource.data.get('stripePromotionCodeId', null);
+      allow delete: if isAnyAdmin();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Affiliate program — affiliates/{CODE} managed from
+    // /manage-affiliates.html. The linked salesperson (matched by uid or
+    // account email) can read their own record + referrals. Aggregate /
+    // money fields are server-written only (webhook + markAffiliatePaid),
+    // enforced by freezing them on client writes.
+    // ────────────────────────────────────────────────────────────────
+    match /affiliates/{code} {
+      // Direct field comparisons (not .get()) so Firestore can prove list
+      // queries like where('email','==',<caller email>) against this rule.
+      function affLinkedToCaller(data) {
+        return isSignedIn()
+          && (data.uid == request.auth.uid
+              || data.email == request.auth.token.email);
+      }
+      allow get: if isAnyAdmin() || affLinkedToCaller(resource.data);
+      allow list: if isAnyAdmin() || affLinkedToCaller(resource.data);
+      allow create: if isAnyAdmin()
+        && request.resource.data.get('clicks', 0) == 0
+        && request.resource.data.get('saleCount', 0) == 0
+        && request.resource.data.get('totalSales', 0) == 0
+        && request.resource.data.get('totalCommission', 0) == 0
+        && request.resource.data.get('totalPaid', 0) == 0;
+      allow update: if isAnyAdmin()
+        && request.resource.data.get('clicks', 0) == resource.data.get('clicks', 0)
+        && request.resource.data.get('saleCount', 0) == resource.data.get('saleCount', 0)
+        && request.resource.data.get('totalSales', 0) == resource.data.get('totalSales', 0)
+        && request.resource.data.get('totalCommission', 0) == resource.data.get('totalCommission', 0)
+        && request.resource.data.get('totalPaid', 0) == resource.data.get('totalPaid', 0);
+      allow delete: if isOwner();
+
+      // Per-sale commission ledger — written by the Stripe webhook and
+      // markAffiliatePaid (Admin SDK). Read-only for admins + the affiliate.
+      match /referrals/{refId} {
+        function parentAff() {
+          return get(/databases/$(database)/documents/affiliates/$(code)).data;
+        }
+        allow read: if isAnyAdmin()
+          || (isSignedIn() && affLinkedToCaller(parentAff()));
+        allow write: if false;
+      }
+    }
+
+    match /events/{eventId} {
+      // Public read: events are front-facing so anyone (signed in or not) can
+      // view them and register from the public Events page.
+      allow read: if true;
+      allow create, update, delete: if isOwner()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+
+      // Registrations — written only by the registerForEvent Cloud Function
+      // (Admin SDK). Readable by organizers (owner/admin) to see attendance;
+      // attendee PII is not exposed to the general public.
+      match /registrations/{regId} {
+        allow read: if isOwner()
+          || (isSignedIn()
+              && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+        allow write: if false;
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Course suggestions — written by the courseAdvisorChat Cloud Function
+    // (Admin SDK) on behalf of members. Only owner/admin can read the list.
+    // ────────────────────────────────────────────────────────────────
+    match /courseSuggestions/{suggestionId} {
+      allow read: if isAnyAdmin();
+      allow write: if false; // Cloud Function (Admin SDK) writes only.
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Chatbot knowledge base — managed via saveKnowledgeEntry /
+    // deleteKnowledgeEntry Cloud Functions (Admin SDK). Direct client
+    // reads/writes are blocked; the chatbot reads via Admin SDK.
+    // ────────────────────────────────────────────────────────────────
+    match /chatbotKnowledge/{entryId} {
+      allow read, write: if false; // Cloud Functions (Admin SDK) only.
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Rate-limit counters — written ONLY by the Cloud Functions limiter
+    // (Admin SDK). Clients must never read or write these; exposing them
+    // would let an attacker probe or reset their own quota.
+    // ────────────────────────────────────────────────────────────────
+    match /rateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Bug reports — written by the reportBug Cloud Function (Admin SDK).
+    // Owner can read and update status; nobody can create/delete from client.
+    // ────────────────────────────────────────────────────────────────
+    match /bugReports/{reportId} {
+      allow read: if isOwner();
+      // Owner may flip status / add resolution note only.
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'resolvedAt', 'resolution']);
+      allow create, delete: if false;
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto; background:var(--black);">
+
+<header class="academy-header">
+  <div class="academy-header-inner">
+    <a class="academy-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+      <img src="/assets/academy-logo.png" alt="" class="academy-brand-mark">
+    </a>
+    <a class="back-to-main" href="https://kaileybrown.com">← Main Site</a>
+    <nav class="academy-tabs">
+      <a class="academy-tab" href="/dashboard.html">Dashboard</a>
+      <a class="academy-tab active" href="/courses.html">Courses</a>
+      <a class="academy-tab" href="/community.html">Community</a>
+      <a class="academy-tab" href="/resources.html">Resources</a>
+      <a class="academy-tab" href="/profile.html">Profile</a>
+    </nav>
+    <div class="academy-header-right">
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </div>
+</header>
+
+<main id="cl-root">
+  <div class="cl-loading">Loading course…</div>
+</main>
+
+<script type="module" src="js/course-landing.js"></script>
+</body>
+</html>

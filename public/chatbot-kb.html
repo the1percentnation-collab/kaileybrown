@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot Knowledge Base | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .kb-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .kb-entry {
+      background: var(--surface, #111);
+      border: 1px solid var(--border, #222);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+    .kb-entry-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #f0f0f0;
+      margin-bottom: 5px;
+    }
+    .kb-entry-body {
+      font-size: 13px;
+      color: #999;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 100px;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    }
+    .kb-entry-meta {
+      font-size: 11px;
+      color: #555;
+      margin-top: 8px;
+    }
+    .kb-entry-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .kb-inactive { opacity: .45; }
+    .kb-badge-active   { background: rgba(0,200,80,.12); color: #00c850; border: 1px solid rgba(0,200,80,.3); padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+    .kb-badge-inactive { background: rgba(0,0,0,.04); color: var(--ink-muted); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+    .kb-order { font-family: 'Space Mono', monospace; font-size: 11px; color: #555; }
+
+    /* Modal */
+    .kb-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .kb-modal {
+      background: #0f0f14;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .kb-modal h3 { margin: 0 0 20px; font-size: 18px; color: #f0f0f0; }
+    .kb-field { margin-bottom: 16px; }
+    .kb-field label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .kb-field input[type="text"],
+    .kb-field input[type="number"],
+    .kb-field textarea {
+      width: 100%;
+      background: #080810;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #e8e8f0;
+      font-family: 'Jost', sans-serif;
+      font-size: 14px;
+      padding: 10px 13px;
+      outline: none;
+      transition: border-color .15s;
+      box-sizing: border-box;
+    }
+    .kb-field input:focus, .kb-field textarea:focus { border-color: #E60306; }
+    .kb-field textarea { min-height: 180px; resize: vertical; line-height: 1.6; }
+    .kb-field-row { display: flex; gap: 14px; }
+    .kb-field-row .kb-field { flex: 1; }
+    .kb-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+    .kb-hint { font-size: 12px; color: #555; margin-top: 5px; }
+
+    .empty-state { text-align: center; padding: 48px 24px; color: #555; }
+    .empty-state h3 { color: #888; margin-bottom: 8px; }
+
+    .btn-icon {
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid #2a2a2a;
+      background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: #666; transition: all .15s;
+    }
+    .btn-icon:hover { border-color: #E60306; color: #E60306; background: rgba(200, 16, 46,.06); }
+    .btn-icon.btn-del:hover { border-color: #c00; color: #f66; background: rgba(200,0,0,.08); }
+    .btn-icon svg { width: 15px; height: 15px; }
+
+    #status-bar {
+      position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+      background: #111; border: 1px solid #333; border-radius: 10px;
+      padding: 12px 18px; font-size: 13px; color: #ccc;
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+      transform: translateY(80px); opacity: 0;
+      transition: transform .25s ease, opacity .25s ease;
+      pointer-events: none;
+    }
+    #status-bar.show { transform: translateY(0); opacity: 1; }
+    #status-bar.ok  { border-color: rgba(0,200,80,.4); color: #00c850; }
+    #status-bar.err { border-color: rgba(200, 16, 46,.4);  color: #f66; }
+  </style>
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+        </a>
+        <a class="back-to-main" href="/owner.html">&larr; Owner Console</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+
+        <div class="card">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0 0 6px;">Chatbot Knowledge Base</h2>
+              <p style="font-size:13px; color:var(--gray-light); margin:0;">
+                Add facts, FAQs, policies, or any information you want the chatbot to know.
+                Entries are injected into every conversation automatically.
+              </p>
+            </div>
+            <button class="btn btn-primary" id="btn-add">+ Add Entry</button>
+          </div>
+
+          <div style="margin-top:18px; padding:14px 16px; background:rgba(200, 16, 46,.06); border:1px solid rgba(200, 16, 46,.2); border-radius:10px; font-size:13px; color:#ccc; line-height:1.6;">
+            <strong style="color:#f0f0f0;">How it works:</strong>
+            Each entry has a <strong>Title</strong> (a short label, like "Refund Policy" or "About Coach Marcus")
+            and a <strong>Body</strong> (the actual information). The chatbot reads all active entries every time
+            a user sends a message. Use the <strong>Order</strong> field to control which entries appear first.
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <h3 style="margin:0; font-size:15px;">Entries</h3>
+            <span id="entry-count" style="font-size:13px; color:#555;"></span>
+          </div>
+          <div id="kb-list">
+            <div class="empty-state">
+              <h3>Loading…</h3>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel -->
+    </div>
+  </div>
+
+  <!-- Add / Edit modal -->
+  <div class="kb-modal-backdrop" id="modal" style="display:none;" aria-modal="true" role="dialog">
+    <div class="kb-modal">
+      <h3 id="modal-title">Add Knowledge Entry</h3>
+
+      <div class="kb-field">
+        <label for="f-title">Title <span style="color:#E60306">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. Refund Policy, About Coach Marcus, Community Rules…" maxlength="200">
+      </div>
+
+      <div class="kb-field">
+        <label for="f-body">Content <span style="color:#E60306">*</span></label>
+        <textarea id="f-body" placeholder="Write everything the chatbot should know about this topic. Be specific — the more detail, the better the answers."></textarea>
+        <p class="kb-hint">Plain text only. Max 8,000 characters.</p>
+      </div>
+
+      <div class="kb-field-row">
+        <div class="kb-field">
+          <label for="f-order">Order (lower = earlier)</label>
+          <input type="number" id="f-order" value="0" min="0" max="999">
+        </div>
+        <div class="kb-field" style="display:flex; align-items:flex-end; padding-bottom:0;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:13px; color:#ccc; margin-bottom:10px; text-transform:none; letter-spacing:0;">
+            <input type="checkbox" id="f-active" checked style="width:16px; height:16px; accent-color:#E60306;">
+            Active (included in chatbot context)
+          </label>
+        </div>
+      </div>
+
+      <div class="kb-modal-actions">
+        <button class="btn btn-ghost" id="btn-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-save">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status-bar"></div>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { functions, db } from './js/firebase.js';
+    import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+    import { initUserChip } from './js/topbar.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const user = await requireAuth('/login.html');
+    if (!user) throw new Error('not authed');
+
+    // Gate: owner or admin only
+    const userSnap = await getDoc(doc(db, 'users', user.uid));
+    const role = userSnap.exists() ? userSnap.data().role : null;
+    if (role !== 'owner' && role !== 'admin') {
+      document.getElementById('gate-msg').innerHTML =
+        '<div class="card" style="color:#f88;"><strong>Access denied.</strong> Owner or admin role required.</div>';
+      throw new Error('not owner/admin');
+    }
+
+    initUserChip(user);
+    document.getElementById('panel').style.display = '';
+
+    // ── Callable refs ──
+    const listKB   = httpsCallable(functions, 'listKnowledgeEntries');
+    const saveKB   = httpsCallable(functions, 'saveKnowledgeEntry');
+    const deleteKB = httpsCallable(functions, 'deleteKnowledgeEntry');
+
+    // ── State ──
+    let entries = [];
+    let editingId = null;
+
+    // ── Toast ──
+    const bar = document.getElementById('status-bar');
+    let toastTimer;
+    function toast(msg, type = 'ok') {
+      bar.textContent = msg;
+      bar.className = `show ${type}`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { bar.className = ''; }, 3200);
+    }
+
+    // ── Load entries ──
+    async function loadEntries() {
+      try {
+        const res = await listKB({});
+        entries = res.data.entries || [];
+        renderList();
+      } catch (e) {
+        document.getElementById('kb-list').innerHTML =
+          `<div class="empty-state"><h3>Failed to load</h3><p>${e.message}</p></div>`;
+      }
+    }
+
+    // ── Render list ──
+    function renderList() {
+      const el = document.getElementById('kb-list');
+      const count = document.getElementById('entry-count');
+      count.textContent = `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`;
+
+      if (!entries.length) {
+        el.innerHTML = `<div class="empty-state">
+          <h3>No entries yet</h3>
+          <p>Click <strong>+ Add Entry</strong> to give the chatbot its first piece of knowledge.</p>
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = '';
+      const grid = document.createElement('div');
+      grid.className = 'kb-grid';
+
+      entries.forEach((e) => {
+        const card = document.createElement('div');
+        card.className = `kb-entry${e.active === false ? ' kb-inactive' : ''}`;
+        const updated = e.updatedAt ? new Date(e.updatedAt).toLocaleDateString() : '—';
+        card.innerHTML = `
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+              <span class="kb-entry-title">${esc(e.title)}</span>
+              <span class="${e.active === false ? 'kb-badge-inactive' : 'kb-badge-active'}">${e.active === false ? 'Inactive' : 'Active'}</span>
+              <span class="kb-order">#${e.order ?? 0}</span>
+            </div>
+            <div class="kb-entry-body">${esc(e.body)}</div>
+            <div class="kb-entry-meta">Last updated ${updated}</div>
+          </div>
+          <div class="kb-entry-actions">
+            <button class="btn-icon btn-edit" data-id="${e.id}" title="Edit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn-icon btn-del" data-id="${e.id}" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      el.appendChild(grid);
+
+      el.querySelectorAll('.btn-edit').forEach((btn) => {
+        btn.addEventListener('click', () => openModal(btn.dataset.id));
+      });
+      el.querySelectorAll('.btn-del').forEach((btn) => {
+        btn.addEventListener('click', () => confirmDelete(btn.dataset.id));
+      });
+    }
+
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+
+    // ── Modal ──
+    const modal   = document.getElementById('modal');
+    const fTitle  = document.getElementById('f-title');
+    const fBody   = document.getElementById('f-body');
+    const fOrder  = document.getElementById('f-order');
+    const fActive = document.getElementById('f-active');
+
+    function openModal(id = null) {
+      editingId = id;
+      const existing = id ? entries.find((e) => e.id === id) : null;
+      document.getElementById('modal-title').textContent = id ? 'Edit Entry' : 'Add Knowledge Entry';
+      fTitle.value  = existing ? existing.title : '';
+      fBody.value   = existing ? existing.body  : '';
+      fOrder.value  = existing ? (existing.order ?? 0) : entries.length;
+      fActive.checked = existing ? existing.active !== false : true;
+      modal.style.display = 'flex';
+      fTitle.focus();
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      editingId = null;
+    }
+
+    document.getElementById('btn-add').addEventListener('click', () => openModal());
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    document.getElementById('btn-save').addEventListener('click', async () => {
+      const title  = fTitle.value.trim();
+      const body   = fBody.value.trim();
+      const order  = parseInt(fOrder.value, 10) || 0;
+      const active = fActive.checked;
+
+      if (!title) { fTitle.focus(); toast('Title is required.', 'err'); return; }
+      if (!body)  { fBody.focus();  toast('Content is required.', 'err'); return; }
+
+      const saveBtn = document.getElementById('btn-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      try {
+        await saveKB({ id: editingId || undefined, title, body, order, active });
+        closeModal();
+        toast(editingId ? 'Entry updated ✓' : 'Entry added ✓');
+        await loadEntries();
+      } catch (e) {
+        toast(`Error: ${e.message}`, 'err');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Entry';
+      }
+    });
+
+    // ── Delete ──
+    async function confirmDelete(id) {
+      const entry = entries.find((e) => e.id === id);
+      if (!entry) return;
+      if (!confirm(`Delete "${entry.title}"?\n\nThis cannot be undone.`)) return;
+      try {
+        await deleteKB({ id });
+        toast('Entry deleted.');
+        await loadEntries();
+      } catch (e) {
+        toast(`Error: ${e.message}`, 'err');
+      }
+    }
+
+    await loadEntries();
+  </script>
+</body>
+</html>

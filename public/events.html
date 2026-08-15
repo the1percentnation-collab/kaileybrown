@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">← Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body c-events-shell">
+      <div id="gate-msg"></div>
+
+      <header class="c-events-hero">
+        <div class="c-events-eyebrow">Community</div>
+        <h1 class="c-events-title">Events</h1>
+        <p class="c-events-sub">Live calls, workshops, and gatherings. RSVP coming soon — for now, mark your calendar and join via the linked room.</p>
+      </header>
+
+      <div class="c-events-toolbar">
+        <div class="c-events-tabs">
+          <button class="c-events-tab is-active" data-filter="upcoming">Upcoming</button>
+          <button class="c-events-tab" data-filter="past">Past</button>
+        </div>
+        <button class="btn btn-primary" id="btn-new-event" style="display:none;">+ New event</button>
+      </div>
+
+      <div id="events-list" class="c-events-list"></div>
+      <div id="events-empty" class="c-empty c-empty-large" hidden></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/events-page.js"></script>
+</body>
+</html>

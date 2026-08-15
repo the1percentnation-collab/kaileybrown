@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete your profile | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="auth-shell onboarding-shell">
+    <div class="auth-card onboarding-card">
+      <a class="auth-brand" href="https://kaileybrown.com" aria-label="Kailey Brown">
+        <img src="/assets/academy-logo.png" alt="" class="auth-brand-mark">
+      </a>
+      <div class="brand-badge">Member Portal</div>
+      <h1>YOUR <span>DETAILS</span></h1>
+      <div class="auth-sub">One quick step before you start — this helps us tailor your experience and keep you in the loop.</div>
+
+      <div id="auth-msg"></div>
+
+      <form class="auth-form" id="onboarding-form" novalidate>
+        <div class="ob-field">
+          <label for="displayName">Full name *</label>
+          <input id="displayName" type="text" autocomplete="name" placeholder="First & Last name" required />
+        </div>
+
+        <div class="ob-field">
+          <label for="phone">Phone *</label>
+          <input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="000-000-0000" required />
+        </div>
+
+        <div class="ob-field ob-field-full">
+          <label for="address">Address</label>
+          <input id="address" type="text" autocomplete="street-address" placeholder="Start typing your address…" />
+        </div>
+
+        <div class="ob-field">
+          <label for="company">Organization / Company</label>
+          <input id="company" type="text" autocomplete="organization" />
+        </div>
+
+        <div class="ob-field">
+          <label for="industry">Industry</label>
+          <input id="industry" type="text" list="industry-list" autocomplete="off" />
+          <datalist id="industry-list">
+            <option value="Coaching"></option>
+            <option value="Consulting"></option>
+            <option value="Technology"></option>
+            <option value="Finance"></option>
+            <option value="Healthcare"></option>
+            <option value="Education"></option>
+            <option value="Real Estate"></option>
+            <option value="Retail"></option>
+            <option value="Nonprofit"></option>
+            <option value="Ministry / Faith"></option>
+            <option value="Other"></option>
+          </datalist>
+        </div>
+
+        <div class="ob-field ob-field-full">
+          <label for="goals">What do you want to achieve?</label>
+          <textarea id="goals" rows="3" placeholder="Your goals for joining the Academy"></textarea>
+        </div>
+
+        <label class="auth-consent ob-field-full" for="consent">
+          <input id="consent" type="checkbox" />
+          <span id="consent-text">I agree to receive calls, text messages (SMS), and emails from Kailey Brown at the phone number and email address I provided — including account updates, course information, and marketing. Message &amp; data rates may apply and message frequency varies. Consent is not a condition of any purchase. I can opt out at any time by replying STOP to texts or using the unsubscribe link in emails.</span>
+        </label>
+
+        <button class="btn btn-primary ob-field-full" type="submit" id="btn-submit">Enter the Academy →</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { onAuthReady } from './js/auth.js';
+    import { db, functions, firebaseReady, firebaseConfig } from './js/firebase.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+
+    const $ = (id) => document.getElementById(id);
+    const msg = $('auth-msg');
+    function showErr(txt) { msg.innerHTML = `<div class="auth-error">${txt}</div>`; }
+    function clearMsg() { msg.innerHTML = ''; }
+
+    function nextUrl() {
+      const n = new URLSearchParams(location.search).get('next');
+      return n && n.startsWith('/') ? n : '/dashboard';
+    }
+
+    if (!firebaseReady) showErr('Authentication service is unreachable. Check your connection and retry.');
+
+    const user = await onAuthReady();
+    if (!user) {
+      location.replace('/login.html?next=' + encodeURIComponent('/onboarding.html'));
+    } else {
+      // Pre-fill name; skip onboarding entirely for staff or anyone already done.
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const d = snap.exists() ? snap.data() : {};
+        if (d.role === 'owner' || d.role === 'admin' || d.onboardingComplete === true) {
+          location.replace(nextUrl());
+        }
+        $('displayName').value = d.displayName || user.displayName || '';
+        if (d.phone) $('phone').value = d.phone;
+        if (d.address) $('address').value = d.address;
+        if (d.company) $('company').value = d.company;
+        if (d.industry) $('industry').value = d.industry;
+        if (d.communityGoals) $('goals').value = d.communityGoals;
+      } catch (e) {
+        $('displayName').value = user.displayName || '';
+      }
+    }
+
+    // ── Phone: auto-insert dashes as the member types ──────────────
+    function formatPhone(raw) {
+      const d = (raw || '').replace(/\D/g, '').slice(0, 15);
+      if (d.length <= 3) return d;
+      if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`;
+      if (d.length <= 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+      // 11+ digits → treat the leading digits as a country code.
+      const cc = d.slice(0, d.length - 10);
+      const rest = d.slice(d.length - 10);
+      return `+${cc} ${rest.slice(0, 3)}-${rest.slice(3, 6)}-${rest.slice(6)}`;
+    }
+    const phoneEl = $('phone');
+    phoneEl.addEventListener('input', () => { phoneEl.value = formatPhone(phoneEl.value); });
+    if (phoneEl.value) phoneEl.value = formatPhone(phoneEl.value);
+
+    // ── Address: Google Places autocomplete (graceful fallback) ────
+    // Uses the modern PlaceAutocompleteElement (Places API "New"), loaded via
+    // the official bootstrap so importLibrary() resolves only when the places
+    // library is truly ready (no race). If Maps/Places isn't enabled for the
+    // key, the field stays a normal text input — nothing breaks.
+    function bootstrapMaps(key) {
+      if (window.google && window.google.maps && window.google.maps.importLibrary) return;
+      ((g) => {
+        let h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary",
+            q = "__ib__", m = document, b = window;
+        b = b[c] || (b[c] = {});
+        const d = b.maps || (b.maps = {}), r = new Set(), e = new URLSearchParams(),
+          u = () => h || (h = new Promise(async (f, n) => {
+            a = m.createElement("script");
+            e.set("libraries", [...r] + "");
+            for (k in g) e.set(k.replace(/[A-Z]/g, (t) => "_" + t[0].toLowerCase()), g[k]);
+            e.set("callback", c + ".maps." + q);
+            a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+            d[q] = f;
+            a.onerror = () => h = n(Error(p + " could not load."));
+            a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+            m.head.append(a);
+          }));
+        d[l] ? console.warn(p + " only loads once. Ignoring:", g)
+             : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)));
+      })({ key, v: "weekly" });
+    }
+    (async () => {
+      const addressEl = $('address');
+      try {
+        bootstrapMaps(firebaseConfig.apiKey);
+        // Resolves ONLY when the places library is actually ready — no race.
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
+
+        // Modern web component, restricted to address-type predictions.
+        const pac = new PlaceAutocompleteElement({
+          includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'route']
+        });
+        pac.id = 'address-ac';
+        pac.className = 'ob-address-ac';
+        if (addressEl.placeholder) pac.placeholder = addressEl.placeholder;
+
+        // Show the component; keep #address as a hidden mirror that the form
+        // submit + pre-fill logic already read/write ($('address').value).
+        addressEl.parentNode.insertBefore(pac, addressEl);
+        addressEl.type = 'hidden';
+
+        // Pre-fill on return: if #address already has a value (set above), show it.
+        if (addressEl.value) pac.value = addressEl.value;
+
+        // Selection: fetch the formatted address and mirror it into #address.
+        pac.addEventListener('gmp-select', async ({ placePrediction }) => {
+          try {
+            const place = placePrediction.toPlace();
+            await place.fetchFields({ fields: ['formattedAddress'] });
+            const fa = place.formattedAddress || '';
+            addressEl.value = fa;
+            pac.value = fa;
+          } catch (err) {
+            console.warn('[onboarding] could not resolve selected place', err);
+          }
+        });
+
+        // Don't let Enter (to pick a suggestion) submit the form.
+        pac.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+      } catch (e) {
+        // Graceful fallback: leave a normal typeable text input.
+        if (addressEl.type === 'hidden') addressEl.type = 'text';
+        console.warn('[onboarding] address autocomplete unavailable; using plain input', e);
+      }
+    })();
+
+    $('onboarding-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMsg();
+      const payload = {
+        displayName: $('displayName').value.trim(),
+        phone: $('phone').value.trim(),
+        address: $('address').value.trim(),
+        company: $('company').value.trim(),
+        industry: $('industry').value.trim(),
+        goals: $('goals').value.trim(),
+        marketingConsent: $('consent').checked,
+        consentText: $('consent-text').textContent.replace(/\s+/g, ' ').trim()
+      };
+      if (!payload.displayName) return showErr('Please enter your name.');
+      if (!payload.phone) return showErr('Please enter a phone number.');
+      $('btn-submit').disabled = true;
+      try {
+        await httpsCallable(functions, 'submitOnboarding')(payload);
+        location.replace(nextUrl());
+      } catch (err) {
+        showErr(err.message || 'Could not save your details. Please try again.');
+        $('btn-submit').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

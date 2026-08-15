@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REPLACE_WITH_GA4_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-REPLACE_WITH_GA4_ID");
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Affiliate Dashboard | Kailey Brown Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display:block; height:auto; overflow:auto;">
+  <div class="console-shell">
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <a class="console-brand" href="/dashboard.html" aria-label="Kailey Brown Academy">
+          <img src="/assets/academy-logo.png" alt="" class="console-brand-mark">
+        </a>
+        <a class="back-to-main" href="https://kaileybrown.com">&larr; Main Site</a>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+    <div class="console-body">
+      <div id="gate-msg"></div>
+      <div id="panel" style="display:none;">
+
+        <div class="card">
+          <h2 id="aff-hello">Your affiliate dashboard</h2>
+          <p style="font-size:13px; color:var(--gray-light); margin-bottom:12px;">
+            Share your link below. Every purchase that starts from it earns you
+            <b id="aff-pct">—</b> commission. Commissions are paid out manually —
+            the table shows what's pending and what's been paid.
+          </p>
+          <div class="inline-form" style="align-items:center;">
+            <div class="field" style="flex:1;">
+              <label for="aff-link">Your referral link</label>
+              <input id="aff-link" type="text" readonly>
+            </div>
+            <button class="btn btn-primary" id="btn-copy-link" type="button">Copy</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Performance</h2>
+          <table class="data-table">
+            <thead>
+              <tr><th>Clicks</th><th>Sales</th><th>Revenue you drove</th><th>Commission earned</th><th>Paid out</th><th>Pending payout</th></tr>
+            </thead>
+            <tbody id="stats-body"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Your sales</h2>
+          <table class="data-table">
+            <thead>
+              <tr><th>Date</th><th>Course</th><th>Sale</th><th>Commission</th><th>Status</th></tr>
+            </thead>
+            <tbody id="sales-body"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/affiliate.js"></script>
+</body>
+</html>
