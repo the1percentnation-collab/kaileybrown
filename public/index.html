@@ -103,13 +103,46 @@
       color: var(--ink-strong);
       border: 1px solid rgba(0, 0, 0, 0.35);
       border-radius: 0;
-      transition: color .25s var(--ease-out), border-color .25s var(--ease-out), background .25s var(--ease-out);
+      /* Stage for the page turn below. isolation keeps the z-index:-1 panel
+         inside the button, so the label paints over it without wrapping
+         every button's text in a span. overflow clips the swing. */
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      /* Close perspective: the leaf foreshortens into a visible trapezoid as
+         it swings, which is what sells it as paper rather than a wipe. */
+      perspective: 340px;
+      transition: color .2s var(--ease-out), border-color .3s var(--ease-out);
     }
-    /* Hover fills with the muted red rather than the signal red: the buttons
-       answer warmly without competing with the one vivid red on the page. */
-    .btn:hover { background: var(--red-muted); border-color: var(--red-muted); color: #fff; }
+    /* Hover turns a page: a red leaf hinged at the left edge starts exactly
+       edge-on (invisible) and swings flat across the face. The gradient
+       darkens toward the leading edge so it reads as paper catching light
+       rather than a block of color. Muted red, not the signal red, so the
+       buttons answer warmly without competing with the one vivid red. */
+    .btn::before {
+      content: '';
+      position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(100deg, var(--red-muted) 0%, var(--red-muted) 72%, #8E2733 100%);
+      transform-origin: left center;
+      transform: rotateY(-90deg);
+      backface-visibility: hidden;
+      /* The shadow rides ahead of the leading edge onto the white it is about
+         to cover. Not --ease-out: that curve is so front-loaded the leaf
+         lands in the first fifth of the duration and reads as a snap. This
+         one starts gently, accelerates, and settles — a page falling. */
+      box-shadow: 12px 0 26px rgba(0, 0, 0, 0.22);
+      transition: transform .55s cubic-bezier(0.45, 0.05, 0.3, 1);
+    }
+    .btn:hover::before,
+    .btn:focus-visible::before { transform: rotateY(0deg); }
+    /* The delay matters: without it the label goes white before the page has
+       covered it, leaving white-on-white for a beat. No delay on the way out. */
+    .btn:hover, .btn:focus-visible {
+      color: #fff;
+      border-color: var(--red-muted);
+      transition: color .2s var(--ease-out) .16s, border-color .3s var(--ease-out);
+    }
     .btn-red { background: var(--red); border-color: var(--red); color: #fff; }
-    .btn-red:hover { background: var(--red-muted); border-color: var(--red-muted); color: #fff; }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
     /* ── Nav: slim light-grey band, Audrey wordmark top-left ─────────────
@@ -358,7 +391,8 @@
 
     @media (prefers-reduced-motion: reduce) {
       .fade-up { opacity: 1; transform: none; transition: none; }
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      /* transition-delay too, or the button label lags the page turn by 160ms. */
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
     }
 
     @media (max-width: 820px) {
