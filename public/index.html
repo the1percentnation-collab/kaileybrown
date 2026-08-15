@@ -33,8 +33,8 @@
     /* ═══════════════════════════════════════════════════════════════════════
        KAILEY BROWN — AUTHOR SITE
        Brief: the structure and cozy editorial feel of the original
-       kaileybrown.com, re-expressed monochrome — black city night, white light,
-       red as the pulse. Serif display over photography, script wordmark,
+       kaileybrown.com, re-expressed monochrome — white paper, black ink,
+       red as punctuation. Serif display over photography, script wordmark,
        quiet outline CTAs, alternating book blocks, centred signup.
        ═══════════════════════════════════════════════════════════════════════ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -99,7 +99,7 @@
       text-decoration: none; cursor: pointer;
       background: transparent;
       color: var(--ink-strong);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.35);
       border-radius: 0;
       transition: color .18s, border-color .18s, background .18s;
     }
@@ -108,10 +108,10 @@
     .btn-red:hover { background: var(--red-dark); border-color: var(--red-dark); color: #fff; }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
-    /* ── Nav: slim, black, script wordmark top-left ─────────────────────── */
+    /* ── Nav: slim, white, script wordmark top-left ─────────────────────── */
     .nav {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(11, 11, 12, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: saturate(140%) blur(10px);
       border-bottom: 1px solid var(--border);
     }
@@ -165,10 +165,10 @@
     .hero-scrim {
       position: absolute; inset: 0;
       background: linear-gradient(100deg,
-        rgba(11, 11, 12, 0.97) 0%,
-        rgba(11, 11, 12, 0.90) 32%,
-        rgba(11, 11, 12, 0.38) 60%,
-        rgba(11, 11, 12, 0) 80%);
+        rgba(255, 255, 255, 0.97) 0%,
+        rgba(255, 255, 255, 0.90) 32%,
+        rgba(255, 255, 255, 0.38) 60%,
+        rgba(255, 255, 255, 0) 80%);
     }
     /* No width here: this element also carries .wrap, whose width must win. */
     .hero-inner { position: relative; padding-block: clamp(48px, 8vw, 96px); }
@@ -186,9 +186,9 @@
       .hero-bg { object-position: 58% 10%; }
       .hero-scrim {
         background: linear-gradient(180deg,
-          rgba(11, 11, 12, 0.24) 0%,
-          rgba(11, 11, 12, 0.86) 48%,
-          rgba(11, 11, 12, 0.97) 74%);
+          rgba(255, 255, 255, 0.24) 0%,
+          rgba(255, 255, 255, 0.86) 48%,
+          rgba(255, 255, 255, 0.97) 74%);
       }
     }
 
@@ -215,7 +215,7 @@
       aspect-ratio: 2 / 3;
       background: linear-gradient(150deg, var(--surface-2), var(--surface));
       border: 1px solid var(--border);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
       display: grid; place-items: center;
       overflow: hidden; position: relative;
     }
@@ -261,7 +261,7 @@
     .newsletter input {
       flex: 1 1 280px;
       padding: 15px 20px;
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.35);
       border-right: 0;
       background: var(--paper);
       font-family: var(--serif-body); font-size: 1rem;
@@ -272,10 +272,10 @@
     .consent { font-size: 0.82rem; max-width: 52ch; font-family: var(--sans-label); letter-spacing: 0.02em; }
     .form-note { font-size: 0.95rem; min-height: 1.5em; font-family: var(--serif-body); }
     .form-note[data-state="ok"] { color: var(--red); }
-    .form-note[data-state="error"] { color: #FF7070; }
+    .form-note[data-state="error"] { color: #B3261E; }
 
     @media (max-width: 560px) {
-      .newsletter input { border-right: 1px solid rgba(255, 255, 255, 0.35); }
+      .newsletter input { border-right: 1px solid rgba(0, 0, 0, 0.35); }
       .newsletter .btn { width: 100%; margin-top: 10px; }
     }
 
