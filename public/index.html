@@ -297,6 +297,19 @@
       .newsletter .btn { width: 100%; margin-top: 10px; }
     }
 
+    /* ── Structural black ────────────────────────────────────────────────
+       Per the reference image, the white body is framed by solid black
+       masses: the Inner Circle band and the footer carry class="on-black",
+       which re-skins the color tokens (see tokens.css). Only hardcoded
+       borders need restating for the dark ground. */
+    .on-black .btn { border-color: rgba(255, 255, 255, 0.4); }
+    .on-black .newsletter input { border-color: rgba(255, 255, 255, 0.4); }
+    @media (max-width: 560px) {
+      .on-black .newsletter input { border-right: 1px solid rgba(255, 255, 255, 0.4); }
+    }
+    /* footer's border-top resolves to a faint white rule inside the scope,
+       which is exactly the seam wanted between the two black blocks. */
+
     /* ── Footer: minimal, centred ────────────────────────────────────────── */
     footer { border-top: 1px solid var(--border); padding: 72px 0 48px; text-align: center; }
     .footer-mark { display: grid; justify-items: center; gap: 4px; }
@@ -475,7 +488,7 @@
   <!-- ════════ THE INNER CIRCLE ════════
        The primary call to action. Posts to the joinEarlyAccess callable via
        /js/newsletter.js, which stores the consent wording below verbatim. -->
-  <section class="section" id="newsletter">
+  <section class="section on-black" id="newsletter">
     <div class="wrap-narrow signup">
       <p class="label is-red">The Inner Circle</p>
       <h2>Be the first to know.</h2>
@@ -503,7 +516,7 @@
 </main>
 
 <!-- ════════ FOOTER ════════ -->
-<footer>
+<footer class="on-black">
   <div class="wrap">
     <div class="footer-mark">
       <span class="from">From the desk of</span>

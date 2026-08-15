@@ -85,3 +85,57 @@
   --red-light:  var(--red-tint);
   --red-glow:   rgba(227, 24, 55, 0.15);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STRUCTURAL BLACK
+
+   The reference aesthetic frames a white body with solid black masses —
+   buildings around the red artery. This scope is those masses: navigation
+   rails, footers, and accent bands render as black structure while the main
+   body stays white.
+
+   Because every stylesheet resolves color through the role tokens, and
+   custom properties resolve at the element that uses them, re-assigning the
+   roles on a scope re-skins everything inside it — including the legacy
+   aliases, which chain through these roles. Add the black frame to a new
+   surface with class="on-black"; the rails listed here are black by design.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.on-black,
+.sidebar,
+.courses-sidebar,
+.crm-sidebar {
+  color-scheme: dark;
+  --paper:      #0B0B0C;
+  --surface:    #17171A;
+  --surface-2:  #101012;
+  --ink:        #C9C9C9;
+  --ink-strong: #F7F7F7;
+  --ink-muted:  #8F8F8F;
+  --border:     rgba(255, 255, 255, 0.14);
+  --red-tint:   rgba(227, 24, 55, 0.14);
+  --gray-dark:  #232326;
+  --gray-600:   #ABABAB;
+  --surface2:   #202024;
+  --white-dim:  rgba(247, 247, 247, 0.72);
+
+  /* The legacy aliases must be RESTATED here, not just the roles: an alias
+     declared on :root substitutes its var() there and inherits the already-
+     computed (light) value, so it never sees this scope's roles. Declaring
+     the same alias→role mapping on the scope makes substitution happen
+     where the dark roles are in effect. */
+  --black:      var(--paper);
+  --black-2:    var(--surface);
+  --charcoal:   var(--surface-2);
+  --gray-mid:   var(--ink-muted);
+  --gray-light: var(--ink-muted);
+  --gray-400:   var(--ink-muted);
+  --white:      var(--ink-strong);
+  --white-soft: var(--ink);
+  --off-white:  var(--ink);
+  --accent:     var(--ink-strong);
+  --red-light:  var(--red-tint);
+}
+.on-black {
+  background: var(--paper);
+  color: var(--ink);
+}
