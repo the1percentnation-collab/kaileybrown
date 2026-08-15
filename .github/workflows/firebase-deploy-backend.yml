@@ -49,15 +49,16 @@ jobs:
       #
       # Rules also go before `npm install` so a dependency problem in
       # functions/ can't block a security-rule change either.
-      - name: Deploy Firestore rules + indexes + Storage rules
+      - name: Deploy Firestore rules + indexes
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
         run: |
           npx --yes firebase-tools deploy \
-            --only firestore:rules,firestore:indexes,storage \
+            --only firestore:rules,firestore:indexes \
             --project kaileybrown-48e22 \
             --non-interactive \
             --force
+
 
       - name: Install function deps
         working-directory: functions
@@ -76,3 +77,24 @@ jobs:
             echo "::error::Cloud Functions deploy failed. Rules and indexes in the previous step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
             exit 1
           }
+
+      # Storage is separate from Firestore for the same reason functions are
+      # separate from rules: the storage deploy needs the default bucket to
+      # exist and the firebasestorage.defaultBucket.get permission, and when
+      # either is missing it must not block the Firestore rules or the
+      # functions — which is exactly what happened on the first production
+      # deploy attempt. Last on purpose: nothing depends on it.
+      - name: Deploy Storage rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
+        run: |
+          npx --yes firebase-tools deploy \
+            --only storage \
+            --project kaileybrown-48e22 \
+            --non-interactive \
+            --force \
+          || {
+            echo "::error::Storage rules deploy failed. Everything before this step DID deploy: Firestore rules, indexes and Cloud Functions. A 403 on firebasestorage.defaultBucket.get means either the default Storage bucket has not been created (Firebase console > Build > Storage > Get started) or the deploy service account lacks the Firebase Storage Admin role."
+            exit 1
+          }
+
