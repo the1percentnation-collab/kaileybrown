@@ -110,10 +110,15 @@
     .btn-red:hover { background: var(--red-dark); border-color: var(--red-dark); color: #fff; }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
-    /* ── Nav: slim, white, Audrey wordmark top-left ─────────────────────── */
+    /* ── Nav: slim light-grey band, Audrey wordmark top-left ─────────────
+       The grey lifts the header off the white page so the top of the site
+       has depth instead of one hairline doing all the separating. Written
+       as an rgba literal, not var(--surface-2), because the alpha has to
+       survive for backdrop-filter to read as frosted glass on scroll —
+       the value IS --surface-2 (#F1F1F1). */
     .nav {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(241, 241, 241, 0.92);
       backdrop-filter: saturate(140%) blur(10px);
       border-bottom: 1px solid var(--border);
     }
@@ -361,7 +366,7 @@
       .hamburger { display: block; }
       .nav-links.open {
         display: grid; position: absolute; top: 76px; left: 0; right: 0;
-        background: var(--paper); border-bottom: 1px solid var(--border);
+        background: var(--surface-2); border-bottom: 1px solid var(--border);
         padding: 22px 24px; gap: 18px;
       }
     }
