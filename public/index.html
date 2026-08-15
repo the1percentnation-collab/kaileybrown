@@ -116,10 +116,19 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 24px; }
-    .wordmark { text-decoration: none; display: flex; flex-direction: column; line-height: 1; }
-    .wordmark .from { font-family: var(--sans-label); font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 2px; }
-    .wordmark .name { font-family: var(--script); font-size: 1.9rem; color: var(--ink-strong); }
-    .wordmark .name .dot { color: var(--red); }
+    /* Letterspaced caps, per the brand lockup — not the script signature,
+       which stays reserved for the footer sign-off. */
+    .wordmark {
+      text-decoration: none;
+      font-family: var(--sans-label);
+      font-weight: 400;
+      font-size: 1.25rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-strong);
+      white-space: nowrap;
+      line-height: 1;
+    }
 
     .nav-links { display: flex; gap: 34px; list-style: none; }
     .nav-links a {
@@ -315,10 +324,7 @@
 <!-- ════════ NAV ════════ -->
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="wordmark" href="/" aria-label="Kailey Brown, home">
-      <span class="from">From the desk of</span>
-      <span class="name">Kailey Brown<span class="dot">.</span></span>
-    </a>
+    <a class="wordmark" href="/" aria-label="Kailey Brown, home">Kailey Brown</a>
 
     <nav>
       <ul class="nav-links" id="nav-links">
