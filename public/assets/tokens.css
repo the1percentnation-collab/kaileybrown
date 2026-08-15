@@ -43,6 +43,7 @@
   /* ── The pop ───────────────────────────────────────────────────────────── */
   --red:          #E31837;   /* vivid signal red — the one loud thing */
   --red-dark:     #B80D28;   /* pressed / hover state of filled-red controls */
+  --red-muted:    #A32E3A;   /* dusty red buttons settle into on hover */
   --red-tint:     rgba(227, 24, 55, 0.08);   /* hover washes, selected rows */
   --border-red:   rgba(227, 24, 55, 0.32);
 

@@ -103,11 +103,13 @@
       color: var(--ink-strong);
       border: 1px solid rgba(0, 0, 0, 0.35);
       border-radius: 0;
-      transition: color .18s, border-color .18s, background .18s;
+      transition: color .25s var(--ease-out), border-color .25s var(--ease-out), background .25s var(--ease-out);
     }
-    .btn:hover { color: var(--red); border-color: var(--red); }
+    /* Hover fills with the muted red rather than the signal red: the buttons
+       answer warmly without competing with the one vivid red on the page. */
+    .btn:hover { background: var(--red-muted); border-color: var(--red-muted); color: #fff; }
     .btn-red { background: var(--red); border-color: var(--red); color: #fff; }
-    .btn-red:hover { background: var(--red-dark); border-color: var(--red-dark); color: #fff; }
+    .btn-red:hover { background: var(--red-muted); border-color: var(--red-muted); color: #fff; }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
     /* ── Nav: slim light-grey band, Audrey wordmark top-left ─────────────
@@ -318,6 +320,9 @@
        which re-skins the color tokens (see tokens.css). Only hardcoded
        borders need restating for the dark ground. */
     .on-black .btn { border-color: rgba(255, 255, 255, 0.4); }
+    /* Same specificity as .btn:hover and declared later, so the hover border
+       has to be restated here or the white outline would win on the band. */
+    .on-black .btn:hover { border-color: var(--red-muted); }
     .on-black .newsletter input { border-color: rgba(255, 255, 255, 0.4); }
     @media (max-width: 560px) {
       .on-black .newsletter input { border-right: 1px solid rgba(255, 255, 255, 0.4); }
