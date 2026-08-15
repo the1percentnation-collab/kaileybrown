@@ -1,0 +1,22 @@
+# Node
+node_modules/
+functions/node_modules/
+functions/npm-debug.log
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+functions/firebase-debug.log
+
+# Env
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
