@@ -1,4 +1,7 @@
 // Cloud Functions v2 — callable endpoints + Firestore triggers + HTTP webhook.
+//
+// First deployed after the service account was granted Service Usage Consumer
+// and the deploy roles; earlier attempts failed on a serviceusage 403.
 // Includes SendGrid email features: transactional emails (invite, welcome),
 // 1-on-1 contact emails, campaign broadcast, and the SendGrid Event Webhook.
 //
