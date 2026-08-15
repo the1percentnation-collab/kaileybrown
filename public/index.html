@@ -29,6 +29,25 @@
        keeps its own faces from tokens.css; these load for this page only. -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/tokens.css">
+  <!-- Typewriter opt-in, deliberately in <head> and inline.
+       The animation script lives at the bottom of <body>, by which point the
+       hero has already painted — hiding the headline there would show it in
+       full, blank it, then type, which reads as a flicker. Setting the class
+       here happens before first paint instead.
+       Nothing is ever hidden unless we already know JS is alive and motion is
+       welcome, so the failure mode is a normal headline, not a missing one.
+       The global prefers-reduced-motion block only zeroes CSS durations; it
+       cannot stop a JS timer, so the check has to happen here. -->
+  <script>
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('js-typewriter');
+      // Belt and braces: if the animation script never runs (parse error,
+      // blocked asset), un-hide the headline anyway rather than lose it.
+      setTimeout(function () {
+        document.documentElement.classList.remove('js-typewriter');
+      }, 3000);
+    }
+  </script>
   <style>
     /* ═══════════════════════════════════════════════════════════════════════
        KAILEY BROWN — AUTHOR SITE
@@ -304,6 +323,31 @@
     }
     .hero-copy { max-width: 620px; display: grid; gap: 22px; justify-items: start; }
     .hero-copy .rule { width: 44px; height: 1px; background: var(--red); }
+
+    /* ── Hero headline typewriter ─────────────────────────────────────────
+       visibility, NOT display or opacity: it keeps the h1's box in the
+       layout, so the space the finished headline will occupy is reserved
+       from the first frame and nothing below it shifts. The class is only
+       ever present when the head script has confirmed JS and motion. */
+    .js-typewriter .hero-copy h1 { visibility: hidden; }
+    /* Characters become individual inline spans, which lets the browser
+       break a line between ANY two of them — "Kailey." splitting across
+       lines. Keeping each word nowrap puts line breaking back at the word
+       level. This headline sits close to wrapping at its max size already. */
+    .tw-word { white-space: nowrap; }
+    .tw-char { opacity: 0; position: relative; }
+    .tw-char.is-on { opacity: 1; }
+    /* The caret rides whichever character was revealed last. Absolutely
+       positioned so it has no layout width — a caret in the flow would
+       nudge the whole line sideways on every keystroke. */
+    .tw-char.is-caret::after {
+      content: '';
+      position: absolute; right: -0.07em; top: 0.14em; bottom: 0.08em;
+      width: 2px;
+      background: var(--red);
+      animation: tw-blink 1.06s steps(1, end) infinite;
+    }
+    @keyframes tw-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
     .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
     .hero-photo {
       aspect-ratio: 3 / 4;
@@ -894,6 +938,73 @@
       burger.setAttribute('aria-expanded', 'false');
     }
   });
+
+  // Hero headline typewriter.
+  //
+  // The real text stays in the markup and is never removed, so the h1 is
+  // intact for search engines, for a screen reader (which announces it once,
+  // normally — not character by character), and for anyone with JS off.
+  // All this does is control which characters are painted.
+  (function typeHeadline() {
+    const root = document.documentElement;
+    if (!root.classList.contains('js-typewriter')) return;  // reduced motion
+    const h1 = document.querySelector('.hero-copy h1');
+    if (!h1) { root.classList.remove('js-typewriter'); return; }
+
+    const text = h1.textContent.trim();
+    let chars;
+    try {
+      const frag = document.createDocumentFragment();
+      text.split(' ').forEach((word, wi, words) => {
+        const w = document.createElement('span');
+        w.className = 'tw-word';
+        for (const ch of word) {
+          const c = document.createElement('span');
+          c.className = 'tw-char';
+          c.textContent = ch;
+          w.appendChild(c);
+        }
+        frag.appendChild(w);
+        // Spaces sit BETWEEN words, outside the nowrap spans, so they stay
+        // the only place a line is allowed to break.
+        if (wi < words.length - 1) {
+          const sp = document.createElement('span');
+          sp.className = 'tw-char';
+          sp.textContent = ' ';
+          frag.appendChild(sp);
+        }
+      });
+      h1.textContent = '';
+      h1.appendChild(frag);
+      chars = h1.querySelectorAll('.tw-char');
+    } catch (e) {
+      // Never leave the headline invisible because of a scripting error.
+      h1.textContent = text;
+      root.classList.remove('js-typewriter');
+      return;
+    }
+
+    root.classList.remove('js-typewriter');   // h1 visible; characters are not
+    if (!chars.length) return;
+    let i = 0;
+    (function step() {
+      // The caret only leaves a character when a new one is taking it, so at
+      // the end it stays on the final letter and blinks before clearing.
+      if (i >= chars.length) {
+        setTimeout(() => chars[chars.length - 1].classList.remove('is-caret'), 700);
+        return;
+      }
+      if (i > 0) chars[i - 1].classList.remove('is-caret');
+      const c = chars[i];
+      c.classList.add('is-on', 'is-caret');
+      i++;
+      // Jitter, because a perfectly even cadence reads as a machine rather
+      // than a person; and a longer beat after the comma, the way a typist
+      // actually pauses.
+      const delay = 62 + (Math.random() * 44 - 22) + (c.textContent === ',' ? 260 : 0);
+      setTimeout(step, delay);
+    })();
+  })();
 
   // Entrance animation. Exposed on window so injected content can re-hook it.
   const io = new IntersectionObserver((entries) => {
