@@ -27,7 +27,7 @@
        display, readable serif body, tracked uppercase sans for labels and
        buttons, and a script face for the wordmark. The member portal keeps its
        own faces from tokens.css; these load for this page only. -->
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/tokens.css">
   <style>
     /* ═══════════════════════════════════════════════════════════════════════
@@ -136,9 +136,15 @@
       text-transform: uppercase;
       color: var(--ink-muted);
     }
+    /* Audrey, the brand display face. It is a licensed font (not on Google
+       Fonts), so tokens.css @font-face's it from /assets/fonts/audrey.woff2
+       and falls back to Jost until that file is installed. */
     .wordmark .name {
-      font-family: var(--script);
-      font-size: 1.9rem;
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 300;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
       color: var(--ink-strong);
     }
     .wordmark .dot { color: var(--red); }
@@ -254,8 +260,10 @@
     }
     .about-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .about-body { display: grid; gap: 18px; justify-items: start; }
-    .about-body .signoff { font-family: var(--script); font-size: 2.4rem; color: var(--ink-strong); margin-top: 8px; }
-    .about-body .signoff .dot { color: var(--red); }
+    /* The handwritten sign-off stays script — it is a signature, not the
+       wordmark. Not scoped to a section: it now sits in the hero copy. */
+    .signoff { font-family: var(--script); font-size: 2.4rem; color: var(--ink-strong); margin-top: 8px; line-height: 1.1; }
+    .signoff .dot { color: var(--red); }
 
     /* ── The Inner Circle: signup left, photo right, on the black band ──── */
     .signup-grid {
@@ -321,7 +329,14 @@
     footer { border-top: 1px solid var(--border); padding: 72px 0 48px; text-align: center; }
     .footer-mark { display: grid; justify-items: center; gap: 4px; }
     .footer-mark .from { font-family: var(--sans-label); font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-muted); }
-    .footer-mark .name { font-family: var(--script); font-size: 2.6rem; color: var(--ink-strong); }
+    .footer-mark .name {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-strong);
+    }
     .footer-mark .name .dot { color: var(--red); }
     .footer-links { display: flex; justify-content: center; gap: 30px; margin-top: 28px; list-style: none; flex-wrap: wrap; }
     .footer-links a {
@@ -370,7 +385,8 @@
     <nav>
       <ul class="nav-links" id="nav-links">
         <li><a href="#books">Books</a></li>
-        <li><a href="#about">About</a></li>
+        <!-- The author introduction is the hero now, so About points there. -->
+        <li><a href="#hero">About</a></li>
         <li><a href="#newsletter">Inner Circle</a></li>
         <li><a href="mailto:kailey@kaileybrown.com">Contact</a></li>
         <li><a href="/login.html">Sign in</a></li>
@@ -392,16 +408,23 @@
   <section class="hero has-photo" id="hero">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="label is-red">Contemporary romance · Out now</p>
-        <h1>Somewhere Between Dreaming &amp; You</h1>
+        <p class="label is-red">Contemporary romance author</p>
+        <h1>Hi, I'm Kailey.</h1>
         <div class="rule" aria-hidden="true"></div>
-        <!-- TODO(brand): replace with the book's real hook: what happens, to
-             whom, and the question that keeps a reader turning pages. -->
         <p class="lede">
-          A story for anyone who has ever wanted to feel seen. Step into the
-          pages, get lost for a while, and come back to your own life feeling
-          a little less alone.
+          Kailey Brown writes contemporary romance stories for anyone who has
+          ever wanted to feel seen. Her hope is that readers can step into her
+          pages, get lost for a while, and return to their own lives feeling a
+          little less alone.
         </p>
+        <p class="muted">
+          She is a wife and mother who treasures her happy, noisy home and the
+          everyday moments that make life meaningful. Kailey believes in taking
+          life a little less seriously than she probably should, finding humor
+          and grace in the middle of the mess, and trusting that even ordinary
+          stories can hold extraordinary truth.
+        </p>
+        <p class="signoff" aria-hidden="true">Kailey<span class="dot">.</span></p>
         <div class="hero-actions">
           <a class="btn" href="#books">The book</a>
           <a class="btn" href="#newsletter">Join the Inner Circle</a>
@@ -426,7 +449,6 @@
     <div class="wrap">
       <div class="section-head is-centered fade-up">
         <p class="label is-red">The books</p>
-        <h2>Stories that stay with you.</h2>
         <div class="rule" aria-hidden="true"></div>
       </div>
 
@@ -473,23 +495,15 @@
       </div>
 
       <div class="about-body fade-up">
-        <p class="label is-red">About Kailey</p>
-        <h2>Hi, I'm Kailey.</h2>
+        <p class="label is-red">Why I write</p>
+        <h2>Stories that stay with you.</h2>
         <div class="rule" aria-hidden="true"></div>
         <p class="lede">
-          Kailey Brown writes contemporary romance stories for anyone who has
-          ever wanted to feel seen. Her hope is that readers can step into her
-          pages, get lost for a while, and return to their own lives feeling a
-          little less alone.
+          A story for anyone who has ever wanted to feel seen. Step into the
+          pages, get lost for a while, and come back to your own life feeling
+          a little less alone.
         </p>
-        <p class="muted">
-          She is a wife and mother who treasures her happy, noisy home and the
-          everyday moments that make life meaningful. Kailey believes in taking
-          life a little less seriously than she probably should, finding humor
-          and grace in the middle of the mess, and trusting that even ordinary
-          stories can hold extraordinary truth.
-        </p>
-        <p class="signoff" aria-hidden="true">Kailey<span class="dot">.</span></p>
+        <a class="btn" href="#newsletter">Join the Inner Circle</a>
       </div>
     </div>
   </section>
