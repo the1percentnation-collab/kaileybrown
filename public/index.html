@@ -129,6 +129,29 @@
       max-width: 340px; margin-inline: auto;
     }
     .cover img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* A photograph, not a book: square-ish corners, no spine shadow, and the
+       image sits on top of the placeholder rather than beside it. */
+    .hero-photo {
+      position: relative;
+      aspect-ratio: 2 / 3;
+      max-width: 380px;
+      margin-inline: auto;
+      border-radius: 14px;
+      overflow: hidden;
+      background: linear-gradient(150deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.14);
+      display: grid;
+      place-items: center;
+    }
+    .hero-photo img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
+
     .placeholder {
       font-family: var(--font-mono); font-size: 10px;
       letter-spacing: 0.18em; text-transform: uppercase;
@@ -300,12 +323,20 @@
         </div>
       </div>
 
-      <div class="cover">
-        <!-- TODO(assets): the cover at /assets/book-cover.jpg, portrait 2:3.
-             Replace this placeholder with:
-             <img src="/assets/book-cover.jpg" alt="Cover of [book title]"> -->
-        <p class="placeholder">Book cover<br>/assets/book-cover.jpg<br>2:3 portrait</p>
-      </div>
+      <!-- The hero image is Kailey with the book, not the cover on its own:
+           it shows the author and the book in one frame, which is what an
+           author site's hero is for. The cover alone still appears in the
+           books section below.
+
+           If /assets/hero.jpg is missing the <img> removes itself and the
+           placeholder underneath shows through, so a missing file degrades to
+           a labelled box rather than a broken-image icon. -->
+      <figure class="hero-photo">
+        <img src="/assets/hero.jpg"
+             alt="Kailey Brown in a bookstore, holding a copy of Somewhere Between Dreaming &amp; You"
+             onerror="this.remove()">
+        <p class="placeholder">Hero photo<br>/assets/hero.jpg<br>2:3 portrait</p>
+      </figure>
     </div>
   </section>
 
