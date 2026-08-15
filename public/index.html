@@ -25,16 +25,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Marketing-page type, per the design brief: delicate high-contrast serif
        display, readable serif body, tracked uppercase sans for labels and
-       buttons, and a script face for the wordmark. The member portal keeps its
-       own faces from tokens.css; these load for this page only. -->
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+       buttons. The wordmark uses Audrey from tokens.css. The member portal
+       keeps its own faces from tokens.css; these load for this page only. -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/tokens.css">
   <style>
     /* ═══════════════════════════════════════════════════════════════════════
        KAILEY BROWN — AUTHOR SITE
        Brief: the structure and cozy editorial feel of the original
        kaileybrown.com, re-expressed monochrome — white paper, black ink,
-       red as punctuation. Serif display over photography, script wordmark,
+       red as punctuation. Serif display over photography, Audrey wordmark,
        quiet outline CTAs, alternating book blocks, centred signup.
        ═══════════════════════════════════════════════════════════════════════ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,7 +45,6 @@
       --serif-display: 'Cormorant Garamond', Georgia, serif;
       --serif-body: 'Lora', Georgia, serif;
       --sans-label: 'Jost', system-ui, sans-serif;
-      --script: 'Great Vibes', cursive;
     }
 
     body {
@@ -111,7 +110,7 @@
     .btn-red:hover { background: var(--red-dark); border-color: var(--red-dark); color: #fff; }
     .btn-red:disabled { opacity: .6; cursor: default; }
 
-    /* ── Nav: slim, white, script wordmark top-left ─────────────────────── */
+    /* ── Nav: slim, white, Audrey wordmark top-left ─────────────────────── */
     .nav {
       position: sticky; top: 0; z-index: 50;
       background: rgba(255, 255, 255, 0.92);
@@ -119,9 +118,9 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 24px; }
-    /* The brand lockup, per the brief: "From the desk of" in tiny tracked
-       caps over the script signature — the letter-from-the-author mark.
-       The red full stop is the wordmark's one pop of color. */
+    /* The brand lockup: "From the desk of" in tiny tracked caps over the
+       name — the letter-from-the-author mark. The red full stop is the
+       wordmark's one pop of color. */
     .wordmark {
       text-decoration: none;
       display: grid;
@@ -260,10 +259,6 @@
     }
     .about-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .about-body { display: grid; gap: 18px; justify-items: start; }
-    /* The handwritten sign-off stays script — it is a signature, not the
-       wordmark. Not scoped to a section: it now sits in the hero copy. */
-    .signoff { font-family: var(--script); font-size: 2.4rem; color: var(--ink-strong); margin-top: 8px; line-height: 1.1; }
-    .signoff .dot { color: var(--red); }
 
     /* ── The Inner Circle: signup left, photo right, on the black band ──── */
     .signup-grid {
@@ -424,7 +419,6 @@
           and grace in the middle of the mess, and trusting that even ordinary
           stories can hold extraordinary truth.
         </p>
-        <p class="signoff" aria-hidden="true">Kailey<span class="dot">.</span></p>
         <div class="hero-actions">
           <a class="btn" href="#books">The book</a>
           <a class="btn" href="#newsletter">Join the Inner Circle</a>
