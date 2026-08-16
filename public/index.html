@@ -313,7 +313,8 @@
        as the only color, so it carries the palette by itself. If
        /assets/hero.jpg is missing, onerror strips the photo column and the
        copy renders full-width on paper. */
-    .hero { border-bottom: 1px solid var(--border); }
+    /* No border-bottom: the section gradients above now carry the seam. */
+    .hero { position: relative; }
     .hero-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(300px, 440px);
@@ -369,7 +370,26 @@
 
     /* ── Sections ────────────────────────────────────────────────────────── */
     .section { padding: clamp(72px, 10vw, 128px) 0; }
-    .section + .section { border-top: 1px solid var(--border); }
+
+    /* Soft black gradients instead of hairline dividers.
+       A 1px rule is a flat device standing in for a change of plane: it
+       says "new section" without the page ever looking like it has more
+       than one surface. These two washes darken each section's top and
+       bottom edge by a few percent, so consecutive sections meet in a soft
+       shadowed seam and each panel reads as its own slightly domed plane.
+       Alpha is deliberately tiny — at 4% it registers as depth, and at
+       anything near 10% it reads as dirty white. */
+    .section:not(.on-black), .hero {
+      background:
+        linear-gradient(180deg, rgba(11, 11, 12, 0.042), rgba(11, 11, 12, 0) 22%),
+        /* Identical to the stop above, not merely similar. At 0.042 top and
+           0.032 bottom the join carried a 2-level step — and 2 levels is
+           enough, because a discontinuity in an otherwise smooth ramp gets
+           amplified by the eye into a visible line (Mach banding). Equal
+           alphas meet exactly: the value stays continuous across the seam
+           and only the slope reverses, which is what a crease should do. */
+        linear-gradient(0deg,   rgba(11, 11, 12, 0.042), rgba(11, 11, 12, 0) 22%);
+    }
     .section-head { display: grid; gap: 16px; margin-bottom: clamp(44px, 6vw, 72px); }
     .section-head.is-centered { justify-items: center; text-align: center; }
     .section-head .rule { width: 44px; height: 1px; background: var(--red); }
@@ -607,7 +627,45 @@
        Per the reference image, the white body is framed by solid black
        masses: the Inner Circle band and the footer carry class="on-black",
        which re-skins the color tokens (see tokens.css). Only hardcoded
-       borders need restating for the dark ground. */
+       borders need restating for the dark ground.
+
+       Overridden here, page-scoped: tokens.css paints .on-black a flat
+       var(--paper) (#0B0B0C). Flat black is the one fill with no form at
+       all — it reads as a hole cut in the page rather than a mass sitting
+       on it. These give the band a light source instead. */
+    /* One variable for the band's top colour, because the ramp above the
+       band has to END on exactly this value. A first pass added a radial
+       highlight across the top of the band, which lifted its first pixel
+       above the ramp's final colour and put a visible step right at the
+       join — the seam the ramp exists to remove. A single vertical gradient
+       cannot drift out of register with the ramp that way. */
+    .section.on-black {
+      --band-top: #1A1A1F;
+      position: relative;
+      background: linear-gradient(180deg, var(--band-top) 0%, #0D0D10 55%, #08080A 100%);
+    }
+    /* The band used to begin on a hard horizontal line. This ramps the paper
+       down into it across the preceding section's bottom padding — which is
+       why the height is capped BELOW that padding (8vw/120px against the
+       section's 10vw/128px), so the fade can never reach into live copy.
+       Stops are all the same hue at rising alpha, so compositing over the
+       white page darkens monotonically; mixing in a different dark (say
+       #08080A) mid-ramp makes it lighten before it darkens. */
+    .section.on-black::before {
+      content: '';
+      position: absolute; left: 0; right: 0; bottom: 100%;
+      height: clamp(56px, 8vw, 120px);
+      pointer-events: none;
+      background: linear-gradient(180deg,
+        rgba(26, 26, 31, 0) 0%,
+        rgba(26, 26, 31, 0.55) 56%,
+        rgba(26, 26, 31, 0.92) 84%,
+        var(--band-top) 100%);
+    }
+    /* The footer picks the band up where it ended rather than restarting the
+       gradient — a second ramp beginning at #17171B against the band's
+       #08080A would put a bright seam between two blacks. */
+    footer.on-black { background: linear-gradient(180deg, #08080A, #050506); }
     .on-black .btn::before { border-color: rgba(255, 255, 255, 0.4); }
     /* Same specificity as .btn:hover and declared later, so the hover border
        has to be restated here or the white outline would win on the band. */
@@ -620,7 +678,9 @@
        which is exactly the seam wanted between the two black blocks. */
 
     /* ── Footer: minimal, centred ────────────────────────────────────────── */
-    footer { border-top: 1px solid var(--border); padding: 72px 0 48px; text-align: center; }
+    /* Was a 1px rgba(255,255,255,0.14) seam, which now cuts a bright line
+       across a continuous gradient. Dropped to a whisper. */
+    footer { border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 72px 0 48px; text-align: center; }
     .footer-mark { display: grid; justify-items: center; gap: 4px; }
     .footer-mark .from { font-family: var(--sans-label); font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-muted); }
     .footer-mark .name {
