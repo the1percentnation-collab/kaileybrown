@@ -451,6 +451,35 @@
       background-position: left center, right center, left center;
       background-repeat: no-repeat;
     }
+    /* The blurb, set on the page rather than under the card. The inset
+       clears the gutter shading on the left and the fore-edge striations on
+       the right; type running under either reads as damp paper. Ink is a
+       warm brown-black, not the page's own #000 — printed text on cream
+       never sits at full black. */
+    .book-page-copy {
+      position: absolute; inset: 0;
+      padding: 8% 15% 8% 24%;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 0.7em;
+      font-size: clamp(9px, 1.05vw, 12.5px);
+      line-height: 1.5;
+      color: #4A4034;
+      opacity: 0;
+      transition: opacity .45s ease .18s;
+    }
+    .book-page-kicker { font-style: italic; color: #6B5C48; }
+    /* Hidden by default so the one visible copy is always the body fallback.
+       Only a pointer that can hover AND a viewer who has not asked for less
+       motion ever sees the book open, so only they get the printed page. */
+    .book-page-copy { display: none; }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .book-page-copy { display: flex; }
+      .book:hover .book-page-copy,
+      .book:focus-within .book-page-copy { opacity: 1; }
+      /* The page carries it now; showing it twice would just be noise. */
+      .book-body .book-blurb { display: none; }
+    }
+
     /* The raised cover darkening the gutter it stands over. An opacity-gated
        overlay for the same reason as above — a box-shadow on the cover would
        slab — and it is the truer effect anyway. Zero at rest. */
@@ -759,7 +788,30 @@
           <div class="book-cover">
             <div class="book-stage">
               <div class="book-spine" aria-hidden="true"></div>
-              <div class="book-pages" aria-hidden="true"></div>
+              <div class="book-pages">
+                <!-- Printed on the page. Kept in sync with the fallback copy
+                     in .book-body below: exactly one of the two is ever
+                     displayed, so neither doubles up for a screen reader. -->
+                <div class="book-page-copy">
+                  <p>
+                    When Maddie Whitmore&rsquo;s brother dies, everyone calls it
+                    an accident. Maddie doesn&rsquo;t believe them.
+                  </p>
+                  <p>
+                    Jonathan left her everything &mdash; his shares in the family
+                    company, a letter she wasn&rsquo;t ready to read, and a
+                    bodyguard named Damien Cruz who was never supposed to be more
+                    than a professional obligation. The deeper she digs, the
+                    clearer it gets: the most dangerous people in her life
+                    aren&rsquo;t strangers. They&rsquo;re the ones who raised her.
+                  </p>
+                  <p>
+                    Walk away from everything Jonathan died protecting, or finish
+                    what he started.
+                  </p>
+                  <p class="book-page-kicker">She was never going to walk away.</p>
+                </div>
+              </div>
               <div class="book-lid">
                 <div class="book-front">
                   <img src="/assets/landed-on-you.jpg" alt="Cover of Landed On You" loading="lazy" onerror="this.remove()">
@@ -775,7 +827,8 @@
               <span class="label muted">Romantic suspense</span>
             </div>
             <h3>Landed On You</h3>
-            <!-- Condensed from the published back-cover copy, not rewritten. -->
+            <!-- Fallback for touch screens and reduced-motion, where the book
+                 never opens and the printed page is never revealed. -->
             <div class="book-blurb">
               <p>
                 When Maddie Whitmore&rsquo;s brother dies, everyone calls it an
