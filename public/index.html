@@ -877,7 +877,26 @@
           <div class="book-cover">
             <div class="book-stage">
               <div class="book-spine" aria-hidden="true"></div>
-              <div class="book-pages" aria-hidden="true"></div>
+              <div class="book-pages">
+                <!-- Kept in sync with the fallback copy in .book-body below:
+                     exactly one of the two is ever displayed. -->
+                <div class="book-page-copy">
+                  <p>
+                    In Copperridge, Tennessee, Remi Moretti has learned that
+                    staying in control is safer than letting anyone leave a mark.
+                  </p>
+                  <p>
+                    Then Zane Carter arrives &mdash; familiar in a way she
+                    can&rsquo;t explain. The closer they get, the more her
+                    memories blur, and pieces of a past she doesn&rsquo;t
+                    remember start surfacing without warning.
+                  </p>
+                  <p class="book-page-kicker">
+                    Some loves don&rsquo;t arrive loudly. They stay, and ask to be
+                    chosen again and again.
+                  </p>
+                </div>
+              </div>
               <div class="book-lid">
                 <div class="book-front">
                   <img src="/assets/somewhere-between-dreaming-and-you.jpg" alt="Cover of Somewhere Between Dreaming &amp; You" loading="lazy" onerror="this.remove()">
@@ -893,6 +912,22 @@
               <span class="label muted">Contemporary romance</span>
             </div>
             <h3>Somewhere Between Dreaming &amp; You</h3>
+            <!-- Fallback for touch screens and reduced-motion, where the book
+                 never opens and the printed page is never revealed. -->
+            <div class="book-blurb">
+              <p>
+                In Copperridge, Tennessee, Remi Moretti has learned that staying
+                in control is safer than letting anyone leave a mark.
+              </p>
+              <p>
+                Then Zane Carter arrives &mdash; familiar in a way she
+                can&rsquo;t explain. The closer they get, the more her memories
+                blur, and pieces of a past she doesn&rsquo;t remember start
+                surfacing without warning.
+              </p>
+              <p><em>Some loves don&rsquo;t arrive loudly. They stay, and ask to
+                be chosen again and again.</em></p>
+            </div>
             <a class="btn" href="#newsletter">Follow along<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </article>
