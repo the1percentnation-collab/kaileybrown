@@ -657,6 +657,33 @@
     }
 
     /* ── About: candid photo beside text ─────────────────────────────────── */
+    /* Full-bleed leather between the shelf and the bio.
+
+       Covered, not tiled. The source is only 612x408, so cover upscales it
+       2.4x at 1440px -- but the alternatives were worse, and both were tried
+       and looked at: repeating at native size put hard vertical seams across
+       the band where the tile edges failed to meet, and a mirrored tile
+       removed the seams by turning the grain into visible kaleidoscope
+       symmetry. Leather has no fine detail to lose, so a soft 2.4x upscale
+       reads as leather where a repeating motif reads as wallpaper.
+
+       The colour underneath is not a placeholder: it is what paints while the
+       texture loads and what stays if it ever 404s, so it is sampled from the
+       leather itself rather than left to flash white and swap. */
+    .band {
+      height: 260px;
+      background-color: #7E1C24;
+      background-image: url('/assets/leather-band.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    @media (max-width: 820px) {
+      /* 260px is a third of a phone screen. Shorter, so it still reads as a
+         break rather than a section to scroll past. */
+      .band { height: 150px; }
+    }
+
     .about-grid {
       display: grid;
       grid-template-columns: minmax(260px, 420px) 1fr;
@@ -1038,6 +1065,10 @@
       </div>
     </div>
   </section>
+
+  <!-- A band of leather to break the page between the shelf and the bio.
+       Decorative only: no content, no heading, out of the a11y tree. -->
+  <div class="band" aria-hidden="true"></div>
 
   <!-- ════════ ABOUT ════════ -->
   <section class="section" id="about">
