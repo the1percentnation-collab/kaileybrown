@@ -678,11 +678,37 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
+      /* The film strip inside is wider than any viewport by design; the band
+         clips it rather than handing the page a horizontal scrollbar. */
+      overflow: hidden;
+      display: grid; align-items: center;
+    }
+    /* Prints from her events drifting across the leather like photographs
+       laid out on a desk. transform is the only thing animated, so the strip
+       runs on the compositor. */
+    .band-strip {
+      display: flex; width: max-content;
+      animation: band-drift 80s linear infinite;
+    }
+    .band:hover .band-strip { animation-play-state: paused; }
+    /* padding-right rather than a trailing gap: it is part of the set's width,
+       which keeps "one set" and "50% of the strip" the same distance. */
+    .band-set { display: flex; gap: 42px; padding-right: 42px; }
+    .band-set img {
+      height: 340px; width: auto; display: block;
+      padding: 12px; background: #FBF7EF;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    }
+    @keyframes band-drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }   /* exactly one set-width */
     }
     @media (max-width: 820px) {
       /* Half height on a phone. 520px would be most of the screen, and a break
          that has to be scrolled through stops reading as a break. */
       .band { height: 300px; }
+      .band-set img { height: 180px; padding: 8px; }
+      .band-set { gap: 24px; padding-right: 24px; }
     }
 
     .about-grid {
@@ -806,6 +832,10 @@
       .book:not(.is-open):focus-within .book-lid { transform: var(--lid-shut); }
       .book:not(.is-open):hover .book-pages::after,
       .book:not(.is-open):focus-within .book-pages::after { opacity: 0; }
+      /* The global near-zero animation-duration above would strobe the film
+         strip through a full loop every hundredth of a second. Stop it dead
+         instead: a static row of prints is the honest fallback. */
+      .band-strip { animation: none; }
     }
 
     @media (max-width: 820px) {
@@ -1069,7 +1099,39 @@
 
   <!-- A band of leather to break the page between the shelf and the bio.
        Decorative only: no content, no heading, out of the a11y tree. -->
-  <div class="band" aria-hidden="true"></div>
+  <div class="band" aria-hidden="true">
+    <div class="band-strip">
+      <!-- The ten prints appear twice, back to back. The animation slides
+           exactly one set-width; the instant the first set has fully left,
+           the second is standing in its place, so the loop never shows a
+           restart. Both sets must stay identical for that arithmetic to
+           hold. -->
+      <div class="band-set">
+        <img src="/assets/band-photo-01.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-02.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-03.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-04.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-05.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-06.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-07.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-08.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-09.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-10.jpg" alt="" loading="lazy" decoding="async">
+      </div>
+      <div class="band-set">
+        <img src="/assets/band-photo-01.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-02.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-03.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-04.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-05.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-06.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-07.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-08.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-09.jpg" alt="" loading="lazy" decoding="async">
+        <img src="/assets/band-photo-10.jpg" alt="" loading="lazy" decoding="async">
+      </div>
+    </div>
+  </div>
 
   <!-- ════════ ABOUT ════════ -->
   <section class="section" id="about">
