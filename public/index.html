@@ -659,29 +659,27 @@
     /* ── About: candid photo beside text ─────────────────────────────────── */
     /* Full-bleed leather between the shelf and the bio.
 
-       Covered, not tiled. The source is only 612x408, so cover upscales it
-       2.4x at 1440px -- but the alternatives were worse, and both were tried
-       and looked at: repeating at native size put hard vertical seams across
-       the band where the tile edges failed to meet, and a mirrored tile
-       removed the seams by turning the grain into visible kaleidoscope
-       symmetry. Leather has no fine detail to lose, so a soft 2.4x upscale
-       reads as leather where a repeating motif reads as wallpaper.
+       The texture is generated rather than photographed, and generated to tile
+       seamlessly, which is what makes it sharp: it is painted at its native
+       1024px and repeated, so the browser never scales it -- crisp at 1440px,
+       at 2560px, and on a 2x display alike. The stock comp this replaces was
+       612px wide and had to be stretched 2.4-4x, which is where the softness
+       came from; no amount of sharpening recovers detail that was never there.
 
-       The colour underneath is not a placeholder: it is what paints while the
-       texture loads and what stays if it ever 404s, so it is sampled from the
-       leather itself rather than left to flash white and swap. */
+       Its palette is sampled from that comp (5th/50th/95th percentile), so the
+       band is still the red that was picked. The colour below is the median of
+       that ramp: what paints while the tile loads, and what stays if it 404s. */
     .band {
-      height: 260px;
-      background-color: #7E1C24;
-      background-image: url('/assets/leather-band.jpg');
-      background-size: cover;
+      height: 520px;
+      background-color: #7B071A;
+      background-image: url('/assets/leather-texture.jpg');
+      background-repeat: repeat;
       background-position: center;
-      background-repeat: no-repeat;
     }
     @media (max-width: 820px) {
-      /* 260px is a third of a phone screen. Shorter, so it still reads as a
-         break rather than a section to scroll past. */
-      .band { height: 150px; }
+      /* Half height on a phone. 520px would be most of the screen, and a break
+         that has to be scrolled through stops reading as a break. */
+      .band { height: 300px; }
     }
 
     .about-grid {
