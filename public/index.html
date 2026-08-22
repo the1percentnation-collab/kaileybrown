@@ -362,6 +362,16 @@
     .hero:not(.has-photo) .hero-photo { display: none; }
     .hero:not(.has-photo) .hero-grid { grid-template-columns: 1fr; }
 
+    /* The wordmark does not shrink: it is a 232px lockup, and at 320px the
+       nav row has only ~210px for it once the hamburger takes its share.
+       The overflow pushed the hamburger off-screen and gave the page a
+       horizontal scrollbar at rest. Scaling the name down on the narrowest
+       phones is enough; nothing else about the lockup changes. */
+    @media (max-width: 360px) {
+      .wordmark .name { font-size: 1.15rem; letter-spacing: 0.1em; }
+      .wordmark .from { font-size: 7px; letter-spacing: 0.24em; }
+    }
+
     @media (max-width: 820px) {
       .hero-grid { grid-template-columns: 1fr; }
       .hero-photo { max-width: 420px; }
@@ -853,7 +863,43 @@
         --lid-shut: translateZ(14px) rotateY(0deg);
       }
       .about-grid { grid-template-columns: 1fr; }
-      .about-photo { max-width: 340px; }
+
+      /* ── One column, one measure ──────────────────────────────────────
+         Every block on a phone shares the wrap's exact width, so their left
+         and right edges line up down the whole page. The desktop caps here
+         (340px on the photo, 360 on the signup photo, 420 on the hero) were
+         sized for a multi-column grid; in a single column they just made
+         some blocks 2-40px narrower than their neighbours, which reads as
+         drift rather than as design. */
+      /* No margin-inline:auto here. Three of these are grid items, and an
+         auto inline margin on a grid item cancels its stretch -- it eats the
+         free space instead, leaving the item at content width. That is what
+         collapsed the About photo to 182px in the middle of a 342px column. */
+      .about-photo,
+      .signup-photo,
+      .hero-photo,
+      .books-grid { max-width: 100%; }
+
+      /* ── Centred on a phone ───────────────────────────────────────────
+         Down one column there is no left rail for the eye to follow, so
+         labels, headings, rules and buttons centre on the axis of the
+         column. Body paragraphs deliberately stay left-aligned: centring
+         five ragged lines is harder to read, and their left edge is the
+         one thing still tying the page to a common margin. */
+      .hero-copy,
+      .about-body { justify-items: center; text-align: center; }
+      .hero-copy p,
+      .about-body p { text-align: left; }
+
+      /* The book cards follow the same rule: status, genre, title and
+         button centre over the cover they belong to. */
+      .book-body { align-items: center; text-align: center; }
+      .book-meta { align-items: center; }
+
+      /* .hero-actions is a full-width flex row, so centring it as a block
+         leaves the buttons themselves packed against the left edge. The row
+         has to centre its own contents. */
+      .hero-actions { justify-content: center; }
       .nav-links { display: none; }
       .hamburger { display: block; }
       .nav-links.open {
