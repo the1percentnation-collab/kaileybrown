@@ -632,8 +632,18 @@
     /* Flex column rather than grid: margin-top:auto on the CTA only absorbs
        free space in a flex container, which is what lines the buttons up. */
     .book-body { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: 100%; }
-    .book-meta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-    .book-body h3 { font-size: clamp(1.35rem, 1.6vw, 1.7rem); }
+    /* Status over genre, always two lines. With flex-wrap the row broke
+       differently on every card -- a short genre sat beside its status, a long
+       one dropped below -- so the three titles underneath started at three
+       different heights. Stacking makes the block the same height on every
+       card at every width, which is what lines the shelf up. */
+    .book-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+    /* Two lines' worth, reserved whether the title needs them or not, so the
+       blurb and the button below start level across the shelf too. */
+    .book-body h3 {
+      font-size: clamp(1.35rem, 1.6vw, 1.7rem);
+      min-height: calc(2 * 1.25em);
+    }
     .book-blurb { font-size: 0.98rem; }
     .book-blurb p + p { margin-top: 12px; }
     .book .btn { margin-top: auto; padding: 13px 27px; }
