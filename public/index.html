@@ -659,22 +659,25 @@
     /* ── About: candid photo beside text ─────────────────────────────────── */
     /* Full-bleed leather between the shelf and the bio.
 
-       The texture is generated rather than photographed, and generated to tile
-       seamlessly, which is what makes it sharp: it is painted at its native
-       1024px and repeated, so the browser never scales it -- crisp at 1440px,
-       at 2560px, and on a 2x display alike. The stock comp this replaces was
-       612px wide and had to be stretched 2.4-4x, which is where the softness
-       came from; no amount of sharpening recovers detail that was never there.
+       A real 1537x1023 photograph of a hide, so `cover` genuinely works here:
+       at 1440px it is scaled to 0.94 -- a DOWNscale, which is always sharp --
+       and only past ~1540px does it upscale at all. That is the whole reason
+       this replaces both the 612px stock comp (stretched 2.4-4x, soft) and the
+       generated tile that stood in for it: real grain beats synthesised grain
+       when the source is big enough not to need stretching.
 
-       Its palette is sampled from that comp (5th/50th/95th percentile), so the
-       band is still the red that was picked. The colour below is the median of
-       that ramp: what paints while the tile loads, and what stays if it 404s. */
+       No tiling, so no seams and no repeat rhythm to notice.
+
+       The colour underneath is sampled from the photograph itself: it paints
+       while the image loads and stays if it ever 404s, so the band never
+       flashes white. */
     .band {
       height: 520px;
-      background-color: #7B071A;
-      background-image: url('/assets/leather-texture.jpg');
-      background-repeat: repeat;
+      background-color: #6C0811;
+      background-image: url('/assets/leather-band.jpg');
+      background-size: cover;
       background-position: center;
+      background-repeat: no-repeat;
     }
     @media (max-width: 820px) {
       /* Half height on a phone. 520px would be most of the screen, and a break
