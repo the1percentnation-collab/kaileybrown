@@ -596,21 +596,32 @@
        thumb lifts a real one. Decorative -- the button's own label says it in
        words -- and it lives inside the button, so a book with nothing printed
        inside never shows one. */
+    /* A labelled pill, not a bare chevron. A lone glyph asks the reader to
+       guess; "Sneak peek" tells them what tapping does, which is the whole
+       job of an affordance on a cover that gives no other clue. Centred
+       along the bottom so it reads as an instruction rather than a stray
+       control in a corner. */
     .book-hint {
-      position: absolute; right: 7%; bottom: 5%;
-      display: grid; place-items: center;
-      width: 30px; height: 30px; border-radius: 50%;
+      position: absolute; left: 50%; bottom: 6%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 14px; border-radius: 999px;
       /* Opaque enough to hold against any cover art, light or dark. */
-      background: rgba(18, 16, 14, 0.58);
+      background: rgba(18, 16, 14, 0.66);
       border: 1px solid rgba(255, 255, 255, 0.34);
       color: #FBF7EF;
+      font-family: var(--sans-label);
+      font-size: 10px; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; white-space: nowrap;
       transition: opacity .35s ease, transform .35s ease, background .35s ease;
     }
-    .book-hint svg { display: block; }
+    .book-hint svg { display: block; flex: none; }
     .book-toggle:hover .book-hint,
     .book-toggle:focus-visible .book-hint { background: rgba(18, 16, 14, 0.80); }
     /* Its job is done, and it goes before the leaf it sits on has swung away. */
-    .book.is-open .book-hint { opacity: 0; transform: scale(0.86); }
+    /* Centred by a translate now, so the shrink has to compose with it or the
+       pill slides sideways as it fades. */
+    .book.is-open .book-hint { opacity: 0; transform: translateX(-50%) scale(0.86); }
 
     /* Past 90deg, not to it — a real cover falls a little beyond flat. The
        stage turns with it so the spine slab comes into view.
@@ -1392,15 +1403,15 @@
       if (copy.id) btn.setAttribute('aria-controls', copy.id);
       btn.innerHTML =
         '<span class="vh"></span>' +
-        '<span class="book-hint" aria-hidden="true">' +
-          '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">' +
-            '<path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+        '<span class="book-hint" aria-hidden="true">Sneak peek' +
+          '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">' +
+            '<path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" ' +
                   'stroke-linecap="round" stroke-linejoin="round"/>' +
           '</svg>' +
         '</span>';
       // textContent, not innerHTML: the titles carry a curly apostrophe and an
       // ampersand, and this string is what a screen reader reads out.
-      btn.firstChild.textContent = 'Look inside' + (title ? ': ' + title.textContent.trim() : '');
+      btn.firstChild.textContent = 'Sneak peek inside' + (title ? ' ' + title.textContent.trim() : '');
 
       cover.appendChild(btn);
       // Only now is the printed page the copy of record -- see .is-openable in
