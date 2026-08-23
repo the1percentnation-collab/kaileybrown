@@ -669,7 +669,10 @@
     }
     .book-blurb { font-size: 0.98rem; }
     .book-blurb p + p { margin-top: 12px; }
-    .book .btn { margin-top: auto; padding: 13px 27px; }
+    /* align-self, not text-align: the body is a flex column aligned to the
+       start, so centring the CTA on its own leaves the status, title and blurb
+       reading from the left edge where they belong. */
+    .book .btn { margin-top: auto; padding: 13px 27px; align-self: center; }
     /* A title with no cover yet still holds its place on the shelf. */
     .book.is-upcoming .book-front { background: var(--surface); }
 
