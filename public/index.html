@@ -602,7 +602,9 @@
        along the bottom so it reads as an instruction rather than a stray
        control in a corner. */
     .book-hint {
-      position: absolute; left: 50%; bottom: 6%;
+      /* 15%, not 6%: Landed On You prints KAILEY BROWN along the cover's
+         bottom edge, and the pill sat straight over it. */
+      position: absolute; left: 50%; bottom: 15%;
       transform: translateX(-50%);
       display: flex; align-items: center; gap: 7px;
       padding: 8px 14px; border-radius: 999px;
@@ -711,7 +713,12 @@
       display: flex; width: max-content;
       animation: band-drift 80s linear infinite;
     }
-    .band:hover .band-strip { animation-play-state: paused; }
+    /* Pausing on hover is a pointer courtesy. On a touch screen :hover
+       sticks to whatever was last touched, so an ungated pause froze the
+       strip for every phone visitor who scroll-dragged across the band. */
+    @media (hover: hover) {
+      .band:hover .band-strip { animation-play-state: paused; }
+    }
     /* padding-right rather than a trailing gap: it is part of the set's width,
        which keeps "one set" and "50% of the strip" the same distance. */
     .band-set { display: flex; gap: 42px; padding-right: 42px; }
@@ -1335,24 +1342,46 @@
 
     root.classList.remove('js-typewriter');   // h1 visible; characters are not
     if (!chars.length) return;
-    let i = 0;
-    (function step() {
-      // The caret only leaves a character when a new one is taking it, so at
-      // the end it stays on the final letter and blinks before clearing.
-      if (i >= chars.length) {
-        setTimeout(() => chars[chars.length - 1].classList.remove('is-caret'), 700);
-        return;
-      }
-      if (i > 0) chars[i - 1].classList.remove('is-caret');
-      const c = chars[i];
-      c.classList.add('is-on', 'is-caret');
-      i++;
-      // Jitter, because a perfectly even cadence reads as a machine rather
-      // than a person; and a longer beat after the comma, the way a typist
-      // actually pauses.
-      const delay = 62 + (Math.random() * 44 - 22) + (c.textContent === ',' ? 260 : 0);
-      setTimeout(step, delay);
-    })();
+
+    // The typing loop, callable more than once: a bfcache return repaints the
+    // finished headline without re-running any script, so reopening Safari
+    // from the app switcher never showed the animation again. run() clears
+    // the previous pass and types afresh; the guard stops a quick
+    // background-and-return from interleaving two carets.
+    let typing = false;
+    function run() {
+      if (typing) return;
+      typing = true;
+      chars.forEach((c) => c.classList.remove('is-on', 'is-caret'));
+      let i = 0;
+      (function step() {
+        // The caret only leaves a character when a new one is taking it, so at
+        // the end it stays on the final letter and blinks before clearing.
+        if (i >= chars.length) {
+          setTimeout(() => {
+            chars[chars.length - 1].classList.remove('is-caret');
+            typing = false;
+          }, 700);
+          return;
+        }
+        if (i > 0) chars[i - 1].classList.remove('is-caret');
+        const c = chars[i];
+        c.classList.add('is-on', 'is-caret');
+        i++;
+        // Jitter, because a perfectly even cadence reads as a machine rather
+        // than a person; and a longer beat after the comma, the way a typist
+        // actually pauses.
+        const delay = 62 + (Math.random() * 44 - 22) + (c.textContent === ',' ? 260 : 0);
+        setTimeout(step, delay);
+      })();
+    }
+    run();
+
+    addEventListener('pageshow', (e) => {
+      // Motion is re-checked at event time -- the setting can change between
+      // visits, and the head script's check only ran on the original load.
+      if (e.persisted && !matchMedia('(prefers-reduced-motion: reduce)').matches) run();
+    });
   })();
 
   // Entrance animation. Exposed on window so injected content can re-hook it.
