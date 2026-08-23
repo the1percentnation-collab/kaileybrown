@@ -1105,7 +1105,27 @@
           <div class="book-cover">
             <div class="book-stage">
               <div class="book-spine" aria-hidden="true"></div>
-              <div class="book-pages" aria-hidden="true"></div>
+              <!-- aria-hidden dropped along with the empty page: there is
+                   printed copy in here now, and the toggle points at it. -->
+              <div class="book-pages">
+                <!-- Kept in sync with the fallback copy in .book-body below:
+                     exactly one of the two is ever displayed. -->
+                <div class="book-page-copy" id="book-inside-12-days-of-awkward">
+                  <p>
+                    One panicked lie. Twelve disastrous dates. One firefighter
+                    next door who&rsquo;s loved her the whole time.
+                  </p>
+                  <p>
+                    Lexi Monroe just needs a boyfriend by Christmas, and the
+                    last person she expects to fall for is the one who&rsquo;s
+                    been there all along.
+                  </p>
+                  <p class="book-page-kicker">
+                    A fake dating, he-fell-first holiday romcom set in the
+                    Christmas Capital of Texas.
+                  </p>
+                </div>
+              </div>
               <div class="book-lid">
                 <div class="book-front">
                   <img src="/assets/12-days-of-awkward.jpg" alt="Cover of 12 Days of Awkward" loading="lazy" onerror="this.remove()">
@@ -1122,7 +1142,22 @@
               <span class="label muted">Holiday rom-com</span>
             </div>
             <h3>12 Days of Awkward</h3>
-            <!-- TODO(brand): the teaser line and the release date. -->
+            <!-- TODO(brand): the release date. -->
+            <!-- Fallback for touch screens and reduced-motion, where the book
+                 never opens and the printed page is never revealed. -->
+            <div class="book-blurb">
+              <p>
+                One panicked lie. Twelve disastrous dates. One firefighter next
+                door who&rsquo;s loved her the whole time.
+              </p>
+              <p>
+                Lexi Monroe just needs a boyfriend by Christmas, and the last
+                person she expects to fall for is the one who&rsquo;s been there
+                all along.
+              </p>
+              <p><em>A fake dating, he-fell-first holiday romcom set in the
+                Christmas Capital of Texas.</em></p>
+            </div>
             <a class="btn" href="https://buy.stripe.com/28EeV67E25ZI1ZmfErcQU03" target="_blank" rel="noopener">Pre-order<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </article>
@@ -1442,10 +1477,10 @@
       const cover = book.querySelector('.book-cover');
       const copy = book.querySelector('.book-page-copy');
       const title = book.querySelector('.book-body h3');
-      // A book with nothing printed inside has nothing to open. The middle
-      // card is a cover and a release date; it stays a plain, quiet card with
-      // no control to announce and no glyph promising a page that is blank.
-      // Checked by content, not by position, so it stays true if the copy moves.
+      // A book with nothing printed inside has nothing to open: no control to
+      // announce and no glyph promising a page that is blank. Checked by
+      // content, not by position -- every card carries copy today, and this
+      // stays right the day one is added without any.
       if (!cover || !copy || !copy.textContent.trim()) return;
 
       const btn = document.createElement('button');
