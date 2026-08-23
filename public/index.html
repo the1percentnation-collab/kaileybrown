@@ -1228,17 +1228,13 @@
         No spam, and one click unsubscribes you.
       </p>
 
-      <form class="newsletter" id="newsletter-form" novalidate>
-        <label for="newsletter-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Email address</label>
-        <input id="newsletter-email" type="email" placeholder="Your email address" required autocomplete="email">
-        <button class="btn btn-red" type="submit">Join<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></button>
-      </form>
-
-      <p class="consent muted" id="newsletter-consent">
-        By subscribing you agree to receive email from Kailey Brown. You can
-        unsubscribe at any time using the link in any message.
-      </p>
-      <p class="form-note" id="newsletter-note" role="status" aria-live="polite"></p>
+      <!-- The list lives at Kit now, so this section points there rather than
+           collecting a second address of its own. The consent sentence went
+           with the form: with nothing captured here, consent belongs on the
+           page that actually captures it. btn-red keeps the weight the Join
+           button had -- this is still the page's primary conversion, and an
+           outline button would recede into the black band. -->
+      <a class="btn btn-red" href="https://kailey-brown.kit.com/b0eeb21548" target="_blank" rel="noopener">Join the Inner Circle<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
     </div>
 
     <div class="signup-photo">
@@ -1469,8 +1465,6 @@
 </script>
 
 <script type="module">
-  import { init as initNewsletter } from './js/newsletter.js';
-  initNewsletter();
 </script>
 <script type="module">
   import { init as initChatbot } from './js/chatbot.js';
