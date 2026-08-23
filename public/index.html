@@ -382,7 +382,27 @@
     .section + .section { border-top: 1px solid var(--border); }
     .section-head { display: grid; gap: 16px; margin-bottom: clamp(44px, 6vw, 72px); }
     .section-head.is-centered { justify-items: center; text-align: center; }
-    .section-head .rule { width: 44px; height: 1px; background: var(--red); }
+    /* The section eyebrow is the one label on the page that is a heading
+       rather than a caption, so it gets its own size instead of .label's 11px. */
+    .section-head .label {
+      font-size: clamp(15px, 2.2vw, 22px);
+      /* Letter-spacing opens the word as it arrives, then settles. The
+         negative margin-right cancels the trailing space the spacing adds
+         after the last letter -- without it the word sits visibly left of
+         centre, and drifts as the spacing animates. */
+      letter-spacing: 0.62em;
+      margin-right: -0.62em;
+      transition: letter-spacing .9s var(--ease-out), margin-right .9s var(--ease-out);
+    }
+    .section-head.is-in .label { letter-spacing: 0.34em; margin-right: -0.34em; }
+    /* The rule draws itself out from nothing, a beat behind the word. */
+    .section-head .rule {
+      width: 0;
+      height: 1px;
+      background: var(--red);
+      transition: width .8s var(--ease-out) .18s;
+    }
+    .section-head.is-in .rule { width: 72px; }
 
     /* ── Books: a shelf of covers, three up, info beneath each ──────────
        Each cover is a standing book: a spine down the left edge, a page
@@ -850,6 +870,10 @@
 
     @media (prefers-reduced-motion: reduce) {
       .fade-up { opacity: 1; transform: none; transition: none; }
+      /* Zeroed durations still leave these at their pre-entrance values until
+         the observer fires, so state the settled values outright. */
+      .section-head .label { letter-spacing: 0.34em; margin-right: -0.34em; }
+      .section-head .rule { width: 72px; }
       /* transition-delay too, or the button label lags the page turn by 160ms. */
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
       /* Zeroed durations alone would make the cover SNAP open on hover,
