@@ -779,6 +779,37 @@
     .about-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .about-body { display: grid; gap: 18px; justify-items: start; }
 
+    /* ── Featured offer: The Awkward Box ─────────────────────────────────
+       Sits between the hero and the shelf. Photo LEFT so it answers the
+       hero photo on the right. The product shot is a 4:5 square-ish crop,
+       same frame as the About photo. If the image is missing, onerror drops
+       the photo column and the copy runs full-width. */
+    .offer { background: var(--surface); }
+    .offer-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 460px) 1fr;
+      gap: clamp(40px, 7vw, 88px);
+      align-items: center;
+    }
+    .offer-grid.no-photo { grid-template-columns: 1fr; }
+    .offer-photo {
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .offer-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .offer-body { display: grid; gap: 18px; justify-items: start; }
+    .offer-body .rule { width: 44px; height: 1px; background: var(--red); }
+    .offer-inside { margin-top: 6px; }
+    .offer-list { list-style: none; display: grid; gap: 10px; margin-bottom: 8px; }
+    .offer-list li { position: relative; padding-left: 22px; }
+    .offer-list li::before {
+      content: ''; position: absolute; left: 0; top: 0.8em;
+      width: 10px; height: 1px; background: var(--red);
+    }
+
     /* ── The Inner Circle: signup left, photo right, on the black band ──── */
     .signup-grid {
       display: grid;
@@ -908,6 +939,7 @@
         --lid-shut: translateZ(14px) rotateY(0deg);
       }
       .about-grid { grid-template-columns: 1fr; }
+      .offer-grid { grid-template-columns: 1fr; }
 
       /* ── One column, one measure ──────────────────────────────────────
          Every block on a phone shares the wrap's exact width, so their left
@@ -921,6 +953,7 @@
          free space instead, leaving the item at content width. That is what
          collapsed the About photo to 182px in the middle of a 342px column. */
       .about-photo,
+      .offer-photo,
       .signup-photo,
       .hero-photo,
       .books-grid { max-width: 100%; }
@@ -932,9 +965,12 @@
          five ragged lines is harder to read, and their left edge is the
          one thing still tying the page to a common margin. */
       .hero-copy,
-      .about-body { justify-items: center; text-align: center; }
+      .about-body,
+      .offer-body { justify-items: center; text-align: center; }
       .hero-copy p,
-      .about-body p { text-align: left; }
+      .about-body p,
+      .offer-body p:not(.label),
+      .offer-list { text-align: left; }
 
       /* The book cards follow the same rule: status, genre, title and
          button centre over the cover they belong to. */
@@ -971,7 +1007,7 @@
         <!-- The author introduction is the hero now, so About points there. -->
         <li><a href="#hero">About</a></li>
         <li><a href="https://kailey-brown.kit.com/b0eeb21548" target="_blank" rel="noopener">Inner Circle</a></li>
-        <li><a href="mailto:kailey@kaileybrown.com">Contact</a></li>
+        <li><a href="mailto:Kaileybrown.author@gmail.com">Contact</a></li>
         <li><a href="/login.html">Sign in</a></li>
       </ul>
     </nav>
@@ -1020,6 +1056,41 @@
              alt="Kailey Brown holding an open book in a bookstore aisle"
              fetchpriority="high"
              onerror="this.closest('.hero').classList.remove('has-photo'); this.remove()">
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ FEATURED OFFER: THE AWKWARD BOX ════════
+       Product photo left, contents and the Stripe checkout button right.
+       On a phone it stacks: photo, copy, then the button. -->
+  <section class="section offer" id="awkward-box" aria-labelledby="awkward-box-title">
+    <div class="wrap offer-grid">
+      <div class="offer-photo fade-up">
+        <img src="/assets/awkward-box.jpg"
+             alt="The Awkward Box, open to show a copy of 12 Days of Awkward, character art, stickers and a sealed envelope, under a lid that reads It's about to get awkward, in the best way possible"
+             loading="lazy" decoding="async"
+             onerror="const g = this.closest('.offer-grid'); g.classList.add('no-photo'); this.parentElement.remove()">
+      </div>
+
+      <div class="offer-body fade-up">
+        <p class="label is-red">Featured offer</p>
+        <h2 id="awkward-box-title">The Awkward Box</h2>
+        <div class="rule" aria-hidden="true"></div>
+        <p class="lede">
+          It&rsquo;s about to get awkward, in the best way possible. Grab your
+          boots, we&rsquo;re going to Grapevine.
+        </p>
+        <p class="label offer-inside">Inside the Awkward Box</p>
+        <ul class="offer-list">
+          <li>One physical copy of <em>12 Days of Awkward</em></li>
+          <li>All original preorder incentives</li>
+          <li>Two character art prints</li>
+          <li>Rate the Date card</li>
+          <li>Bonus sticker pack</li>
+          <li>An exclusive deleted scene you won&rsquo;t find in the book</li>
+          <li>Special <em>12 Days of Awkward</em> packaging</li>
+        </ul>
+        <a class="btn btn-red" href="https://buy.stripe.com/6oU9AM4rQ9bU8nKfErcQU04" target="_blank" rel="noopener">Get the Awkward Box<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
       </div>
     </div>
   </section>
@@ -1331,7 +1402,7 @@
       <!-- TODO(brand): the real profile URLs. -->
       <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
       <li><a href="#" target="_blank" rel="noopener">TikTok</a></li>
-      <li><a href="mailto:kailey@kaileybrown.com">Contact</a></li>
+      <li><a href="mailto:Kaileybrown.author@gmail.com">Contact</a></li>
       <li><a href="/privacy.html">Privacy</a></li>
       <li><a href="/terms.html">Terms</a></li>
     </ul>
