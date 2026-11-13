@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARC application | Kailey Brown</title>
+  <!-- Private tool for Kailey: reached only from the buttons in her "New ARC
+       application" emails. Kept out of search results, and it sends no
+       referrer, because the address carries a signed, single-reader link. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Lora:wght@400;500&family=Jost:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/tokens.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    body {
+      background: var(--paper); color: var(--ink);
+      font-family: 'Lora', Georgia, serif; font-size: 1.05rem; line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh; padding: 40px 20px;
+    }
+    .wrap { width: min(460px, 100%); margin: 0 auto; }
+    .label {
+      font-family: 'Jost', system-ui, sans-serif; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.28em; text-transform: uppercase; color: var(--red);
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500;
+      font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1.1; color: var(--ink-strong);
+      margin: 10px 0 14px;
+    }
+    .rule { width: 44px; height: 1px; background: var(--red); margin-bottom: 24px; }
+    .name { font-size: 1.3rem; color: var(--ink-strong); }
+    .mail { font-family: 'Jost', system-ui, sans-serif; font-size: 0.9rem; color: var(--ink-muted); margin-bottom: 14px; word-break: break-all; }
+    .row strong { font-weight: 500; color: var(--ink-strong); }
+    .note { margin-top: 20px; color: var(--ink-muted); }
+    .buttons { margin-top: 28px; display: grid; gap: 12px; }
+    button {
+      width: 100%; min-height: 54px; padding: 16px;
+      font-family: 'Jost', system-ui, sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      border-radius: 0; cursor: pointer; touch-action: manipulation;
+    }
+    button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+    button:disabled { opacity: .55; cursor: default; }
+    .go { background: var(--red); color: #fff; border: 1px solid var(--red); }
+    .quiet { background: transparent; color: var(--ink-strong); border: 1px solid rgba(0, 0, 0, 0.45); }
+    .result { margin-top: 26px; font-size: 1.12rem; color: var(--ink-strong); }
+    .result[data-state="error"] { color: #B3261E; }
+    .back { display: inline-block; margin-top: 28px; font-family: 'Jost', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-muted); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="label">Kailey Brown ARC Team</p>
+    <h1 id="heading">One moment</h1>
+    <div class="rule" aria-hidden="true"></div>
+
+    <p class="note" id="loading">Looking up this application.</p>
+
+    <div id="details" hidden>
+      <p class="name" id="name"></p>
+      <p class="mail" id="mail"></p>
+      <p class="row"><strong>Book:</strong> <span id="book"></span></p>
+      <p class="row"><strong>Will review on:</strong> <span id="platforms"></span></p>
+      <p class="note" id="state" hidden></p>
+    </div>
+
+    <div class="buttons" id="buttons" hidden>
+      <button type="button" id="approve">Approve and send the book</button>
+      <button type="button" id="decline">Decline</button>
+    </div>
+
+    <p class="result" id="result" role="status" aria-live="polite" hidden></p>
+    <a class="back" href="/" id="back" hidden>kaileybrown.com</a>
+  </main>
+
+<script>
+  // Confirm page for the Approve / Decline buttons in Kailey's "New ARC
+  // application" emails.
+  //
+  // It lives on this site rather than being served by the Apps Script because
+  // a page served from script.google.com fails ("Sorry, unable to open the
+  // file at this time") in any browser signed in to more than one Google
+  // account. Here the script is only called for data, by fetch, and a
+  // cross-site fetch carries no Google sign-in cookies, so it always goes
+  // through as an anonymous request.
+  //
+  // Opening this page changes nothing: it only looks the application up.
+  // The reader is approved or declined when a button below is pressed.
+  //
+  // The link carries: a (which button was tapped), s (Kit subscriber id),
+  // b (book), k (signature made by the script) and w (the script's web app
+  // id). The script refuses anything whose signature does not match, so this
+  // page holds no secret.
+  (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var q = new URLSearchParams(location.search);
+    var action = q.get('a') === 'decline' ? 'decline' : 'approve';
+    var s = q.get('s') || '', b = q.get('b') || '', k = q.get('k') || '', w = q.get('w') || '';
+
+    function fail(message) {
+      $('loading').hidden = true;
+      $('buttons').hidden = true;
+      $('heading').textContent = 'Something is not right';
+      $('result').textContent = message;
+      $('result').dataset.state = 'error';
+      $('result').hidden = false;
+      $('back').hidden = false;
+    }
+
+    // Only ever talk to a Google Apps Script web app, at a fixed address shape.
+    if (!/^\d{1,15}$/.test(s) || !/^\d{1,15}$/.test(b) || !/^[A-Za-z0-9_-]{10,100}$/.test(k) || !/^[A-Za-z0-9_-]{20,200}$/.test(w)) {
+      fail('This link is not valid. Open the newest notification email and try again.');
+      return;
+    }
+    var api = 'https://script.google.com/macros/s/' + w + '/exec';
+    var busy = false;
+
+    fetch(api + '?s=' + s + '&b=' + b + '&k=' + encodeURIComponent(k), { credentials: 'omit', redirect: 'follow' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { fail((d && d.message) || 'This link is not valid.'); return; }
+        $('loading').hidden = true;
+        $('name').textContent = d.name || '(no name given)';
+        $('mail').textContent = d.email || '';
+        $('book').textContent = d.book || '';
+        $('platforms').textContent = d.platforms || 'not stated';
+        $('details').hidden = false;
+
+        if (d.state === 'sent') {
+          $('heading').textContent = 'Already sent';
+          $('state').textContent = 'This reader has already been sent ' + d.book + '. Nothing more to do.';
+          $('state').hidden = false;
+          $('back').hidden = false;
+          return;
+        }
+        if (d.state === 'declined') { $('state').textContent = 'You declined this application earlier. You can still approve it.'; $('state').hidden = false; }
+        if (d.state === 'approved') { $('state').textContent = 'Already approved. The book is on its way or waiting for its file.'; $('state').hidden = false; }
+
+        $('heading').textContent = action === 'decline' ? 'Decline this application?' : 'Approve this application?';
+        // The button that matches the one tapped in the email is the filled one.
+        $('approve').className = action === 'decline' ? 'quiet' : 'go';
+        $('decline').className = action === 'decline' ? 'go' : 'quiet';
+        $('buttons').hidden = false;
+      })
+      .catch(function () { fail('Could not look up this application. Check your connection and open the link again.'); });
+
+    function decide(a) {
+      if (busy) return;
+      busy = true;
+      $('approve').disabled = true; $('decline').disabled = true;
+      $('result').dataset.state = '';
+      $('result').textContent = a === 'approve' ? 'Approving and sending the book...' : 'Declining...';
+      $('result').hidden = false;
+
+      // text/plain keeps this a "simple" request, which Apps Script requires:
+      // it cannot answer the preflight a JSON content type would trigger.
+      fetch(api, {
+        method: 'POST', credentials: 'omit', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ a: a, s: s, b: b, k: k })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          $('result').textContent = (d && d.message) || 'Done.';
+          if (d && d.ok) {
+            $('buttons').hidden = true;
+            $('state').hidden = true;
+            $('heading').textContent = a === 'approve' ? 'Approved' : 'Declined';
+            $('back').hidden = false;
+          } else {
+            $('result').dataset.state = 'error';
+            $('approve').disabled = false; $('decline').disabled = false;
+            busy = false;
+          }
+        })
+        .catch(function () {
+          $('result').dataset.state = 'error';
+          $('result').textContent = 'Could not confirm that this went through. Open the link again to see where it stands before trying again.';
+          busy = false;
+        });
+    }
+    $('approve').addEventListener('click', function () { decide('approve'); });
+    $('decline').addEventListener('click', function () { decide('decline'); });
+  })();
+</script>
+</body>
+</html>
