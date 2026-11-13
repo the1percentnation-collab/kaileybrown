@@ -1,16 +1,31 @@
 // ARC Team page (/arc).
 //
-// Opens the application dialog from any book card, posts the application to
-// the `submitArcApplication` callable, and shows the confirmation. Approval is
-// manual: the server only records the application and emails it to Kailey.
+// Opens the application dialog from any book card, sends the application to
+// Kailey's Kit account, and shows the confirmation.
 //
-// Firebase is imported lazily inside the submit handler, for the same reason as
-// newsletter.js: if the CDN fetch fails at the top of a module, nothing below
-// it runs and the page silently loses its nav and its dialog. Loaded on demand,
-// a CDN problem becomes a visible error message instead.
+// How an application travels: it is posted to the Kit form "ARC Application"
+// (the same public endpoint Kit's own embed code posts to, so no key lives in
+// this file). Kit creates the reader as a subscriber and tags them
+// "ARC Applicant: <Book>". Kailey reviews applicants under that tag in Kit and
+// approves by hand. Nothing is sent to the reader automatically.
+//
+// The tags and custom fields below were created in Kit for this page. If one
+// is deleted or renamed there, applications still arrive but lose that detail.
 //
 // Deep link: /arc?book=<slug> opens the form for that book on load, so a
 // TikTok or Instagram bio can point straight at one title.
+
+const KIT_FORM_ID = '10183976';                       // Kit form: "ARC Application"
+const KIT_ENDPOINT = `https://app.kit.com/forms/${KIT_FORM_ID}/subscriptions`;
+// Kit tag IDs, one "ARC Applicant: <Book>" tag per book slug on this page.
+const KIT_TAGS = {
+  'somewhere-between-dreaming-and-you': '25808851',
+  'landed-on-you': '25808852',
+  '12-days-of-awkward': '25808853',
+  'mafia-romance': '25808854',
+  'copperridge-3': '25808855'
+};
+const PLATFORM_LABELS = { amazon: 'Amazon', goodreads: 'Goodreads' };
 
 const $ = (id) => document.getElementById(id);
 const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,13 +74,9 @@ const submitLabel = submitBtn.firstChild.textContent;
 const agreeInput = $('arc-agree');
 
 // The form shows the same ARC Promise as the page section, copied from it so
-// there is one copy to edit. promiseText is what the reader agreed to; it is
-// sent with the application so the stored record matches what was on screen.
+// there is one copy to edit.
 const promiseSource = $('arc-promise');
 if (promiseSource) $('arc-promise-form').innerHTML = promiseSource.innerHTML;
-const promiseText = promiseSource
-  ? [...promiseSource.querySelectorAll('li')].map((li) => li.textContent.replace(/\s+/g, ' ').trim()).join(' | ')
-  : '';
 
 let opener = null;
 let busy = false;
@@ -79,6 +90,7 @@ function openFor(card, trigger) {
   if (!card) return;
   opener = trigger || null;
 
+  modal.classList.remove('no-cover');
   bookInput.value = card.dataset.book;
   titleEl.textContent = card.dataset.title;
   // Static markup from this page's own cards, never user input.
@@ -166,47 +178,108 @@ form.addEventListener('submit', async (event) => {
   submitBtn.firstChild.textContent = 'Sending...';
   setNote('', '');
 
+  // Honeypot: a field real readers never see. A bot that fills it gets the
+  // same thank-you a person would and nothing is sent.
+  if (website.trim()) { showThanks(); return; }
+
+  const tagId = KIT_TAGS[bookInput.value];
+  if (!tagId) {
+    setNote('Please close this form and choose a book to apply for.', 'error');
+    resetSubmit();
+    return;
+  }
+
+  // Field names are Kit's own: email_address, fields[<custom field key>] and
+  // tags[]. A plain form post with only an Accept header is a "simple" request,
+  // so the browser sends it without a preflight.
+  const body = new FormData();
+  body.append('email_address', email);
+  body.append('fields[first_name]', name);
+  body.append('fields[arc_review_platforms]', platforms.map((p) => PLATFORM_LABELS[p] || p).join(', '));
+  body.append('fields[arc_promise_agreed]', 'Yes, ' + new Date().toISOString().slice(0, 10));
+  body.append('tags[]', tagId);
+
   try {
-    let functions, firebaseReady, httpsCallable;
+    let res;
     try {
-      [{ functions, firebaseReady }, { httpsCallable }] = await Promise.all([
-        import('./firebase.js'),
-        import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js')
-      ]);
+      res = await fetch(KIT_ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body });
     } catch (e) {
       throw new Error('offline');
     }
-    if (!firebaseReady) throw new Error('offline');
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* non-JSON reply, judged by status below */ }
 
-    await httpsCallable(functions, 'submitArcApplication')({
-      book: bookInput.value, name, email, platforms, website,
-      agree: true, promiseText
-    });
+    const status = data && data.status;
 
-    form.hidden = true;
-    thanks.hidden = false;
-    thanks.focus();
+    // Kit sometimes asks for a quick "are you human" check before it accepts a
+    // sign-up. It answers "quarantined" with the address of that check; the
+    // application is only recorded once the reader passes it. Kit's own embed
+    // code handles this the same way, by sending the reader there. The book is
+    // remembered so the thank-you can greet them when Kit sends them back to
+    // /arc?applied=1 (set as the form's redirect in Kit).
+    if (res.ok && status === 'quarantined' && typeof data.url === 'string' && data.url.startsWith('https://app.kit.com/')) {
+      try { sessionStorage.setItem('arcPendingBook', bookInput.value); } catch (e) { /* private mode */ }
+      setNote('One last step: a quick security check to confirm you are a real reader. Taking you there now.', 'ok');
+      setTimeout(() => { location.href = data.url; }, 1600);
+      return;
+    }
+    if (!res.ok || (status && status !== 'success')) {
+      const detail = data && data.errors && (data.errors.messages || data.errors);
+      const err = new Error(Array.isArray(detail) ? detail.join(' ') : 'rejected');
+      err.rejected = true;
+      throw err;
+    }
+
+    showThanks();
     if (typeof gtag === 'function') gtag('event', 'arc_application', { book: bookInput.value });
   } catch (error) {
-    const code = (error && error.code) || '';
-    const offline = error && error.message === 'offline';
-    const message = offline
-      ? 'Applications are offline right now. Please try again in a moment.'
-      : code === 'functions/invalid-argument'
-        ? (error.message || 'Something in the form was not accepted. Check it and try again.')
-        : code === 'functions/resource-exhausted'
-          ? 'Too many attempts just now. Please try again in a few minutes.'
-          : 'Could not send your application just now. Please try again shortly.';
+    const message = error && error.message === 'offline'
+      ? 'Could not reach the sign-up service. Check your connection and try again.'
+      : 'Could not send your application just now. Please try again shortly, or email Kaileybrown.author@gmail.com.';
     setNote(message, 'error');
-    submitBtn.disabled = false;
-    submitBtn.firstChild.textContent = submitLabel;
-    busy = false;
+    resetSubmit();
   }
 });
 
-// ── Deep link ────────────────────────────────────────────────────────────
-const wanted = new URLSearchParams(location.search).get('book');
-if (wanted) {
+function showThanks() {
+  form.hidden = true;
+  thanks.hidden = false;
+  thanks.focus();
+}
+
+function resetSubmit() {
+  submitBtn.disabled = false;
+  submitBtn.firstChild.textContent = submitLabel;
+  busy = false;
+}
+
+// A reader coming back with the browser's Back button from Kit's security
+// check finds the page restored from cache with the button still disabled.
+addEventListener('pageshow', (e) => { if (e.persisted) { resetSubmit(); setNote('', ''); } });
+
+// ── Deep link and return from Kit ────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+
+// /arc?applied=1 is where Kit sends a reader after its security check, or
+// after any sign-up if the form's redirect is set. Show the thank-you.
+if (params.get('applied')) {
+  let pending = null;
+  try { pending = sessionStorage.getItem('arcPendingBook'); sessionStorage.removeItem('arcPendingBook'); } catch (e) { /* private mode */ }
+  const card = pending && [...document.querySelectorAll('.arc-book')].find((c) => c.dataset.book === pending);
+  if (card) {
+    openFor(card, card.querySelector('.arc-cover'));
+  } else {
+    modal.classList.add('no-cover');
+    titleEl.textContent = 'Thank you';
+    coverEl.innerHTML = '';
+    synopsisEl.innerHTML = '';
+    if (typeof modal.showModal === 'function') modal.showModal(); else modal.setAttribute('open', '');
+  }
+  showThanks();
+}
+
+const wanted = params.get('book');
+if (wanted && !params.get('applied')) {
   const card = [...document.querySelectorAll('.arc-book')].find((c) => c.dataset.book === wanted);
   if (card) openFor(card, card.querySelector('.arc-cover'));
 }

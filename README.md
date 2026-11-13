@@ -147,21 +147,28 @@ public/assets/         tokens.css and the logo
 
 ## ARC Team page (`/arc`)
 
-`public/arc.html` + `public/js/arc.js`, backed by the `submitArcApplication`
-callable in `functions/index.js`.
+`public/arc.html` + `public/js/arc.js`. Applications go to Kailey's **Kit**
+account, not to this project's backend.
 
-- A reader picks a book, fills in name, email and review platforms. The function
-  saves the application to `arcApplications` (admin-read only), tags the reader
-  in the CRM (`ARC Team`, `ARC: <title>`), and emails Kailey at
-  kaileybrown.author@gmail.com with subject `ARC Application: <title>`. Reply-To
-  is the reader, so approving is just hitting Reply.
-- The form requires "I agree to the ARC Promise." The Promise text lives once, in
-  the `#arc-promise` list on the page; the form copies it and the wording the
-  reader saw is stored with their application.
-- Approval and delivery are manual. EPUB files are **not** in `public/`: anything
-  there is downloadable by anyone.
-- Deep link to one book: `/arc?book=<slug>`. Slugs live in `ARC_BOOKS`.
-- Revealing an untitled book: swap the `.arc-front.is-tbd` contents for the cover
-  `<img>`, update `data-title` and the `<h3>`, and update its title in `ARC_BOOKS`.
-- Release day for a book: flip its badge to "Out now", set `released: true` in
-  `ARC_BOOKS`, and add its row to the "Leave a review" list.
+- A reader picks a book, fills in name, email and review platforms, and ticks
+  "I agree to the ARC Promise." The page posts to the Kit form **ARC Application**
+  (ID in `KIT_FORM_ID`), the same public endpoint Kit's embed code uses, so no
+  API key is in the site.
+- Kit creates the reader as a subscriber tagged `ARC Applicant: <Book>` (tag IDs
+  in `KIT_TAGS`) with two custom fields: `arc_review_platforms` and
+  `arc_promise_agreed`.
+- Kit may answer `quarantined` and ask the reader to pass a security check first.
+  The page sends them to it. Set the Kit form's redirect to
+  `https://kaileybrown.com/arc?applied=1` so they land back on the thank-you.
+- Approval and delivery are manual: Kailey reviews applicants under each tag in
+  Kit and emails approved readers their file. Kit's automations are a paid
+  feature and the account is on the free plan. EPUB files are **not** in
+  `public/`: anything there is downloadable by anyone.
+- The Promise text lives once, in the `#arc-promise` list on the page; the form
+  copies it.
+- Deep link to one book: `/arc?book=<slug>`.
+- Adding or revealing a book: create its `ARC Applicant:` tag in Kit, add the
+  tag ID to `KIT_TAGS`, and add or update its card in `arc.html`.
+- `submitArcApplication` in `functions/index.js` and the `arcApplications`
+  Firestore rule are the earlier SendGrid-based path. The page no longer calls
+  them and they have never been deployed.

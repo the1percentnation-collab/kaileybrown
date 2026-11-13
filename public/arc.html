@@ -528,6 +528,15 @@
       gap: clamp(28px, 4vw, 44px);
       padding: clamp(28px, 4vw, 48px);
     }
+    /* The thank-you shown when Kit sends a reader back without a book to
+       show: one plain column at every width. Three classes deep so it also
+       beats the phone layout below, which lays the dialog out as a grid. */
+    .arc-modal.no-cover .arc-modal-grid { display: block; }
+    .arc-modal.no-cover .arc-modal-cover,
+    .arc-modal.no-cover .arc-modal-main .rule { display: none; }
+    .arc-modal.no-cover .arc-modal-main { display: grid; gap: 14px; }
+    .arc-modal.no-cover .arc-modal-main > * { grid-column: auto; grid-row: auto; order: 0; }
+    .arc-modal.no-cover .arc-modal-synopsis { display: none; }
     .arc-modal-cover { position: relative; aspect-ratio: 5 / 8; align-self: start; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16); }
     .arc-modal-main { display: grid; gap: 14px; align-content: start; }
     .arc-modal-main h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); padding-right: 36px; }
@@ -955,6 +964,7 @@
             <ul class="rules" id="arc-promise-form"></ul>
           </details>
           <label class="agree"><input type="checkbox" name="agree" id="arc-agree" required> <span id="arc-agree-text">I agree to the ARC Promise.</span></label>
+          <span class="field-help">Applying adds you to Kailey&rsquo;s reader list so she can email you about your ARC. You can unsubscribe at any time.</span>
         </div>
         <div class="hp" aria-hidden="true">
           <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
