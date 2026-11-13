@@ -8,7 +8,7 @@ rebranded: same engine, new brand, empty catalog.
 ## Stack
 
 A **buildless static multi-page app** on Firebase Hosting, plus **one Cloud
-Functions v2 file** (Node 20, CommonJS).
+Functions v2 file** (Node 22, CommonJS).
 
 There is no bundler, no npm on the frontend, no TypeScript, and no build step.
 The only npm project in the repo is `functions/`. Everything in `public/` is
