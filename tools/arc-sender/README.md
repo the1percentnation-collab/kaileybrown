@@ -12,10 +12,10 @@ is deployed by Firebase.
    `ARC Applicant: <Book>`.
 2. Within about 15 minutes Kailey gets an email listing the new applications,
    each with an **Approve** and a **Decline** button.
-3. A button opens a page showing the reader and the book, with one button to
-   confirm. Opening the page changes nothing; only the confirm button acts.
-   Mail apps and security scanners open links on their own, and this stops
-   them from approving anyone.
+3. A button opens `kaileybrown.com/arc-decide` (`public/arc-decide.html`),
+   which shows the reader and the book with one button to confirm. Opening the
+   page changes nothing; only the confirm button acts. Mail apps and security
+   scanners open links on their own, and this stops them from approving anyone.
 4. **Approve** tags the reader `ARC Approved: <Book>`, emails them the EPUB
    from Kailey's Gmail straight away, and tags them `ARC Sent: <Book>`.
    **Decline** tags them `ARC Declined: <Book>`. The reader is told nothing.
@@ -36,10 +36,15 @@ and received the book by email).
   `KIT_API_KEY`.
 - **Web app:** the same project deployed as a web app (Execute as: Me, Who has
   access: Anyone). Its `/exec` address is stored as the script property
-  `WEB_APP_URL`; the buttons in the notification email point at it. Treat that
-  address as private. The links are signed with a random key the script keeps
-  in `ARC_LINK_SECRET`, so a link only works for the reader and book it was
-  made for.
+  `WEB_APP_URL`. The script answers two requests there: a lookup (`doGet`) and
+  the decision itself (`doPost`). The confirm page on the website calls them.
+  The links are signed with a random key the script keeps in
+  `ARC_LINK_SECRET`, so a link only works for the reader and book it was made
+  for, and the script refuses everything else.
+- **Why the page is on the website:** a page served by Apps Script itself fails
+  with "Sorry, unable to open the file at this time" in any browser signed in
+  to more than one Google account, which is most phones. The site page calls
+  the script with no Google sign-in cookies, so it always goes through.
 - **Drive folder:** "ARC Files" in Kailey's My Drive, holding the three EPUBs.
 - **Kit form:** "ARC Application" (ID 10183976). Fields: email only. Confirmation
   email off, redirect after subscribe set to `https://kaileybrown.com/arc?applied=1`.
@@ -84,8 +89,8 @@ Do all of this signed in to the Google account the emails should come from.
 
 ## Changing the script later
 
-The timer always runs the newest saved code. The buttons run the **deployed**
-version, so after editing `Code.gs` also do: Deploy, Manage deployments, edit
+The timer always runs the newest saved code. The confirm page talks to the
+**deployed** version, so after editing `Code.gs` also do: Deploy, Manage deployments, edit
 (pencil), Version: **New version**, Deploy. The web app URL stays the same.
 
 ## Testing
@@ -113,8 +118,8 @@ Run `stop` in the editor. Run `setup` to turn it back on.
   sends at most 40 per run and stops early if the daily allowance runs out.
   The notification emails to Kailey count against the same allowance, which is
   why new applications are grouped into one email per run.
-- "Anyone" access on the web app is needed so the buttons work from any mail
-  app without a Google sign-in. A visit without a valid signed link shows "This
+- "Anyone" access on the web app is needed so the confirm page can reach it
+  without a Google sign-in. A request without a valid signature gets "This
   link is not valid" and nothing else.
 - Tag IDs in `Code.gs` belong to Kailey's Kit account. If a tag is deleted and
   recreated in Kit, its ID changes and must be updated here.

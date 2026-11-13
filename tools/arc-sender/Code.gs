@@ -9,8 +9,9 @@
  *      "ARC Applicant: <Book>".
  *   2. This script emails Kailey the new applications. Each one has an
  *      Approve and a Decline button.
- *   3. Approve opens a page with one confirm button. Confirming tags the
- *      reader "ARC Approved: <Book>", emails them the EPUB from Kailey's Gmail
+ *   3. A button opens kaileybrown.com/arc-decide, which shows the reader and
+ *      one confirm button. Confirming Approve tags the reader
+ *      "ARC Approved: <Book>", emails them the EPUB from Kailey's Gmail
  *      straight away, and tags them "ARC Sent: <Book>".
  *      Decline tags them "ARC Declined: <Book>". The reader is told nothing.
  *   4. Kailey can also approve the old way, by adding "ARC Approved: <Book>"
@@ -24,6 +25,13 @@
  *   - Script property KIT_API_KEY holding a Kit V4 API key.
  *   - Deploy as a web app (Execute as: Me, Who has access: Anyone) and save
  *     its URL in the script property WEB_APP_URL. The buttons need it.
+ *
+ * Why the confirm page is on the website and not served from here
+ *   A page served by Apps Script fails with "Sorry, unable to open the file at
+ *   this time" in any browser signed in to more than one Google account, which
+ *   is most phones. So this script only answers data requests (doGet, doPost);
+ *   the page itself is public/arc-decide.html on the site, which calls this
+ *   script without Google sign-in cookies.
  *   - Run setup() once and approve the permissions it asks for.
  *
  * To add a book: put its EPUB in the "ARC Files" folder and fill in its
@@ -32,7 +40,7 @@
  *
  * After changing this file, update the web app: Deploy, Manage deployments,
  * edit, Version: New version. The timer always runs the latest code, but the
- * buttons run the deployed version.
+ * confirm page talks to the deployed version.
  */
 
 const FOLDER_NAME = 'ARC Files';
@@ -41,6 +49,7 @@ const NOTIFY_EMAIL = 'kaileybrown.author@gmail.com';   // where applications are
 const MAX_SENDS_PER_RUN = 40;      // well under Gmail's daily limit
 const MAX_PER_NOTICE = 25;         // applications listed in one notification email
 const KIT_API = 'https://api.kit.com/v4';
+const DECISION_PAGE = 'https://kaileybrown.com/arc-decide';   // public/arc-decide.html
 
 const BOOKS = [
   {
@@ -74,8 +83,7 @@ const BOOKS = [
 
 /**
  * Sends books to readers approved in Kit, then tells Kailey about new
- * applications. Returns only a short status: details go to the log, because
- * anything returned here could be read by a visitor to the web app.
+ * applications. Returns only a short status; details go to the log.
  */
 function sendApprovedArcs() {
   const lock = LockService.getScriptLock();
@@ -283,7 +291,7 @@ function notifyNewApplicants_() {
   settled.forEach(function (k) { props.setProperty(k, 'settled'); });
   if (!pending.length) return '';
 
-  const base = webAppUrl_();
+  const base = deploymentId_();
   const esc = escapeHtml_;
   const subject = pending.length === 1
     ? 'New ARC application: ' + (pending[0].reader.first_name || pending[0].reader.email_address) + ' for ' + pending[0].book.title
@@ -294,8 +302,8 @@ function notifyNewApplicants_() {
   pending.forEach(function (p) {
     const name = p.reader.first_name || '(no name given)';
     const platforms = (p.reader.fields && p.reader.fields.arc_review_platforms) || 'not stated';
-    const approve = base ? decisionUrl_(base, 'approve', p.reader.id, p.book) : '';
-    const decline = base ? decisionUrl_(base, 'decline', p.reader.id, p.book) : '';
+    const approve = base ? decisionUrl_('approve', p.reader.id, p.book) : '';
+    const decline = base ? decisionUrl_('decline', p.reader.id, p.book) : '';
 
     textBlocks.push([
       name + ' <' + p.reader.email_address + '>',
@@ -339,8 +347,14 @@ function notifyNewApplicants_() {
 
 function webAppUrl_() {
   const saved = PropertiesService.getScriptProperties().getProperty('WEB_APP_URL');
-  if (saved && /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(saved.trim())) return saved.trim();
+  if (saved && /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(saved.trim())) return saved.trim();
   return '';
+}
+
+/** The web app's deployment id, which the confirm page needs to reach this script. */
+function deploymentId_() {
+  const m = webAppUrl_().match(/\/macros\/s\/([A-Za-z0-9_-]+)\/exec$/);
+  return m ? m[1] : '';
 }
 
 /** A private random key, made once, that signs the links so they cannot be forged. */
@@ -360,8 +374,9 @@ function sign_(subscriberId, book) {
   return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/, '');
 }
 
-function decisionUrl_(base, action, subscriberId, book) {
-  return base + '?a=' + action + '&s=' + subscriberId + '&b=' + book.sentTagId + '&k=' + sign_(subscriberId, book);
+function decisionUrl_(action, subscriberId, book) {
+  return DECISION_PAGE + '?a=' + action + '&s=' + subscriberId + '&b=' + book.sentTagId +
+    '&k=' + sign_(subscriberId, book) + '&w=' + deploymentId_();
 }
 
 function bookBySentTag_(id) {
@@ -383,98 +398,65 @@ function verify_(subscriberId, sentTagId, sig) {
   return diff === 0 ? book : null;
 }
 
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
 /**
- * The page a button in the notification email opens.
- *
- * Opening the page changes nothing. Mail apps and security scanners open
- * links in emails on their own; if a visit alone approved a reader, a scanner
- * could approve everyone. The reader is only approved or declined when the
- * button on this page is pressed.
+ * Answers the confirm page's first question: who is this, and where does
+ * their application stand? Changes nothing. Mail apps and security scanners
+ * open links in emails on their own; if a visit alone approved a reader, a
+ * scanner could approve everyone. Only doPost, sent when the button on the
+ * page is pressed, acts.
  */
 function doGet(e) {
   const q = (e && e.parameter) || {};
   const book = verify_(q.s, q.b, q.k);
-  if (!book) return page_('This link is not valid', '<p>It may have been copied incorrectly. Open the newest notification email and try again, or approve the reader in Kit.</p>');
+  if (!book) return json_({ ok: false, message: 'This link is not valid. Open the newest notification email and try again, or approve the reader in Kit.' });
 
   let reader, tags;
   try {
     reader = kitSubscriber_(q.s);
     tags = kitSubscriberTagIds_(q.s);
   } catch (err) {
-    return page_('Could not reach Kit', '<p>Please try the link again in a minute.</p>');
+    return json_({ ok: false, message: 'Could not reach Kit. Please try the link again in a minute.' });
   }
 
-  const esc = escapeHtml_;
-  const platforms = (reader.fields && reader.fields.arc_review_platforms) || 'not stated';
-  const details =
-    '<p class="name">' + esc(reader.first_name || '(no name given)') + '</p>' +
-    '<p class="mail">' + esc(reader.email_address) + '</p>' +
-    '<p><strong>Book:</strong> ' + esc(book.title) + '</p>' +
-    '<p><strong>Will review on:</strong> ' + esc(platforms) + '</p>';
-
-  if (tags[book.sentTagId]) {
-    return page_('Already sent', details + '<p class="state">This reader has already been sent ' + esc(book.title) + '. Nothing more to do.</p>');
-  }
-
-  const state = tags[book.declinedTagId] ? '<p class="state">You declined this application earlier. You can still approve it.</p>'
-    : tags[book.approvedTagId] ? '<p class="state">Already approved. The book is on its way or waiting for its file.</p>'
-    : '';
-  const wantDecline = q.a === 'decline';
-  const call = function (action) {
-    return 'decide(\'' + action + '\')';
-  };
-  const buttons =
-    '<div id="buttons">' +
-    '<button class="' + (wantDecline ? 'quiet' : 'go') + '" onclick="' + call('approve') + '">Approve and send the book</button>' +
-    '<button class="' + (wantDecline ? 'go' : 'quiet') + '" onclick="' + call('decline') + '">Decline</button>' +
-    '</div><p id="result" class="state"></p>' +
-    '<script>' +
-    'function decide(a){var b=document.getElementById("buttons"),r=document.getElementById("result");' +
-    'b.style.display="none";r.textContent=a==="approve"?"Approving and sending the book...":"Declining...";' +
-    'google.script.run.withSuccessHandler(function(m){r.textContent=m;})' +
-    '.withFailureHandler(function(){r.textContent="Something went wrong. Nothing was changed. Please try again.";b.style.display="";})' +
-    '.arcDecision({a:a,s:' + JSON.stringify(String(q.s)) + ',b:' + JSON.stringify(String(q.b)) + ',k:' + JSON.stringify(String(q.k)) + '});}' +
-    '</script>';
-
-  return page_(wantDecline ? 'Decline this application?' : 'Approve this application?', details + state + buttons);
+  return json_({
+    ok: true,
+    name: reader.first_name || '',
+    email: reader.email_address,
+    book: book.title,
+    platforms: (reader.fields && reader.fields.arc_review_platforms) || '',
+    state: tags[book.sentTagId] ? 'sent' : tags[book.declinedTagId] ? 'declined' : tags[book.approvedTagId] ? 'approved' : 'pending'
+  });
 }
 
-function page_(heading, bodyHtml) {
-  const html =
-    '<!DOCTYPE html><html><head><base target="_top"><style>' +
-    'body{font-family:Georgia,serif;font-size:17px;line-height:1.6;color:#1a1a1a;margin:0;padding:28px 20px;background:#fff;}' +
-    '.wrap{max-width:460px;margin:0 auto;}' +
-    '.label{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#E31837;margin:0 0 10px;}' +
-    'h1{font-weight:500;font-size:28px;line-height:1.15;margin:0 0 22px;color:#000;}' +
-    '.name{font-size:20px;color:#000;margin:0;}.mail{font-family:Arial,sans-serif;font-size:14px;color:#6e6e6e;margin:0 0 14px;}' +
-    'p{margin:0 0 8px;}.state{margin-top:18px;color:#6e6e6e;}' +
-    '#buttons{margin-top:26px;}' +
-    'button{display:block;width:100%;padding:16px;margin:0 0 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:0;}' +
-    '.go{background:#E31837;color:#fff;border:1px solid #E31837;}.quiet{background:#fff;color:#1a1a1a;border:1px solid #1a1a1a;}' +
-    '</style></head><body><div class="wrap"><p class="label">Kailey Brown ARC Team</p><h1>' + escapeHtml_(heading) + '</h1>' +
-    bodyHtml + '</div></body></html>';
-  return HtmlService.createHtmlOutput(html)
-    .setTitle('ARC application')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+/** The confirm button. Body: {"a":"approve"|"decline","s":..,"b":..,"k":..} */
+function doPost(e) {
+  let req = {};
+  try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { req = {}; }
+  return json_(decide_(req));
 }
 
 /**
- * Called by the button on the page. Does nothing unless the request carries a
- * valid signature for that reader and book, so it is safe to be public.
- * Returns the sentence shown on the page.
+ * Carries out a decision. Does nothing unless the request carries a valid
+ * signature for that reader and book. Returns { ok, message }; the message is
+ * the sentence shown on the page.
  */
-function arcDecision(req) {
+function decide_(req) {
   req = req || {};
   const book = verify_(req.s, req.b, req.k);
-  if (!book) return 'This link is not valid. Nothing was changed.';
+  if (!book) return { ok: false, message: 'This link is not valid. Nothing was changed.' };
   const action = req.a === 'decline' ? 'decline' : 'approve';
   const props = PropertiesService.getScriptProperties();
+  const done = function (message) { return { ok: true, message: message }; };
 
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(25000);            // never overlap the timer's own sending
   } catch (e) {
-    return 'The sender is busy right now. Nothing was changed. Please try again in a minute.';
+    return { ok: false, message: 'The sender is busy right now. Nothing was changed. Please try again in a minute.' };
   }
   try {
     const reader = kitSubscriber_(req.s);
@@ -482,36 +464,36 @@ function arcDecision(req) {
     const already = tags[book.sentTagId] || props.getProperty(ledgerKey_(book, reader));
 
     if (action === 'decline') {
-      if (already) return 'This reader was already sent ' + book.title + ', so it cannot be declined now.';
+      if (already) return done('This reader was already sent ' + book.title + ', so it cannot be declined now.');
       kitTag_(book.declinedTagId, reader.id);
       if (tags[book.approvedTagId]) kitUntag_(book.approvedTagId, reader.id);
       Logger.log('DECLINED ' + reader.email_address + ' for ' + book.title);
-      return 'Declined. Nothing was sent to the reader.';
+      return done('Declined. Nothing was sent to the reader.');
     }
 
-    if (already) return 'This reader was already sent ' + book.title + '. Nothing more to do.';
+    if (already) return done('This reader was already sent ' + book.title + '. Nothing more to do.');
     kitTag_(book.approvedTagId, reader.id);
     if (tags[book.declinedTagId]) kitUntag_(book.declinedTagId, reader.id);
 
     if (!book.fileName) {
       Logger.log('APPROVED ' + reader.email_address + ' for ' + book.title + ' (no file yet)');
-      return 'Approved. ' + book.title + ' has no file yet, so the reader will be sent it automatically once the file is added.';
+      return done('Approved. ' + book.title + ' has no file yet, so the reader will be sent it automatically once the file is added.');
     }
     if (MailApp.getRemainingDailyQuota() < 1) {
-      return 'Approved. Gmail\'s daily sending limit has been reached, so the book will go out automatically tomorrow.';
+      return done('Approved. Gmail\'s daily sending limit has been reached, so the book will go out automatically tomorrow.');
     }
     let file;
     try {
       file = findFile_(book.fileName);
     } catch (e) {
       Logger.log('APPROVED ' + reader.email_address + ' for ' + book.title + ' but ' + e.message);
-      return 'Approved, but the book file could not be found in Google Drive. It will be sent automatically once the file is back in the "' + FOLDER_NAME + '" folder.';
+      return done('Approved, but the book file could not be found in Google Drive. It will be sent automatically once the file is back in the "' + FOLDER_NAME + '" folder.');
     }
     Logger.log(deliver_(book, reader, file, props));
-    return 'Approved. ' + book.title + ' has been emailed to ' + reader.email_address + '.';
+    return done('Approved. ' + book.title + ' has been emailed to ' + reader.email_address + '.');
   } catch (e) {
     Logger.log('PROBLEM with a decision: ' + e.message);
-    return 'Something went wrong talking to Kit. Please try again in a minute.';
+    return { ok: false, message: 'Something went wrong talking to Kit. Please try again in a minute.' };
   } finally {
     lock.releaseLock();
   }
@@ -611,7 +593,7 @@ function setup() {
 
   linkSecret_();
   report.push(webAppUrl_()
-    ? 'Approve and Decline buttons: on.'
+    ? 'Approve and Decline buttons: on. They open ' + DECISION_PAGE
     : 'Approve and Decline buttons: PROBLEM, script property WEB_APP_URL is missing or is not a /exec web app address. New applications will still be announced, without buttons.');
   report.push('New applications are announced to: ' + NOTIFY_EMAIL);
 
