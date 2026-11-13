@@ -103,7 +103,7 @@ jobs:
             --non-interactive \
             --force \
           || {
-            echo "::error::Cloud Functions deploy failed. Firestore rules in the earlier step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
+            echo "::error::Cloud Functions deploy failed. Firestore rules in the earlier step DID deploy. 'Permissions denied enabling <name>.googleapis.com' means that Google Cloud API is switched off for kaileybrown-48e22 and a project owner has to enable it in the console (APIs & Services > Library). Functions v2 also require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
             exit 1
           }
 
