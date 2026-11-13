@@ -155,6 +155,9 @@ callable in `functions/index.js`.
   in the CRM (`ARC Team`, `ARC: <title>`), and emails Kailey at
   kaileybrown.author@gmail.com with subject `ARC Application: <title>`. Reply-To
   is the reader, so approving is just hitting Reply.
+- The form requires "I agree to the ARC Promise." The Promise text lives once, in
+  the `#arc-promise` list on the page; the form copies it and the wording the
+  reader saw is stored with their application.
 - Approval and delivery are manual. EPUB files are **not** in `public/`: anything
   there is downloadable by anyone.
 - Deep link to one book: `/arc?book=<slug>`. Slugs live in `ARC_BOOKS`.

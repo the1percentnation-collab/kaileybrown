@@ -4984,7 +4984,7 @@ const ARC_INBOX = 'kaileybrown.author@gmail.com';
 const ARC_BOOKS = {
   'somewhere-between-dreaming-and-you': { title: 'Somewhere Between Dreaming & You', released: true },
   'landed-on-you':                      { title: 'Landed On You',                    released: true },
-  '12-days-of-awkward':                 { title: '12 Days of Awkward',               released: false },
+  '12-days-of-awkward':                 { title: '12 Days of Awkward',               released: true },
   'mafia-romance':                      { title: 'Untitled Mafia Romance',           released: false },
   'copperridge-3':                      { title: 'Copperridge Book 3',               released: false }
 };
@@ -5020,6 +5020,10 @@ exports.submitArcApplication = onCall(
     if (!name) throw new HttpsError('invalid-argument', 'Please enter your name.');
     if (!EMAIL_RE.test(email)) throw new HttpsError('invalid-argument', 'Please enter a valid email address.');
     if (!platforms.length) throw new HttpsError('invalid-argument', 'Please choose where you will post your review.');
+    // The reader must tick "I agree to the ARC Promise." The wording they saw
+    // is stored with the application so the record can be defended later.
+    if (data.agree !== true) throw new HttpsError('invalid-argument', 'Please agree to the ARC Promise to apply.');
+    const promiseText = (data.promiseText || '').toString().trim().slice(0, 1500);
 
     // Unauthenticated, so throttled by IP. Generous enough for one reader
     // applying for every book, tight enough to stop a script.
@@ -5042,6 +5046,9 @@ exports.submitArcApplication = onCall(
       name,
       email,
       platforms,
+      promiseAgreed: true,
+      promiseAgreedAt: FV.serverTimestamp(),
+      promiseText: promiseText || 'Agreed to the ARC Promise on the application form',
       status: 'pending',          // pending → approved | declined, set by Kailey
       emailStatus: 'pending',
       createdAt: FV.serverTimestamp(),
@@ -5076,6 +5083,7 @@ exports.submitArcApplication = onCall(
       `Name: ${name}`,
       `Email: ${email}`,
       `Will review on: ${platformLabels.join(', ')}`,
+      'ARC Promise: Agreed',
       `Book status: ${book.released ? 'Released' : 'Unreleased'}`,
       '',
       'Reply to this email to reach the reader directly.'
@@ -5088,6 +5096,7 @@ exports.submitArcApplication = onCall(
         ${row('Name', escHtml(name))}
         ${row('Email', `<a href="mailto:${escHtml(email)}" style="color:#000;">${escHtml(email)}</a>`)}
         ${row('Will review on', escHtml(platformLabels.join(', ')))}
+        ${row('ARC Promise', 'Agreed')}
         ${row('Book status', book.released ? 'Released' : 'Unreleased')}
       </table>
       <p style="font-size:14px;color:#6E6E6E;margin-top:22px;">Reply to this email to reach the reader directly.</p>
