@@ -160,8 +160,9 @@ account, not to this project's backend.
 - Kit may answer `quarantined` and ask the reader to pass a security check first.
   The page sends them to it. Set the Kit form's redirect to
   `https://kaileybrown.com/arc?applied=1` so they land back on the thank-you.
-- Approval and delivery are manual: Kailey reviews applicants under each tag in
-  Kit and emails approved readers their file. Kit's automations are a paid
+- Approval is manual, delivery is automatic: Kailey adds `ARC Approved: <Book>`
+  to a reader in Kit and `tools/arc-sender/` (a Google Apps Script in her
+  Google account) emails them the EPUB. Kit's own automations are a paid
   feature and the account is on the free plan. EPUB files are **not** in
   `public/`: anything there is downloadable by anyone.
 - The Promise text lives once, in the `#arc-promise` list on the page; the form
