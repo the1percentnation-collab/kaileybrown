@@ -563,6 +563,24 @@
     .check:has(input:checked) { border-color: var(--red); background: var(--red-tint); }
     .check:has(input:focus-visible) { outline: 2px solid var(--red); outline-offset: 2px; }
     .field-help { font-size: 0.85rem; color: var(--ink-muted); }
+    .promise-intro { text-align: center; margin: 0 auto 28px; }
+    .promise-box { border: 1px solid var(--border); background: var(--surface); }
+    .promise-box summary {
+      padding: 12px 16px; min-height: 44px; cursor: pointer;
+      font-family: var(--sans-label); font-size: 11px; font-weight: 500;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-strong);
+    }
+    .promise-box summary:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    .promise-box .rules { padding: 4px 16px 16px; gap: 10px; font-size: 0.9rem; line-height: 1.55; }
+    .promise-box .rules li { padding-left: 22px; }
+    .promise-box .rules li::before { width: 10px; top: 0.75em; }
+    .agree {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 6px 0; min-height: 44px; cursor: pointer;
+      font-size: 1rem; color: var(--ink-strong);
+    }
+    .agree input { width: 20px; height: 20px; margin: 4px 0 0; flex: none; accent-color: var(--red); }
+    .agree input:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
     /* Off-screen, not display:none — some bots skip fields they can tell are hidden. */
     .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
     .arc-form .btn { justify-self: start; }
@@ -612,6 +630,7 @@
       .arc-form, .arc-thanks { order: 1; }
       .arc-modal-synopsis { order: 2; font-size: 0.92rem; color: var(--ink-muted); padding-top: 18px; border-top: 1px solid var(--border); }
       .arc-form .btn, .arc-thanks .btn { width: 100%; }
+      .review-links .btn { flex: 1 1 130px; }
       /* The leather placeholder is 76px wide here: keep only its title. */
       .arc-modal-cover .tbd-inner { padding: 8px; }
       .arc-modal-cover .tbd-inner .label, .arc-modal-cover .tbd-rule { display: none; }
@@ -728,8 +747,6 @@
           </div>
         </article>
 
-        <!-- Status matches the home page ("Coming soon"). Flip to "Out now"
-             on release day and add its review links below. -->
         <article class="arc-book fade-up" data-book="12-days-of-awkward" data-title="12 Days of Awkward">
           <button class="arc-cover" type="button" data-apply aria-haspopup="dialog">
             <span class="arc-front"><img src="/assets/12-days-of-awkward.jpg" alt="" loading="lazy" onerror="this.remove()"></span>
@@ -737,7 +754,7 @@
             <span class="vh">Apply for an ARC of 12 Days of Awkward</span>
           </button>
           <div class="arc-body">
-            <span class="label is-red">Coming soon</span>
+            <span class="label is-red">Out now</span>
             <h3>12 Days of Awkward</h3>
             <p class="arc-tagline">A fake dating, he-fell-first holiday romcom set in the Christmas Capital of Texas.</p>
             <div class="arc-synopsis">
@@ -834,28 +851,29 @@
     </div>
   </section>
 
-  <!-- ════════ GUIDELINES ════════ -->
-  <section class="section" id="guidelines" aria-labelledby="guidelines-label">
+  <!-- ════════ THE ARC PROMISE ════════
+       Kailey's wording, verbatim. The application form shows this same list
+       (arc.js copies it from here) above the "I agree" checkbox, so there is
+       one copy to edit. -->
+  <section class="section" id="promise" aria-labelledby="promise-label">
     <div class="wrap-narrow">
       <div class="section-head is-centered fade-up">
-        <p class="label is-red" id="guidelines-label">ARC guidelines</p>
+        <p class="label is-red" id="promise-label">The ARC Promise</p>
         <div class="rule" aria-hidden="true"></div>
       </div>
-      <ul class="rules fade-up">
-        <li><strong>Already-released books:</strong> please post your review as soon as you finish reading.</li>
-        <!-- TODO(brand): Kailey to confirm the review timing for unreleased books. -->
-        <li><strong>Unreleased books:</strong> please post your review by release day.</li>
-        <li><strong>Be honest.</strong> You&rsquo;re never required to leave a positive review.</li>
-        <li><strong>Missed a review?</strong> No penalty. You&rsquo;ll just get a friendly reminder.</li>
-        <!-- TODO(brand): Kailey to confirm this guideline. -->
-        <li><strong>Keep it to yourself.</strong> Your ARC is for you alone. Please don&rsquo;t share it or upload it anywhere.</li>
+      <p class="lede promise-intro fade-up">Thanks for reading early! By joining, you agree to:</p>
+      <ul class="rules fade-up" id="arc-promise">
+        <li><strong>Keep it private.</strong> Don&rsquo;t share your login, or copy, screenshot, or repost the book.</li>
+        <li><strong>Be honest.</strong> Reviews don&rsquo;t have to be positive, just genuine.</li>
+        <li><strong>Skip spoilers.</strong> Tag or hide any big twists.</li>
+        <li><strong>Disclose your copy.</strong> Add &ldquo;I received an advance copy and am voluntarily leaving an honest review.&rdquo;</li>
+        <li><strong>Leave a review</strong> on Amazon and/or Goodreads when you finish. No penalty if you fall behind, just a friendly reminder.</li>
       </ul>
     </div>
   </section>
 
   <!-- ════════ LEAVE A REVIEW ════════
-       Only released books get buttons. Add a Goodreads button to a row the
-       moment its link exists; add a row for each book on release day. -->
+       Only released books get a row. Add one for each book on release day. -->
   <section class="section on-black" id="reviews" aria-labelledby="reviews-label">
     <div class="wrap">
       <div class="section-head is-centered fade-up">
@@ -871,18 +889,24 @@
         <li class="review-item">
           <h3>Somewhere Between Dreaming &amp; You</h3>
           <div class="review-links">
-            <a class="btn" href="https://a.co/d/08V4cTYt" target="_blank" rel="noopener">Review on Amazon<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
-            <!-- TODO(links): Goodreads button once Kailey sends the link. -->
+            <a class="btn" href="https://www.amazon.com/dp/B0GQP3FZ6C" target="_blank" rel="noopener">Amazon<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+            <a class="btn" href="https://www.goodreads.com/book/show/249129213-somewhere-between-dreaming-you" target="_blank" rel="noopener">Goodreads<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </li>
         <li class="review-item">
           <h3>Landed On You</h3>
           <div class="review-links">
-            <a class="btn" href="https://a.co/d/0eXWcKPP" target="_blank" rel="noopener">Review on Amazon<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
-            <!-- TODO(links): Goodreads button once Kailey sends the link. -->
+            <a class="btn" href="https://www.amazon.com/dp/B0H1JP3TPL" target="_blank" rel="noopener">Amazon<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+            <a class="btn" href="https://www.goodreads.com/book/show/251557783-landed-on-you" target="_blank" rel="noopener">Goodreads<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
           </div>
         </li>
-        <!-- TODO(links): 12 Days of Awkward row on release (Amazon + Goodreads). -->
+        <li class="review-item">
+          <h3>12 Days of Awkward</h3>
+          <div class="review-links">
+            <a class="btn" href="https://www.amazon.com/dp/B0HBH1J6ZK" target="_blank" rel="noopener">Amazon<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+            <a class="btn" href="https://www.goodreads.com/book/show/255891294" target="_blank" rel="noopener">Goodreads<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+          </div>
+        </li>
       </ul>
       <p class="review-later muted fade-up">Reading an upcoming book? Review links for it will appear here on release day.</p>
     </div>
@@ -925,6 +949,13 @@
           </div>
           <span class="field-help">Choose one or both.</span>
         </fieldset>
+        <div class="field">
+          <details class="promise-box">
+            <summary>Read the ARC Promise</summary>
+            <ul class="rules" id="arc-promise-form"></ul>
+          </details>
+          <label class="agree"><input type="checkbox" name="agree" id="arc-agree" required> <span id="arc-agree-text">I agree to the ARC Promise.</span></label>
+        </div>
         <div class="hp" aria-hidden="true">
           <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>

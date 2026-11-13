@@ -56,6 +56,16 @@ const synopsisEl = $('arc-modal-synopsis');
 const bookInput = $('arc-book');
 const submitBtn = form.querySelector('button[type="submit"]');
 const submitLabel = submitBtn.firstChild.textContent;
+const agreeInput = $('arc-agree');
+
+// The form shows the same ARC Promise as the page section, copied from it so
+// there is one copy to edit. promiseText is what the reader agreed to; it is
+// sent with the application so the stored record matches what was on screen.
+const promiseSource = $('arc-promise');
+if (promiseSource) $('arc-promise-form').innerHTML = promiseSource.innerHTML;
+const promiseText = promiseSource
+  ? [...promiseSource.querySelectorAll('li')].map((li) => li.textContent.replace(/\s+/g, ' ').trim()).join(' | ')
+  : '';
 
 let opener = null;
 let busy = false;
@@ -82,6 +92,8 @@ function openFor(card, trigger) {
   form.hidden = false;
   thanks.hidden = true;
   form.querySelectorAll('input[name="platforms"]').forEach((c) => { c.checked = false; });
+  agreeInput.checked = false;
+  form.querySelector('.promise-box').open = false;
   setNote('', '');
   submitBtn.disabled = false;
   submitBtn.firstChild.textContent = submitLabel;
@@ -143,6 +155,12 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  if (!agreeInput.checked) {
+    setNote('Please agree to the ARC Promise to apply.', 'error');
+    agreeInput.focus();
+    return;
+  }
+
   busy = true;
   submitBtn.disabled = true;
   submitBtn.firstChild.textContent = 'Sending...';
@@ -161,7 +179,8 @@ form.addEventListener('submit', async (event) => {
     if (!firebaseReady) throw new Error('offline');
 
     await httpsCallable(functions, 'submitArcApplication')({
-      book: bookInput.value, name, email, platforms, website
+      book: bookInput.value, name, email, platforms, website,
+      agree: true, promiseText
     });
 
     form.hidden = true;
