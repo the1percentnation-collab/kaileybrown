@@ -4968,3 +4968,150 @@ exports.generateCourseLesson = onCall({ timeoutSeconds: 300 }, async (request) =
   }
   return { lesson };
 });
+
+// ────────────────────────────────────────────────────────────────
+// ARC Team — submitArcApplication (public callable)
+// ────────────────────────────────────────────────────────────────
+// A reader on /arc applies for an Advance Reader Copy of one book. Approval is
+// manual: this only records the application and emails it to Kailey. Nothing
+// is sent to the reader except the on-screen confirmation.
+//
+// The book list is an allowlist, keyed by the slug the page sends. The title
+// here is what lands in the email subject ("ARC Application: <title>"), so a
+// reader can never inject their own subject line. When an untitled book is
+// revealed, change its title here AND its data-title on public/arc.html.
+const ARC_INBOX = 'kaileybrown.author@gmail.com';
+const ARC_BOOKS = {
+  'somewhere-between-dreaming-and-you': { title: 'Somewhere Between Dreaming & You', released: true },
+  'landed-on-you':                      { title: 'Landed On You',                    released: true },
+  '12-days-of-awkward':                 { title: '12 Days of Awkward',               released: false },
+  'mafia-romance':                      { title: 'Untitled Mafia Romance',           released: false },
+  'copperridge-3':                      { title: 'Copperridge Book 3',               released: false }
+};
+const ARC_PLATFORMS = { amazon: 'Amazon', goodreads: 'Goodreads' };
+
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+exports.submitArcApplication = onCall(
+  { secrets: [sendgridKey] },
+  async (request) => {
+    const db = admin.firestore();
+    const FV = admin.firestore.FieldValue;
+    const data = request.data || {};
+
+    // Honeypot: a field real readers never see. A bot that fills it gets the
+    // same success response a person would, so it learns nothing, and nothing
+    // is stored or sent.
+    if ((data.website || '').toString().trim()) return { ok: true };
+
+    const name = (data.name || '').toString().trim().replace(/\s+/g, ' ').slice(0, 120);
+    const email = (data.email || '').toString().trim().toLowerCase().slice(0, 200);
+    const slug = (data.book || '').toString().trim();
+    const platforms = Array.isArray(data.platforms)
+      ? [...new Set(data.platforms.map((p) => String(p)))].filter((p) => ARC_PLATFORMS[p])
+      : [];
+
+    const book = ARC_BOOKS[slug];
+    if (!book) throw new HttpsError('invalid-argument', 'Please choose a book to apply for.');
+    if (!name) throw new HttpsError('invalid-argument', 'Please enter your name.');
+    if (!EMAIL_RE.test(email)) throw new HttpsError('invalid-argument', 'Please enter a valid email address.');
+    if (!platforms.length) throw new HttpsError('invalid-argument', 'Please choose where you will post your review.');
+
+    // Unauthenticated, so throttled by IP. Generous enough for one reader
+    // applying for every book, tight enough to stop a script.
+    await rateLimitCaller(db, request, { action: 'submitArcApplication', max: 10, windowSec: 600 });
+
+    // One application per reader per book. A second submit updates the record
+    // instead of sending Kailey a duplicate email.
+    const emailHash = crypto.createHash('sha256').update(email).digest('hex').slice(0, 24);
+    const ref = db.collection('arcApplications').doc(`${slug}__${emailHash}`);
+    const existing = await ref.get();
+    if (existing.exists) {
+      await ref.set({ name, platforms, updatedAt: FV.serverTimestamp() }, { merge: true });
+      return { ok: true, duplicate: true };
+    }
+
+    const platformLabels = platforms.map((p) => ARC_PLATFORMS[p]);
+    await ref.set({
+      bookSlug: slug,
+      bookTitle: book.title,
+      name,
+      email,
+      platforms,
+      status: 'pending',          // pending → approved | declined, set by Kailey
+      emailStatus: 'pending',
+      createdAt: FV.serverTimestamp(),
+      updatedAt: FV.serverTimestamp()
+    });
+
+    // CRM copy: the portal's contact list is where Kailey can see every ARC
+    // reader in one place, tagged by book. Best-effort; never blocks the apply.
+    try {
+      const companyId = await resolveAcademyCompanyId(db);
+      if (companyId) {
+        const contactRef = await upsertCrmContact(db, companyId, {
+          name, email, source: 'ARC Team', tags: ['ARC Team', `ARC: ${book.title}`.slice(0, 40)]
+        });
+        await contactRef.collection('activities').add({
+          type: 'arc_application',
+          description: `Applied for an ARC of "${book.title}" (reviews on ${platformLabels.join(' and ')})`,
+          actorUid: 'system', actorName: 'ARC Team', createdAt: FV.serverTimestamp(),
+          meta: { bookSlug: slug, applicationId: ref.id }
+        });
+      }
+    } catch (e) {
+      console.warn('[submitArcApplication] CRM upsert failed:', e && e.message);
+    }
+
+    // The email to Kailey. Reply-To is the reader, so approving someone is
+    // just hitting Reply.
+    const subject = `ARC Application: ${book.title}`;
+    const text = [
+      `New ARC application for ${book.title}.`,
+      '',
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Will review on: ${platformLabels.join(', ')}`,
+      `Book status: ${book.released ? 'Released' : 'Unreleased'}`,
+      '',
+      'Reply to this email to reach the reader directly.'
+    ].join('\n');
+    const row = (k, v) => `<tr><td style="padding:6px 14px 6px 0;color:#6E6E6E;font-size:13px;white-space:nowrap;">${k}</td><td style="padding:6px 0;font-size:15px;color:#000;">${v}</td></tr>`;
+    const html = `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1A1A1A;">
+      <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#E31837;margin:0 0 8px;">ARC application</p>
+      <h2 style="font-weight:500;font-size:26px;margin:0 0 18px;color:#000;">${escHtml(book.title)}</h2>
+      <table style="border-collapse:collapse;">
+        ${row('Name', escHtml(name))}
+        ${row('Email', `<a href="mailto:${escHtml(email)}" style="color:#000;">${escHtml(email)}</a>`)}
+        ${row('Will review on', escHtml(platformLabels.join(', ')))}
+        ${row('Book status', book.released ? 'Released' : 'Unreleased')}
+      </table>
+      <p style="font-size:14px;color:#6E6E6E;margin-top:22px;">Reply to this email to reach the reader directly.</p>
+    </div>`;
+
+    try {
+      sgMail.setApiKey(sendgridKey.value());
+      await sgMail.send({
+        to: ARC_INBOX,
+        from: { email: FROM_EMAIL, name: 'Kailey Brown ARC Team' },
+        replyTo: { email, name },
+        subject,
+        text,
+        html,
+        customArgs: { type: 'arc_application', bookSlug: slug }
+      });
+      await ref.set({ emailStatus: 'sent' }, { merge: true });
+    } catch (e) {
+      // The application is already saved (and in the CRM), so the reader still
+      // gets their confirmation. The failure is recorded for follow-up.
+      console.error('[submitArcApplication] email failed:', e && e.message);
+      await ref.set({ emailStatus: 'failed', emailError: String((e && e.message) || 'unknown').slice(0, 300) }, { merge: true });
+    }
+
+    return { ok: true };
+  }
+);

@@ -144,3 +144,21 @@ public/assets/         tokens.css and the logo
 - **`cleanUrls` and the catch-all rewrite coexist.** Real files win, so every
   page is reachable both as `/courses.html` and `/courses`, and only unknown
   paths fall through to the marketing home page.
+
+## ARC Team page (`/arc`)
+
+`public/arc.html` + `public/js/arc.js`, backed by the `submitArcApplication`
+callable in `functions/index.js`.
+
+- A reader picks a book, fills in name, email and review platforms. The function
+  saves the application to `arcApplications` (admin-read only), tags the reader
+  in the CRM (`ARC Team`, `ARC: <title>`), and emails Kailey at
+  kaileybrown.author@gmail.com with subject `ARC Application: <title>`. Reply-To
+  is the reader, so approving is just hitting Reply.
+- Approval and delivery are manual. EPUB files are **not** in `public/`: anything
+  there is downloadable by anyone.
+- Deep link to one book: `/arc?book=<slug>`. Slugs live in `ARC_BOOKS`.
+- Revealing an untitled book: swap the `.arc-front.is-tbd` contents for the cover
+  `<img>`, update `data-title` and the `<h3>`, and update its title in `ARC_BOOKS`.
+- Release day for a book: flip its badge to "Out now", set `released: true` in
+  `ARC_BOOKS`, and add its row to the "Leave a review" list.

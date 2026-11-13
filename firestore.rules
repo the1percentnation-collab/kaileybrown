@@ -831,6 +831,19 @@ service cloud.firestore {
     }
 
     // ────────────────────────────────────────────────────────────────
+    // ARC applications — written only by the submitArcApplication Cloud
+    // Function (Admin SDK). Admins can read them and mark a decision; the
+    // public site never touches this collection directly.
+    // ────────────────────────────────────────────────────────────────
+    match /arcApplications/{applicationId} {
+      allow read: if isAnyAdmin();
+      allow update: if isAnyAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'decidedAt', 'note', 'updatedAt']);
+      allow create, delete: if false;
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // Bug reports — written by the reportBug Cloud Function (Admin SDK).
     // Owner can read and update status; nobody can create/delete from client.
     // ────────────────────────────────────────────────────────────────
