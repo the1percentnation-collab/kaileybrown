@@ -8,6 +8,23 @@ EPUB as an attachment from Kailey's Gmail, and tagged **ARC Sent: \<Book\>**.
 It runs in Kailey's Google account, not on the website. Nothing in this folder
 is deployed by Firebase.
 
+## Where it is installed
+
+Set up on 2026-11-13 and tested end to end (a test reader was approved in Kit
+and received the book by email).
+
+- **Apps Script project:** "ARC Sender" in `kaileybrown.author@gmail.com`,
+  script ID `1LeGSvQt8uMwb89ltIhp4KEAOtZWaWp89gv1O7xFb9cBkWpWdXMDbR01T`. It holds
+  one file, `Code.gs`, identical to the copy here, and one trigger,
+  `sendApprovedArcs`, every 10 minutes.
+- **Kit key:** a V4 API key named "ARC sender", stored as the script property
+  `KIT_API_KEY`.
+- **Drive folder:** "ARC Files" in Kailey's My Drive, holding the three EPUBs.
+- **Kit form:** "ARC Application" (ID 10183976). Fields: email only. Confirmation
+  email off, redirect after subscribe set to `https://kaileybrown.com/arc?applied=1`.
+  Do not add required fields to this form: the website posts to it and only
+  sends the fields listed in `public/js/arc.js`.
+
 ## How approval works day to day
 
 1. Open Kit, go to Subscribers, click the tag `ARC Applicant: <Book>`.
