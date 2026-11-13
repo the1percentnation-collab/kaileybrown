@@ -49,12 +49,41 @@ jobs:
       #
       # Rules also go before `npm install` so a dependency problem in
       # functions/ can't block a security-rule change either.
-      - name: Deploy Firestore rules + indexes
+      - name: Deploy Firestore rules
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
         run: |
           npx --yes firebase-tools deploy \
-            --only firestore:rules,firestore:indexes \
+            --only firestore:rules \
+            --project kaileybrown-48e22 \
+            --non-interactive \
+            --force
+
+      # Indexes are their own step, and a failure here does not stop the job.
+      #
+      # Rules and indexes used to share one command. The deploy service account
+      # can publish rules but lacked permission to manage indexes, so every run
+      # died on
+      #
+      #     403, The caller does not have permission
+      #     (.../collectionGroups/posts/indexes)
+      #
+      # and because the command is all-or-nothing, the rules were never
+      # released and the functions step behind it never ran. Nothing in the
+      # backend deployed for months on account of one missing role.
+      #
+      # continue-on-error lets the functions and Storage steps run regardless;
+      # the last step of the job turns the run red again if this one failed,
+      # so a missing index is still loud, it just no longer holds the rest
+      # hostage.
+      - name: Deploy Firestore indexes
+        id: indexes
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.sa.outputs.path }}
+        run: |
+          npx --yes firebase-tools deploy \
+            --only firestore:indexes \
             --project kaileybrown-48e22 \
             --non-interactive \
             --force
@@ -74,7 +103,7 @@ jobs:
             --non-interactive \
             --force \
           || {
-            echo "::error::Cloud Functions deploy failed. Rules and indexes in the previous step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
+            echo "::error::Cloud Functions deploy failed. Firestore rules in the earlier step DID deploy. Functions v2 require the Blaze plan — a 403 mentioning 'requires billing to be enabled' on secretmanager.googleapis.com means billing is off for kaileybrown-48e22. See AUTH_SETUP.md step 1."
             exit 1
           }
 
@@ -94,7 +123,15 @@ jobs:
             --non-interactive \
             --force \
           || {
-            echo "::error::Storage rules deploy failed. Everything before this step DID deploy: Firestore rules, indexes and Cloud Functions. A 403 on firebasestorage.defaultBucket.get means either the default Storage bucket has not been created (Firebase console > Build > Storage > Get started) or the deploy service account lacks the Firebase Storage Admin role."
+            echo "::error::Storage rules deploy failed. Firestore rules and Cloud Functions before this step DID deploy. A 403 on firebasestorage.defaultBucket.get means either the default Storage bucket has not been created (Firebase console > Build > Storage > Get started) or the deploy service account lacks the Firebase Storage Admin role."
             exit 1
           }
 
+      # Keeps an index failure visible. Runs even if a step above failed, so
+      # the cause is always named at the bottom of the log.
+      - name: Fail the run if indexes did not deploy
+        if: always() && steps.indexes.outcome == 'failure'
+        run: |
+          echo "::error::Firestore indexes did NOT deploy. Queries that need a composite index will fail at runtime until they do."
+          echo "::error::A 403 'The caller does not have permission' means the deploy service account lacks the Cloud Datastore Index Admin role (roles/datastore.indexAdmin). Grant it in Google Cloud Console > IAM, then re-run this workflow."
+          exit 1

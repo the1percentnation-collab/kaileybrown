@@ -832,6 +832,9 @@
     }
 
     .signup { text-align: center; display: grid; justify-items: center; gap: 18px; }
+    /* Two stacked buttons with different labels: one shared width, so their
+       edges line up instead of missing each other by a few pixels. */
+    .signup .btn { width: min(290px, 100%); padding-inline: 12px; }
     .newsletter {
       display: flex; gap: 0; flex-wrap: wrap; justify-content: center;
       margin-top: 14px; width: min(560px, 100%);
@@ -1376,6 +1379,9 @@
            button had -- this is still the page's primary conversion, and an
            outline button would recede into the black band. -->
       <a class="btn btn-red" href="https://kailey-brown.kit.com/b0eeb21548" target="_blank" rel="noopener">Join the Inner Circle<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
+      <!-- Secondary to the red button above: outlined, so the Inner Circle
+           stays the one filled-red action on the page. -->
+      <a class="btn" href="/arc">Become an ARC Reader<span class="page" aria-hidden="true"><span class="seg seg-1"><span class="seg seg-2"></span></span></span></a>
     </div>
 
     <div class="signup-photo">
